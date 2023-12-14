@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Text.Json.Serialization;
 
 namespace Crowmask
 {
@@ -14,10 +15,25 @@ namespace Crowmask
         ActorEndpoint endpoints = null,
         ActorPublicKey publicKey = null);
 
-    public record ActivityPubObject(
+    public record APObject(
+        string id = null,
         string type = null,
-        IEnumerable<string> to = null,
-        IEnumerable<string> bto = null,
-        IEnumerable<string> cc = null,
-        IEnumerable<string> bcc = null);
+        string attributedTo = null,
+        string content = null,
+        DateTimeOffset? published = null,
+        string[] to = null,
+        string[] cc = null);
+
+    public record Activity(
+        string type = null,
+        string id = null,
+        string actor = null,
+        DateTimeOffset? published = null,
+        string[] to = null,
+        string[] cc = null,
+        APObject @object = null)
+    {
+        [JsonPropertyName("@context")]
+        public string Context => "https://www.w3.org/ns/activitystreams";
+    }
 }
