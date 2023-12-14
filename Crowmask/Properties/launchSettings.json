@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Crowmask": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7262",
+      "launchBrowser": false
+    }
+  }
+}

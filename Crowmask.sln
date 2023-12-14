@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask", "Crowmask\Crowmask.csproj", "{7E2FFEDC-9163-4636-9209-61276A7A74ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D87F3DE5-FFD9-4C90-A625-CB5B581D7C6F}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EF3A608E-4180-4E0A-85E9-7868527E7EA9}
+	EndGlobalSection
+EndGlobal
