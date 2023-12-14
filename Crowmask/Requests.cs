@@ -12,21 +12,8 @@ using System.Threading.Tasks;
 
 namespace Crowmask
 {
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Enforce lowercase for  ActivityPub interoperability")]
     public static class Requests
     {
-        public record Endpoint(string sharedInbox = null);
-
-        public record PublicKey(string publicKeyPem = null);
-
-        public record Actor(
-            string inbox,
-            string outbox = null,
-            string followers = null,
-            string following = null,
-            Endpoint endpoints = null,
-            PublicKey publicKey = null);
-
         private static readonly HttpClient _httpClient = new();
 
         /// <summary>
@@ -65,12 +52,14 @@ namespace Crowmask
             var digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
             var d = DateTime.UtcNow;
 
-            var data = Encoding.UTF8.GetBytes(string.Join("\n", [
+            string ds = string.Join("\n", [
                 $"(request-target): post {fragment}",
                 $"host: {url.Host}",
                 $"date: {d:r}",
                 $"digest: SHA-256={digest}"
-            ]));
+            ]);
+
+            var data = Encoding.UTF8.GetBytes(ds);
 
             var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
             byte[] signature = signResult.Signature;
@@ -79,10 +68,10 @@ namespace Crowmask
             req.Headers.Host = url.Host;
             req.Headers.Date = d;
             req.Headers.Add("Digest", $"SHA-256={digest}");
-            req.Headers.Add("Signature", $"keyId=\"{sender}#main-key\",headers=\"(request-target) host date digest\",signature=\"{signature}\"");
+            req.Headers.Add("Signature", $"keyId=\"{sender}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            req.Content = new ByteArrayContent(data);
+            req.Content = new ByteArrayContent(body);
             req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
             var res = await _httpClient.SendAsync(req);
