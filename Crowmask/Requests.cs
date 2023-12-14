@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Azure.Identity;
+using Azure.Security.KeyVault.Keys;
+using Azure.Security.KeyVault.Keys.Cryptography;
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -44,6 +47,14 @@ namespace Crowmask
             return body;
         }
 
+        private static CryptographyClient GetCryptographyClient()
+        {
+            var credential = new DefaultAzureCredential();
+            var uri = new Uri("https://crowmask.vault.azure.net/");
+            var keyClient = new KeyClient(uri, credential);
+            return keyClient.GetCryptographyClient("crowmask-ap");
+        }
+
         public static async Task<HttpResponseMessage> SendAsync(string sender, string recipient, object message)
         {
             var url = new Uri(recipient);
@@ -61,14 +72,8 @@ namespace Crowmask
                 $"digest: SHA-256={digest}"
             ]));
 
-            using RSA rsa = RSA.Create();
-            //rsa.ImportParameters();
-            throw new NotImplementedException();
-
-            var rsaFormatter = new RSAPKCS1SignatureFormatter(rsa);
-            rsaFormatter.SetHashAlgorithm(nameof(SHA256));
-
-            byte[] signature = rsaFormatter.CreateSignature(SHA256.Create().ComputeHash(data));
+            var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
+            byte[] signature = signResult.Signature;
 
             var req = new HttpRequestMessage(HttpMethod.Post, actor.inbox);
             req.Headers.Host = url.Host;
