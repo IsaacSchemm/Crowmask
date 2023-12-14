@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Sandbox", "Sandbox\Sandbox.fsproj", "{D8F3365F-BAEC-49BF-8733-DA7281889370}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,6 +24,10 @@ Global
 		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8F3365F-BAEC-49BF-8733-DA7281889370}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8F3365F-BAEC-49BF-8733-DA7281889370}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8F3365F-BAEC-49BF-8733-DA7281889370}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8F3365F-BAEC-49BF-8733-DA7281889370}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
