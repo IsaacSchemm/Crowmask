@@ -27,10 +27,15 @@ namespace Crowmask.Functions
                 RatingId = Submission.Rating.General,
                 SubmitId = submitid,
                 SubtypeId = Submission.Subtype.Visual,
-                Tags = ["tag1", "tag2"],
+                Tags = [
+                    new SubmissionTag { Tag = "tag5" },
+                    new SubmissionTag { Tag = "tag6" }
+                ],
                 Title = "The Title",
                 UpdatedAt = new DateTimeOffset(2023, 12, 13, 12, 0, 0, TimeSpan.Zero),
-                Urls = ["https://cdn.weasyl.com/~lizardsocks/submissions/2326525/c774c4f03f37127be0c8183a95509b343a4d55e8602a1f6a05936824914203db/lizardsocks-nervous-odri.png"]
+                Media = [
+                    new SubmissionMedia { Url = "https://cdn.weasyl.com/~lizardsocks/submissions/2326525/c774c4f03f37127be0c8183a95509b343a4d55e8602a1f6a05936824914203db/lizardsocks-nervous-odri.png" }
+                ]
             };
 
             var apObject = AP.AsObject(

@@ -18,21 +18,6 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            var submission = new Submission
-            {
-                Description = "This is the <b>description</b>",
-                FriendsOnly = false,
-                Id = Guid.NewGuid(),
-                PostedAt = DateTimeOffset.UtcNow.AddMinutes(-10),
-                RatingId = Submission.Rating.General,
-                SubmitId = 2326525,
-                SubtypeId = Submission.Subtype.Visual,
-                Tags = ["tag1", "tag2"],
-                Title = "The Title",
-                UpdatedAt = DateTimeOffset.UtcNow,
-                Urls = ["https://cdn.weasyl.com/~lizardsocks/submissions/2326525/c774c4f03f37127be0c8183a95509b343a4d55e8602a1f6a05936824914203db/lizardsocks-nervous-odri.png"]
-            };
-
             var activity = AP.AsActivity(
                 Domain.AsDelete(new DeleteActivity
                 {

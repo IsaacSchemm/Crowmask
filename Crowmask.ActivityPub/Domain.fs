@@ -1,6 +1,7 @@
 ﻿namespace Crowmask.ActivityPub
 
 open System
+open System.Net
 open Crowmask.Data
 
 type Image = {
@@ -43,21 +44,18 @@ module Domain =
     let AsNote (submission: Submission) =
         {
             submitid = submission.SubmitId
-            content = String.concat "" [
-                "<p>"
-                $"<a href='https://www.weasyl.com/~lizardsocks/submissions/{submission.SubmitId}'>"
-                System.Net.WebUtility.HtmlEncode(submission.Title)
-                "</a>"
-                "</p>"
+            content = String.concat " " [
                 submission.Description
+                for t in submission.Tags do
+                    $"#{WebUtility.HtmlEncode(t.Tag)}"
             ]
             published = submission.PostedAt
             attachment = [
                 if submission.SubtypeId = Submission.Subtype.Visual then
-                    for url in submission.Urls do
+                    for media in submission.Media do
                         Image {
                             content = submission.Title
-                            url = url
+                            url = media.Url
                         }
             ]
             sensitivity =
