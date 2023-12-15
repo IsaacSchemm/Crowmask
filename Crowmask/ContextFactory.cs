@@ -1,7 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Crowmask.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System.IO;
-using System.Text.Json;
 
 namespace Crowmask
 {
@@ -11,10 +10,8 @@ namespace Crowmask
 
         public CrowmaskDbContext CreateDbContext(string[] args)
         {
-            string json = File.ReadAllText("local.settings.json");
-            var localConfig = JsonSerializer.Deserialize<LocalConfig>(json);
             var optionsBuilder = new DbContextOptionsBuilder<CrowmaskDbContext>();
-            optionsBuilder.UseSqlServer(localConfig.SqlConnectionString);
+            optionsBuilder.UseSqlServer("Data Source=(LocalDB)\\MSSQLLocalDB;Integrated Security=true;Database=Crowmask20231213");
             return new CrowmaskDbContext(optionsBuilder.Options);
         }
     }

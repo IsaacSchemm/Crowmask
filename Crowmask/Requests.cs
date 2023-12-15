@@ -48,7 +48,8 @@ namespace Crowmask
 
             var actor = await FetchActorAsync(recipient);
             var fragment = actor.inbox.Replace($"https://{url.Host}", "");
-            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+            var json = JsonSerializer.Serialize(message);
+            var body = Encoding.UTF8.GetBytes(json);
             var digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
             var d = DateTime.UtcNow;
 

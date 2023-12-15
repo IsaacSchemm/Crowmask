@@ -12,6 +12,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crowmask.Data", "Crowmask.Data\Crowmask.Data.csproj", "{25E5C366-59BF-41F7-9561-BFFADFCA55A7}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Crowmask.ActivityPub", "Crowmask.ActivityPub\Crowmask.ActivityPub.fsproj", "{823BAF0D-A68E-47A4-8B72-CA4562C51371}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,6 +26,14 @@ Global
 		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E2FFEDC-9163-4636-9209-61276A7A74ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25E5C366-59BF-41F7-9561-BFFADFCA55A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25E5C366-59BF-41F7-9561-BFFADFCA55A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25E5C366-59BF-41F7-9561-BFFADFCA55A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25E5C366-59BF-41F7-9561-BFFADFCA55A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{823BAF0D-A68E-47A4-8B72-CA4562C51371}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{823BAF0D-A68E-47A4-8B72-CA4562C51371}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{823BAF0D-A68E-47A4-8B72-CA4562C51371}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{823BAF0D-A68E-47A4-8B72-CA4562C51371}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
