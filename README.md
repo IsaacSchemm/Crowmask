@@ -14,7 +14,7 @@ The plan:
 - [ ] Implement inbox, outbox, followers, following
 - [ ] Implement an Entity Framework Core backend to store Activities and Notes
 - [ ] Send new public posts (from the user who issued the API key) to all followers
-- [ ] When a reply is recieved, Announce it to the "admin actor URLs" (?)
+- [ ] When a reply is recieved, boost it, but make that boost only visible to the "admin actor URLs"
 - [ ] Pull new posts from the Weasyl API periodically
 - [ ] Periodically check whether stored posts still exist on Weasyl, and update or delete them as appropriate
 - [ ] Add public endpoints for a "home page" and for individual Weasyl posts
