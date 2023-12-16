@@ -1,12 +1,10 @@
 ﻿namespace CrosspostSharp3.Weasyl {
 	public class WeasylMediaFile {
-		public int? mediaid;
-		public string url;
+		public int? mediaid { get; set; }
+		public string url { get; set; }
 	}
 
 	public class WeasylSubmissionMedia {
-		public IEnumerable<WeasylMediaFile> submission;
-		public IEnumerable<WeasylMediaFile> thumbnail;
-		public IEnumerable<WeasylMediaFile> cover;
+		public IEnumerable<WeasylMediaFile> submission { get; set; }
 	}
 }

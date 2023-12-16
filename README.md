@@ -13,7 +13,7 @@ Internal objects:
 
 ActivityPub HTTP endpoints:
 
-- [ ] `/api/actor`: a Person object with the name, avatar, and URL of the associated Weasyl account
+- [x] `/api/actor`: a Person object with the name, avatar, and URL of the associated Weasyl account
 - [ ] `/api/actor/inbox`: accepts `Follow`, `Undo` `Follow`, `Create`, and `Delete`
 - [ ] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
@@ -26,11 +26,12 @@ Accepted inbox activities:
 
 - [ ] `Follow`: adds the actor to the list of followers, adds an `Accept` to `OutboundActivity`, then processes outbound activities for this actor only
 - [ ] `Undo` `Follow`: removes the actor from the list of followers
-- [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateBoost` for each Admin Actor
+- [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateBoost` for the Admin Actor
 
 Timed functions:
 
-- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then process outbound activities (every hour)
+- [ ] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed
+- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then process outbound activities (every four hours)
 - [ ] `OutboundActivityCleanup`: Remove each `OutboundActivity` that was successfully sent more than a week ago (every hour)
 
 Other functions:
@@ -51,6 +52,7 @@ Other functions:
         * If the post is at least 24 hours old and the cache is less than an hour old, keep it
         * If a cache refresh was performed on this post within the last 5 minutes, keep it
     * Pull the post from Weasyl
+    * If the post was posted over 24 hours ago, backdate it
     * If the fields we care about have changed, or if the post is deleted:
         * Update or delete our copy
         * Add outbound activities
@@ -61,5 +63,5 @@ Other tasks:
 - [x] Create an application that can send Create, Update, and Delete activities and host Actor and Note URLs,
       using [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) as a guide,
       consumable by microblog.pub (posts should be visible in the Inbox tab)
-- [ ] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URLs"
+- [x] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URL"
 - [ ] Verify HTTP signatures in inbox

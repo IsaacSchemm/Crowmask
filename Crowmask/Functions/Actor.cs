@@ -4,39 +4,52 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using CrosspostSharp3.Weasyl;
+using System.Collections.Generic;
+using Crowmask.ActivityPub;
+using System.Linq;
 
 namespace Crowmask.Functions
 {
-    public static class Actor
+    public class Actor(WeasylClient weasylClient)
     {
         [FunctionName("Actor")]
-        public static async Task<IActionResult> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
             ILogger log)
         {
-            return new ContentResult
+            var self = await weasylClient.WhoamiAsync();
+            var user = await weasylClient.GetUserAsync(self.login);
+
+            return new JsonResult(new Dictionary<string, object>
             {
-                StatusCode = 200,
-                Content = @"{
-  ""@context"": [
-      ""https://www.w3.org/ns/activitystreams"",
-      ""https://w3id.org/security/v1""
-    ],
-  ""id"": ""https://crowmask20231213.azurewebsites.net/api/actor"",
-  ""type"": ""Person"",
-  ""preferredUsername"": ""xyz"",
-  ""inbox"": ""https://crowmask20231213.azurewebsites.net/api/actor/inbox"",
-  ""outbox"": ""https://crowmask20231213.azurewebsites.net/api/actor/outbox"",
-  ""followers"": ""https://crowmask20231213.azurewebsites.net/api/actor/followers"",
-  ""following"": ""https://crowmask20231213.azurewebsites.net/api/actor/following"",
-  ""publicKey"": {
-    ""id"": ""https://crowmask20231213.azurewebsites.net/api/actor#main-key"",
-    ""owner"": ""https://crowmask20231213.azurewebsites.net/api/actor"",
-    ""publicKeyPem"": ""-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoHfLR9OTkg8mMvziXlrt8uQqWH3u13RJSlCN1w0TE7R0WvG4w1SEL+QWQY61X+STRJ/emzPX3fi6X/FTapLrMdVg4CHio3VW5Jr8qvgG56NfJ5QCxDsB+VzLiCWVp7Dge2v6WGgitfndNhMu/nvUMRft8a+Q7QWqNQ9iNCVBS1KRm2WEVs0hUvfCubQtv0DzUFTmnFi1sjHG/G1kwlukp/V+fLqGQzBjkrdQ0vvorRZwKvnTjdqRNjgq9580x+tEHfnCX4DScnwu/jWEMD9VmpZfE4/UD91yQMCihqv/NvAU0EVdgnH1hI2xWDhCeQ1zEKCS/bCcHxT30SLfsMI2PQIDAQAB\n-----END PUBLIC KEY-----""
-  }
-}",
-                ContentType = "application/activity+json"
-            };
+                ["@context"] = new[] {
+                    "https://www.w3.org/ns/activitystreams",
+                    "https://w3id.org/security/v1"
+                },
+                ["id"] = $"https://{AP.HOST}/api/actor",
+                ["type"] = "Person",
+                ["inbox"] = $"https://{AP.HOST}/api/actor/inbox",
+                ["outbox"] = $"https://{AP.HOST}/api/actor/outbox",
+                ["followers"] = $"https://{AP.HOST}/api/actor/followers",
+                ["following"] = $"https://{AP.HOST}/api/actor/following",
+                ["preferredUsername"] = user.username,
+                ["name"] = user.full_name,
+                ["summary"] = user.profile_text,
+                ["url"] = user.link,
+                ["publicKey"] = new
+                {
+                    id = "https://crowmask20231213.azurewebsites.net/api/actor#main-key",
+                    owner = "https://crowmask20231213.azurewebsites.net/api/actor",
+                    publicKeyPem = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoHfLR9OTkg8mMvziXlrt8uQqWH3u13RJSlCN1w0TE7R0WvG4w1SEL+QWQY61X+STRJ/emzPX3fi6X/FTapLrMdVg4CHio3VW5Jr8qvgG56NfJ5QCxDsB+VzLiCWVp7Dge2v6WGgitfndNhMu/nvUMRft8a+Q7QWqNQ9iNCVBS1KRm2WEVs0hUvfCubQtv0DzUFTmnFi1sjHG/G1kwlukp/V+fLqGQzBjkrdQ0vvorRZwKvnTjdqRNjgq9580x+tEHfnCX4DScnwu/jWEMD9VmpZfE4/UD91yQMCihqv/NvAU0EVdgnH1hI2xWDhCeQ1zEKCS/bCcHxT30SLfsMI2PQIDAQAB\n-----END PUBLIC KEY-----"
+                },
+                ["icon"] = new
+                {
+                    mediaType = "image/png",
+                    type = "Image",
+                    url = user.media.avatar.First().url
+                }
+            });
         }
     }
 }

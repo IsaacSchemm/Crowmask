@@ -1,6 +1,28 @@
 ﻿namespace CrosspostSharp3.Weasyl {
-	public class WeasylUser {
-		public string login;
-		public int userid;
+	public class WeasylUserBase {
+		public string login { get; set; }
+		public int userid { get; set; }
+	}
+
+	public class WeasylUserProfile
+	{
+		public string username { get; set; }
+		public string full_name { get; set; }
+		public string profile_text { get; set; }
+		public WeasylUserMedia media { get; set; }
+		public string login_name { get; set; }
+		public WeasylUserInfo user_info { get; set; }
+		public string link { get; set; }
+    }
+
+    public class WeasylUserMedia
+    {
+        public IEnumerable<WeasylMediaFile> avatar { get; set; }
+    }
+
+	public class WeasylUserInfo
+	{
+		public string gender { get; set; }
+		public Dictionary<string, IEnumerable<string>> user_links { get; set; }
 	}
 }
