@@ -7,9 +7,8 @@ Internal objects:
 - [x] `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
-- [ ] `Follower`: an ActivityPub actor who follows this actor
-- [ ] `InstanceOutbox`: an internal outbox for another ActivityPub instance (to deal with instances that go down)
-- [ ] `Reply`: a reply to this actor's post, with a private announcement sent to all Admin Actors
+- [x] `Follower`: an ActivityPub actor who follows this actor
+- [x] `OutboundActivity`: a list of `Accept`, `Announce`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
 ActivityPub HTTP endpoints:
 
@@ -18,8 +17,9 @@ ActivityPub HTTP endpoints:
 - [ ] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
 - [ ] `/api/actor/following`: an empty list
-- [ ] `/api/creates/{id}`: returns the matching `Create` activity (`Update` and `Delete` activites are transient)
-- [ ] `/api/submissions/{submitid}`: Attempts cache refresh for the post, processes instance outboxes, then returns the resulting object
+- [ ] `/api/creates/{submitid}`: returns a `Create` activity for the post from the public outbox
+- [ ] `/api/activities/{id}`: returns the matching `OutboundActivity`
+- [ ] `/api/submissions/{submitid}`: Attempts cache refresh for the post, adds and processes outbound activities, then returns the resulting object
 
 Accepted inbox activities:
 
@@ -30,15 +30,19 @@ Accepted inbox activities:
 
 Timed functions:
 
-- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then process instance outboxes (every hour)
+- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then add and process outbound activities (every hour)
+- [ ] `OutboundActivityCleanup`: Remove outbound activities that were successfully sent more than a week ago (every hour)
 
 Other functions:
 
-- [ ] Process Instance Outboxes
-    * For each instance outbox:
-        * Send each pending `Create`, `Update`, or `Delete` (in order) to the instance
+- [ ] Add Outbound Activities
+    * Group followers by inbox
+    * For each inbox, add the appropriate activity
+- [ ] Process Outbound Activities
+    * For each activity:
+        * Send the activity to the inbox
         * Mark as sent (no longer pending)
-    * If a send fails, skip that instance and move to the next
+    * If a send fails, skip it and all other activities with the same inbox
 - [ ] Cache Refresh
     * If the post is cached:
         * If the post is at least 24 hours old and the cache is less than an hour old, keep it
