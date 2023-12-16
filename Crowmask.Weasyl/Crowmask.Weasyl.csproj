@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="8.0.100" />
+  </ItemGroup>
+
 </Project>
