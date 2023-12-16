@@ -32,10 +32,11 @@ namespace Crowmask.Functions
                     new SubmissionTag { Tag = "tag6" }
                 ],
                 Title = "The Title",
-                UpdatedAt = new DateTimeOffset(2023, 12, 13, 12, 0, 0, TimeSpan.Zero),
                 Media = [
                     new SubmissionMedia { Url = "https://cdn.weasyl.com/~lizardsocks/submissions/2326525/c774c4f03f37127be0c8183a95509b343a4d55e8602a1f6a05936824914203db/lizardsocks-nervous-odri.png" }
-                ]
+                ],
+                CacheRefreshAttemptedAt = DateTimeOffset.UtcNow.AddHours(-1),
+                CacheRefreshSucceededAt = DateTimeOffset.UtcNow.AddHours(-1)
             };
 
             var apObject = AP.AsObject(

@@ -37,19 +37,17 @@ module AP =
         match activity with
         | Create create ->
             pair "type" "Create"
-            pair "id" $"https://{HOST}/api/activities/{create.activityid}"
+            pair "id" $"https://{HOST}/api/creates/{create.note.submitid}"
             pair "actor" ACTOR
             pair "published" create.note.published
             pair "object" (AsObject create.note)
         | Update update ->
             pair "type" "Update"
-            pair "id" $"https://{HOST}/api/activities/{update.activityid}"
             pair "actor" ACTOR
             pair "published" update.time
             pair "object" (AsObject update.note)
         | Delete delete ->
             pair "type" "Delete"
-            pair "id" $"https://{HOST}/api/activities/{delete.activityid}"
             pair "actor" ACTOR
             pair "published" delete.time
             pair "object" $"https://{HOST}/api/submissions/{delete.submitid}"

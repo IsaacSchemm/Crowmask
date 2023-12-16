@@ -4,9 +4,9 @@
 
 Internal objects:
 
-- [ ] `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-- [ ] `SubmissionMedia`: an associated image
-- [ ] `SubmissionTag`: an associated tag
+- [x] `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
+- [x] `SubmissionMedia`: an associated image
+- [x] `SubmissionTag`: an associated tag
 - [ ] `Follower`: an ActivityPub actor who follows this actor
 - [ ] `InstanceOutbox`: an internal outbox for another ActivityPub instance (to deal with instances that go down)
 - [ ] `Reply`: a reply to this actor's post, with a private announcement sent to all Admin Actors
@@ -18,7 +18,7 @@ ActivityPub HTTP endpoints:
 - [ ] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
 - [ ] `/api/actor/following`: an empty list
-- [ ] `/api/activities/{id}`: returns the matching `Create` activity (`Update` and `Delete` activites are transient)
+- [ ] `/api/creates/{id}`: returns the matching `Create` activity (`Update` and `Delete` activites are transient)
 - [ ] `/api/submissions/{submitid}`: Attempts cache refresh for the post, processes instance outboxes, then returns the resulting object
 
 Accepted inbox activities:
@@ -45,7 +45,7 @@ Other functions:
         * If a cache refresh was performed on this post within the last 5 minutes, keep it
     * Pull the post from Weasyl
     * If the fields we care about have changed, or if the post is deleted:
-        * Update our copy
+        * Update or delete our copy
         * Add a `Create`, `Update`, or `Delete` to instance outboxes for all instances with at least one follower
 
 Other tasks:

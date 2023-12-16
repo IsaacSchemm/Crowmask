@@ -22,18 +22,15 @@ type Note = {
 }
 
 type Create = {
-    activityid: Guid
     note: Note
 }
 
 type Update = {
-    activityid: Guid
     note: Note
     time: DateTimeOffset
 }
 
 type Delete = {
-    activityid: Guid
     submitid: int
     time: DateTimeOffset
 }
@@ -68,20 +65,17 @@ module Domain =
 
     let AsCreate (submission: Submission) =
         Create {
-            activityid = submission.Id
             note = AsNote submission
         }
 
-    let AsUpdate (submission: Submission, activity: UpdateActivity) =
+    let AsUpdate (submission: Submission) =
         Update {
-            activityid = activity.Id
             note = AsNote submission
-            time = activity.PublishedAt
+            time = DateTimeOffset.UtcNow
         }
 
-    let AsDelete (activity: DeleteActivity) =
+    let AsDelete (submitid: int) =
         Delete {
-            activityid = activity.Id
-            submitid = activity.SubmitId
-            time = activity.PublishedAt
+            submitid = submitid
+            time = DateTimeOffset.UtcNow
         }

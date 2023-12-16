@@ -19,12 +19,7 @@ namespace Crowmask.Functions
             ILogger log)
         {
             var activity = AP.AsActivity(
-                Domain.AsDelete(new DeleteActivity
-                {
-                    Id = Guid.NewGuid(),
-                    SubmitId = 1,
-                    PublishedAt = DateTimeOffset.UtcNow
-                }),
+                Domain.AsDelete(5),
                 Recipient.NewActorRecipient("https://microblog.lakora.us"));
 
             await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);

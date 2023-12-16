@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+#nullable disable
+
 namespace Crowmask.Data
 {
     public class Submission
@@ -9,13 +11,13 @@ namespace Crowmask.Data
 
         public int SubmitId { get; set; }
 
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         public bool FriendsOnly { get; set; }
 
         public DateTimeOffset PostedAt { get; set; }
 
-        public IEnumerable<SubmissionMedia> Media { get; set; } = Enumerable.Empty<SubmissionMedia>();
+        public IEnumerable<SubmissionMedia> Media { get; set; }
 
         public enum Rating
         {
@@ -36,10 +38,12 @@ namespace Crowmask.Data
 
         public Subtype SubtypeId { get; set; }
 
-        public IEnumerable<SubmissionTag> Tags { get; set; } = Enumerable.Empty<SubmissionTag>();
+        public IEnumerable<SubmissionTag> Tags { get; set; }
 
-        public string? Title { get; set; }
+        public string Title { get; set; }
 
-        public DateTimeOffset UpdatedAt { get; set; }
+        public DateTimeOffset CacheRefreshAttemptedAt { get; set; }
+
+        public DateTimeOffset CacheRefreshSucceededAt { get; set; }
     }
 }

@@ -25,29 +25,25 @@ namespace Crowmask.Functions
                 Id = Guid.NewGuid(),
                 PostedAt = DateTimeOffset.UtcNow.AddMinutes(-10),
                 RatingId = Submission.Rating.General,
-                SubmitId = 1,
+                SubmitId = 5,
                 SubtypeId = Submission.Subtype.Visual,
                 Tags = [
                     new SubmissionTag { Tag = "tag3" },
                     new SubmissionTag { Tag = "tag4" }
                 ],
                 Title = "The Title",
-                UpdatedAt = DateTimeOffset.UtcNow,
                 Media = [
                     new SubmissionMedia { Url = "https://cdn.weasyl.com/~lizardsocks/submissions/2326525/c774c4f03f37127be0c8183a95509b343a4d55e8602a1f6a05936824914203db/lizardsocks-nervous-odri.png" }
-                ]
+                ],
+                CacheRefreshAttemptedAt = DateTimeOffset.UtcNow.AddHours(-1),
+                CacheRefreshSucceededAt = DateTimeOffset.UtcNow.AddHours(-1)
             };
 
             var apObject = AP.AsObject(
                 Domain.AsNote(submission));
 
             var activity = AP.AsActivity(
-                Domain.AsUpdate(submission, new UpdateActivity
-                {
-                    Id = Guid.NewGuid(),
-                    SubmitId = 1,
-                    PublishedAt = DateTimeOffset.UtcNow
-                }),
+                Domain.AsUpdate(submission),
                 Recipient.NewActorRecipient("https://microblog.lakora.us"));
 
             await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
