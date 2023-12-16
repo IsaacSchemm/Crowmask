@@ -21,6 +21,28 @@ namespace Crowmask.Functions
             var self = await weasylClient.WhoamiAsync();
             var user = await weasylClient.GetUserAsync(self.login);
 
+            IEnumerable<object> getAttachments()
+            {
+                if (user.user_info.gender is string g)
+                {
+                    yield return new
+                    {
+                        type = "PropertyValue",
+                        name = "Gender",
+                        value = g
+                    };
+                }
+                foreach (var link in user.user_info.user_links)
+                {
+                    yield return new
+                    {
+                        type = "PropertyValue",
+                        name = link.Key,
+                        value = link.Value.First()
+                    };
+                }
+            }
+
             return new JsonResult(new Dictionary<string, object>
             {
                 ["@context"] = new[] {
@@ -48,7 +70,17 @@ namespace Crowmask.Functions
                     mediaType = "image/png",
                     type = "Image",
                     url = user.media.avatar.First().url
-                }
+                },
+                ["attachment"] = getAttachments()
+                //["attachment"] = new[]
+                //{
+                //    new
+                //    {
+                //        type = "PropertyValue",
+                //        name = "x",
+                //        value = "y"
+                //    }
+                //}
             });
         }
     }
