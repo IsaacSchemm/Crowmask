@@ -24,7 +24,7 @@ ActivityPub HTTP endpoints:
 
 Accepted inbox activities:
 
-- [ ] `Follow`: adds the actor to the list of followers
+- [ ] `Follow`: adds the actor to the list of followers, adds an `Accept` to `OutboundActivity`, then processes outbound activities for this actor only
 - [ ] `Undo` `Follow`: removes the actor from the list of followers
 - [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateBoost` for each Admin Actor
 
