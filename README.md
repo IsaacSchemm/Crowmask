@@ -8,7 +8,8 @@ Internal objects:
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
-- [x] `OutboundActivity`: a list of `Accept`, `Announce`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+- [ ] `PrivateBoost`: a list of `Announce` activities sent to particular actors or instances
+- [x] `OutboundActivity`: a list of `Accept`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
 ActivityPub HTTP endpoints:
 
@@ -19,27 +20,29 @@ ActivityPub HTTP endpoints:
 - [ ] `/api/actor/following`: an empty list
 - [ ] `/api/creates/{submitid}`: returns a `Create` activity for the post from the public outbox
 - [ ] `/api/activities/{id}`: returns the matching `OutboundActivity`
-- [ ] `/api/submissions/{submitid}`: Attempts cache refresh for the post, adds and processes outbound activities, then returns the resulting object
+- [ ] `/api/submissions/{submitid}`: Attempts cache refresh for the post, processes outbound activities, then returns the resulting object
 
 Accepted inbox activities:
 
 - [ ] `Follow`: adds the actor to the list of followers
 - [ ] `Undo` `Follow`: removes the actor from the list of followers
-- [ ] `Create`: if the post is in reply to this actor's post, store a `Reply` and send an `Announce` activity to all Admin Actors
-- [ ] `Delete`: if the post has an associated `Reply`, remove it and send an `Undo`
+- [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateBoost` for each Admin Actor
 
 Timed functions:
 
-- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then add and process outbound activities (every hour)
-- [ ] `OutboundActivityCleanup`: Remove outbound activities that were successfully sent more than a week ago (every hour)
+- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then process outbound activities (every hour)
+- [ ] `OutboundActivityCleanup`: Remove each `OutboundActivity` that was successfully sent more than a week ago (every hour)
 
 Other functions:
 
 - [ ] Add Outbound Activities
     * Group followers by inbox
-    * For each inbox, add the appropriate activity
+    * For each inbox, add the appropriate `OutboundActivity`
 - [ ] Process Outbound Activities
-    * For each activity:
+    * For each `OutboundActivity`:
+        * Send the activity to the inbox
+        * Mark as sent (no longer pending)
+    * For each `PrivateBoost`:
         * Send the activity to the inbox
         * Mark as sent (no longer pending)
     * If a send fails, skip it and all other activities with the same inbox
@@ -50,7 +53,7 @@ Other functions:
     * Pull the post from Weasyl
     * If the fields we care about have changed, or if the post is deleted:
         * Update or delete our copy
-        * Add a `Create`, `Update`, or `Delete` to instance outboxes for all instances with at least one follower
+        * Add outbound activities
 
 Other tasks:
 
