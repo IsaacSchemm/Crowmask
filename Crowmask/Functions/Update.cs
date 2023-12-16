@@ -25,7 +25,7 @@ namespace Crowmask.Functions
                 Id = Guid.NewGuid(),
                 PostedAt = DateTimeOffset.UtcNow.AddMinutes(-10),
                 RatingId = Submission.Rating.General,
-                SubmitId = 5,
+                SubmitId = 7,
                 SubtypeId = Submission.Subtype.Visual,
                 Tags = [
                     new SubmissionTag { Tag = "tag3" },

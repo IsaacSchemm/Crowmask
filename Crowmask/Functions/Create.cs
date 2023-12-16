@@ -23,9 +23,9 @@ namespace Crowmask.Functions
                 Description = "This is the <b>description</b>",
                 FriendsOnly = false,
                 Id = Guid.NewGuid(),
-                PostedAt = DateTimeOffset.UtcNow.AddHours(-2),
+                PostedAt = DateTimeOffset.UtcNow.AddMinutes(-2),
                 RatingId = Submission.Rating.General,
-                SubmitId = 5,
+                SubmitId = 7,
                 SubtypeId = Submission.Subtype.Visual,
                 Tags = [
                     new SubmissionTag { Tag = "tag1" },

@@ -43,11 +43,13 @@ module AP =
             pair "object" (AsObject create.note)
         | Update update ->
             pair "type" "Update"
+            pair "id" $"https://{HOST}/api/updates/{System.Guid.NewGuid().ToString()}"
             pair "actor" ACTOR
             pair "published" update.time
             pair "object" (AsObject update.note)
         | Delete delete ->
             pair "type" "Delete"
+            pair "id" $"https://{HOST}/api/activities/{System.Guid.NewGuid().ToString()}"
             pair "actor" ACTOR
             pair "published" delete.time
             pair "object" $"https://{HOST}/api/submissions/{delete.submitid}"
