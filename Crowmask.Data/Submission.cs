@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 #nullable disable
 
@@ -6,9 +7,7 @@ namespace Crowmask.Data
 {
     public class Submission
     {
-        [Key]
-        public Guid Id { get; set; }
-
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int SubmitId { get; set; }
 
         public string Description { get; set; }

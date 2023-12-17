@@ -4,16 +4,18 @@
 
 Internal objects:
 
+- [x] `User`: a cached user from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
+- [x] `UserLink`: an entry from the Contact and Social Media section of the Weasyl profile
 - [x] `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
-- [ ] `PrivateBoost`: a list of `Announce` activities sent to particular actors or instances
+- [x] `PrivateAnnouncement`: a list of `Announce` activities sent to particular actors or instances
 - [x] `OutboundActivity`: a list of `Accept`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
 ActivityPub HTTP endpoints:
 
-- [x] `/api/actor`: a Person object with the name, avatar, and URL of the associated Weasyl account
+- [x] `/api/actor`: attempts cache refresh for the user, processes outbound activities, then returns the resulting object
 - [ ] `/api/actor/inbox`: accepts `Follow`, `Undo` `Follow`, `Create`, and `Delete`
 - [ ] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
@@ -26,7 +28,7 @@ Accepted inbox activities:
 
 - [ ] `Follow`: adds the actor to the list of followers, adds an `Accept` to `OutboundActivity`, then processes outbound activities for this actor only
 - [ ] `Undo` `Follow`: removes the actor from the list of followers
-- [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateBoost` for the Admin Actor
+- [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateAnnouncement` for the Admin Actor
 
 Timed functions:
 
@@ -43,7 +45,7 @@ Other functions:
     * For each `OutboundActivity`:
         * Send the activity to the inbox
         * Mark as sent (no longer pending)
-    * For each `PrivateBoost`:
+    * For each `PrivateAnnouncement`:
         * Send the activity to the inbox
         * Mark as sent (no longer pending)
     * If a send fails, skip it and all other activities with the same inbox
@@ -54,6 +56,14 @@ Other functions:
     * Pull the post from Weasyl
     * If the post was posted over 24 hours ago, backdate it
     * If the fields we care about have changed, or if the post is deleted:
+        * Update or delete our copy
+        * Add outbound activities
+- [ ] User Cacahe Refresh
+    * If the post is cached:
+        * If the post is at least 24 hours old and the cache is less than an hour old, keep it
+        * If a cache refresh was performed on this post within the last 5 minutes, keep it
+    * Pull the user from Weasyl
+    * If the fields we care about have changed:
         * Update or delete our copy
         * Add outbound activities
 

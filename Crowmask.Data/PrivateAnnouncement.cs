@@ -4,15 +4,12 @@
 
 namespace Crowmask.Data
 {
-    public class OutboundActivity
+    public class PrivateAnnouncement
     {
         public long Id { get; set; }
 
         [Required]
-        public string Inbox { get; set; }
-
-        [Required]
-        public string JsonBody { get; set; }
+        public string AnnouncedObjectId { get; set; }
 
         public DateTimeOffset PublishedAt { get; set; }
     }
