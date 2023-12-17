@@ -80,5 +80,6 @@ Other tasks:
 - [x] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URL"
 - [ ] Try out Entra auth for DB
 - [ ] Verify HTTP signatures in inbox
-- [ ] Use an actual JSON-LD implementation
+- [x] Only insert JSON-LD @context at top level
+- [ ] Use an actual JSON-LD implementation for parsing
 - [ ] Webfinger implementation

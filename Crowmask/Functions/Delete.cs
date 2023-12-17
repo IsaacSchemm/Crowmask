@@ -22,7 +22,7 @@ namespace Crowmask.Functions
                 Domain.AsDelete(7),
                 Recipient.NewActorRecipient("https://microblog.lakora.us"));
 
-            await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
+            //await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
 
             return new OkObjectResult("test");
         }

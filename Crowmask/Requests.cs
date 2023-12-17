@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
+using Crowmask.ActivityPub;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -30,6 +31,8 @@ namespace Crowmask
 
             res.EnsureSuccessStatusCode();
 
+            // TODO implement JSON-LD here
+
             var body = await res.Content.ReadFromJsonAsync<Actor>();
             return body;
         }
@@ -42,7 +45,7 @@ namespace Crowmask
             return keyClient.GetCryptographyClient("crowmask-ap");
         }
 
-        public static async Task<HttpResponseMessage> SendAsync(string sender, string recipient, object message)
+        public static async Task<HttpResponseMessage> SendAsync(string sender, string recipient, AP.Object message)
         {
             var url = new Uri(recipient);
 

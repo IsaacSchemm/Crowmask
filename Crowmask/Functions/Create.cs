@@ -45,7 +45,7 @@ namespace Crowmask.Functions
                 Domain.AsCreate(submission),
                 Recipient.NewActorRecipient("https://microblog.lakora.us"));
 
-            await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
+            //await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
 
             return new OkObjectResult("test");
         }
