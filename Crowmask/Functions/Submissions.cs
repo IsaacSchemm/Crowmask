@@ -14,7 +14,7 @@ namespace Crowmask.Functions
     {
         [FunctionName("Submissions")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "submissions/{submitid}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "api/submissions/{submitid}")] HttpRequest req,
             int submitid,
             ILogger log)
         {

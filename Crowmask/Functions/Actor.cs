@@ -15,7 +15,7 @@ namespace Crowmask.Functions
     {
         [FunctionName("Actor")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "api/actor")] HttpRequest req,
             ILogger log)
         {
             var person = await crowmaskCache.GetUser();

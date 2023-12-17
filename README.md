@@ -1,6 +1,12 @@
 # Crowmask
 
-**Crowmask** stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit".
+**Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented using Azure Functions.
+
+Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
+to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
+was quickly modified to support the strongly typed nature of .NET and the specificity of this app.
+Still, having a simple,working ActivityPub implementation in a language I was able to understand (if
+not compile) was incredibly helpful.
 
 Internal objects:
 
@@ -75,3 +81,4 @@ Other tasks:
 - [ ] Try out Entra auth for DB
 - [ ] Verify HTTP signatures in inbox
 - [ ] Use an actual JSON-LD implementation
+- [ ] Webfinger implementation
