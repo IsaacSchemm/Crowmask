@@ -4,14 +4,13 @@
 
 namespace Crowmask.Data
 {
-    public class UserLink
+    public class UserAvatar
     {
         public long Id { get; set; }
 
         [Required]
-        public string Site { get; set; }
+        public string Url { get; set; }
 
-        [Required]
-        public string UsernameOrUrl { get; set; }
+        public int? MediaId { get; set; }
     }
 }

@@ -22,7 +22,9 @@
 
 	public class WeasylUserInfo
 	{
+		public int? age { get; set; }
 		public string gender { get; set; }
-		public Dictionary<string, IEnumerable<string>> user_links { get; set; }
+		public string location { get; set; }
+        public Dictionary<string, IEnumerable<string>> user_links { get; set; }
 	}
 }

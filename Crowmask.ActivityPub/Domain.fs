@@ -4,40 +4,71 @@ open System
 open System.Net
 open Crowmask.Data
 
-type Image = {
-    content: string
-    url: string
-}
-
-type Attachment = Image of Image
-
-type Sensitivity = General | Sensitive of warning: string
-
-type Note = {
-    submitid: int
-    content: string
-    published: DateTimeOffset
-    attachment: Attachment list
-    sensitivity: Sensitivity
-}
-
-type Create = {
-    note: Note
-}
-
-type Update = {
-    note: Note
-    time: DateTimeOffset
-}
-
-type Delete = {
-    submitid: int
-    time: DateTimeOffset
-}
-
-type Activity = Create of Create | Update of Update | Delete of Delete
-
 module Domain =
+    type Person = {
+        preferredUsername: string
+        name: string
+        summary: string
+        url: string
+        iconUrls: string list
+        attachments: (string * string) list
+    }
+
+    type Image = {
+        content: string
+        url: string
+    }
+
+    type Attachment = Image of Image
+
+    type Sensitivity = General | Sensitive of warning: string
+
+    type Note = {
+        submitid: int
+        content: string
+        published: DateTimeOffset
+        attachment: Attachment list
+        sensitivity: Sensitivity
+    }
+
+    type Create = {
+        note: Note
+    }
+
+    type Update = {
+        note: Note
+        time: DateTimeOffset
+    }
+
+    type Delete = {
+        submitid: int
+        time: DateTimeOffset
+    }
+
+    type Activity = Create of Create | Update of Update | Delete of Delete
+
+    let AsPerson (user: User) =
+        {
+            preferredUsername = user.Username
+            name = user.DisplayName
+            summary = user.Summary
+            url = user.Url
+            iconUrls = [for a in user.Avatars do a.Url]
+            attachments = [
+                if user.Age.HasValue then
+                    ("Age", $"{user.Age}")
+
+                if not (String.IsNullOrWhiteSpace(user.Gender)) then
+                    ("Gender", user.Gender)
+
+                if not (String.IsNullOrWhiteSpace(user.Location)) then
+                    ("Location", user.Location)
+
+                for link in user.Links do
+                    (link.Site, link.UsernameOrUrl)
+            ]
+        }
+
     let AsNote (submission: Submission) =
         {
             submitid = submission.SubmitId

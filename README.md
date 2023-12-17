@@ -55,17 +55,15 @@ Other functions:
         * If a cache refresh was performed on this post within the last 5 minutes, keep it
     * Pull the post from Weasyl
     * If the post was posted over 24 hours ago, backdate it
-    * If the fields we care about have changed, or if the post is deleted:
-        * Update or delete our copy
-        * Add outbound activities
-- [ ] User Cacahe Refresh
+    * Update or delete our copy
+    * Add outbound activities
+- [x] User Cache Refresh
     * If the post is cached:
         * If the post is at least 24 hours old and the cache is less than an hour old, keep it
         * If a cache refresh was performed on this post within the last 5 minutes, keep it
     * Pull the user from Weasyl
-    * If the fields we care about have changed:
-        * Update or delete our copy
-        * Add outbound activities
+    * Update or delete our copy
+    * Add outbound activities
 
 Other tasks:
 
@@ -76,3 +74,4 @@ Other tasks:
 - [x] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URL"
 - [ ] Try out Entra auth for DB
 - [ ] Verify HTTP signatures in inbox
+- [ ] Use an actual JSON-LD implementation

@@ -22,7 +22,6 @@ namespace Crowmask.Functions
             {
                 Description = "This is the <b>description</b>",
                 FriendsOnly = false,
-                Id = Guid.NewGuid(),
                 PostedAt = new DateTimeOffset(2023, 12, 9, 12, 0, 0, TimeSpan.Zero),
                 RatingId = Submission.Rating.General,
                 SubmitId = submitid,

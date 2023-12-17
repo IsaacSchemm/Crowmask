@@ -1,14 +1,67 @@
 ﻿namespace Crowmask.ActivityPub
 
+open System
 open System.Collections.Generic
 
 type Recipient = Followers | ActorRecipient of string
 
 module AP =
+    open Domain
+
     let HOST = "crowmask20231213.azurewebsites.net"
     let ACTOR = $"https://{HOST}/api/actor"
 
     let private pair key value = (key, value :> obj)
+
+    let PersonToObject (person: Person) (key: IPublicKey) = dict [
+        pair "@context" [
+            "https://www.w3.org/ns/activitystreams"
+            "https://w3id.org/security/v1"
+        ]
+        pair "id" ACTOR
+        pair "type" "Person"
+        pair "inbox" $"{ACTOR}/inbox"
+        pair "outbox" $"{ACTOR}/outbox"
+        pair "followers" $"{ACTOR}/followers"
+        pair "following" $"{ACTOR}/following"
+        pair "preferredUsername" person.preferredUsername
+        pair "name" person.name
+        pair "summary" person.summary
+        pair "url" person.url
+        pair "publicKey" {|
+            id = $"{ACTOR}#main-key"
+            owner = ACTOR
+            publicKeyPem = key.Pem
+        |}
+        match person.iconUrls with
+        | [] -> ()
+        | url::_ ->
+            pair "icon" {|
+                mediaType = "image/png"
+                ``type`` = "Image"
+                url = url
+            |}
+        pair "attachment" [
+            for (name, value) in person.attachments do
+                {|
+                    ``type`` = "PropertyValue"
+                    name = name
+                    value = value
+                |}
+        ]
+    ]
+
+    let PersonToUpdate (person: Person) (key: IPublicKey) = dict [
+        pair "@context" [
+            "https://www.w3.org/ns/activitystreams"
+            "https://w3id.org/security/v1"
+        ]
+        pair "type" "Update"
+        pair "id" $"https://{HOST}/api/updates/{System.Guid.NewGuid().ToString()}"
+        pair "actor" ACTOR
+        pair "published" DateTimeOffset.UtcNow
+        pair "object" (PersonToObject person key)
+    ]
 
     let AsObject (note: Note) = dict [
         pair "@context" [

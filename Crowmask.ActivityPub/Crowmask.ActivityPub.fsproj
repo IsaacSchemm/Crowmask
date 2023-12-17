@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="IPublicKey.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="ActivityPub.fs" />
   </ItemGroup>

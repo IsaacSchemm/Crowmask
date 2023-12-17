@@ -17,9 +17,10 @@ namespace Crowmask.Data
 
         public string ProfileText { get; set; }
 
+        [Required]
         public string Url { get; set; }
 
-        public string IconUrl { get; set; }
+        public IEnumerable<UserAvatar> Avatars { get; set; } = new List<UserAvatar>(0);
 
         public int? Age { get; set; }
 
@@ -27,6 +28,16 @@ namespace Crowmask.Data
 
         public string Location { get; set; }
 
-        public IEnumerable<UserLink> Links { get; set; }
+        public IEnumerable<UserLink> Links { get; set; } = new List<UserLink>(0);
+
+        public DateTimeOffset CacheRefreshAttemptedAt { get; set; }
+
+        public DateTimeOffset CacheRefreshSucceededAt { get; set; }
+
+        [NotMapped]
+        public string DisplayName => FullName ?? Username;
+
+        [NotMapped]
+        public string Summary => ProfileText ?? "";
     }
 }

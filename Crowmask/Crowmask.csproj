@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.ActivityPub\Crowmask.ActivityPub.fsproj" />
+    <ProjectReference Include="..\Crowmask.Cache\Crowmask.Cache.csproj" />
     <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
     <ProjectReference Include="..\Crowmask.Weasyl\Crowmask.Weasyl.csproj" />
   </ItemGroup>
