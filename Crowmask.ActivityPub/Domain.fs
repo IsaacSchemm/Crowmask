@@ -26,6 +26,7 @@ module Domain =
     type Note = {
         submitid: int
         content: string
+        url: string
         published: DateTimeOffset
         attachments: Attachment list
         sensitivity: Sensitivity
@@ -73,6 +74,7 @@ module Domain =
         {
             submitid = submission.SubmitId
             content = submission.Content
+            url = submission.Url
             published =
                 if DateTimeOffset.UtcNow - submission.PostedAt < TimeSpan.FromHours(24)
                 then submission.FirstCachedAt

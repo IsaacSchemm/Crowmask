@@ -61,13 +61,13 @@ namespace Crowmask.Cache
 
                 cachedSubmission.Description = weasylSubmission.description;
                 cachedSubmission.FriendsOnly = weasylSubmission.friends_only;
-                cachedSubmission.PostedAt = weasylSubmission.posted_at;
                 cachedSubmission.Media = weasylSubmission.media.submission
                     .Select(s => new SubmissionMedia
                     {
                         Url = s.url
                     })
                     .ToList();
+                cachedSubmission.PostedAt = weasylSubmission.posted_at;
                 cachedSubmission.RatingId = weasylSubmission.rating switch
                 {
                     "general" => Submission.Rating.General,
@@ -90,6 +90,7 @@ namespace Crowmask.Cache
                     })
                     .ToList();
                 cachedSubmission.Title = weasylSubmission.title;
+                cachedSubmission.Link = weasylSubmission.link;
 
                 var newSubmission = Domain.AsNote(cachedSubmission);
 
@@ -103,13 +104,13 @@ namespace Crowmask.Cache
                         Guid guid = Guid.NewGuid();
                         _context.OutboundActivities.Add(new OutboundActivity
                         {
-                            Id = guid,
+                            ExternalId = guid,
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(
                                 newlyCreated
                                 ? AP.ObjectToCreate(guid, newSubmission)
                                 : AP.ObjectToUpdate(guid, newSubmission)),
-                            PublishedAt = DateTimeOffset.UtcNow
+                            StoredAt = DateTimeOffset.UtcNow
                         });
                     }
                 }
@@ -133,10 +134,10 @@ namespace Crowmask.Cache
                         Guid guid = Guid.NewGuid();
                         _context.OutboundActivities.Add(new OutboundActivity
                         {
-                            Id = guid,
+                            ExternalId = guid,
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(AP.ObjectToDelete(guid, cachedSubmission.SubmitId)),
-                            PublishedAt = DateTimeOffset.UtcNow
+                            StoredAt = DateTimeOffset.UtcNow
                         });
                     }
 
@@ -231,7 +232,7 @@ namespace Crowmask.Cache
                     {
                         Inbox = inbox.Key,
                         JsonBody = AP.SerializeWithContext(AP.PersonToUpdate(newUser, _publicKey)),
-                        PublishedAt = DateTimeOffset.UtcNow
+                        StoredAt = DateTimeOffset.UtcNow
                     });
                 }
             }

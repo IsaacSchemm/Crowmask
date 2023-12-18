@@ -1,12 +1,6 @@
-# Crowmask
+﻿# Crowmask 🐦‍⬛🎭
 
 **Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented using Azure Functions.
-
-Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
-to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
-was quickly modified to support the strongly typed nature of .NET and the specificity of this app.
-Still, having a simple,working ActivityPub implementation in a language I was able to understand (if
-not compile) was incredibly helpful.
 
 Internal objects:
 
@@ -21,26 +15,27 @@ Internal objects:
 
 ActivityPub HTTP endpoints:
 
-- [x] `/api/actor`: attempts cache refresh for the user, processes outbound activities, then returns the resulting object
+- [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
 - [ ] `/api/actor/inbox`: accepts `Follow`, `Undo` `Follow`, `Create`, and `Delete`
 - [ ] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
 - [ ] `/api/actor/following`: an empty list
 - [ ] `/api/creates/{submitid}`: returns a `Create` activity for the post from the public outbox
 - [ ] `/api/activities/{guid}`: returns the matching `OutboundActivity`
-- [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, processes outbound activities, then returns the resulting object
+- [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, then returns the resulting object
 
 Accepted inbox activities:
 
-- [ ] `Follow`: adds the actor to the list of followers, adds an `Accept` to `OutboundActivity`, then processes outbound activities for this actor only
+- [ ] `Follow`: adds the actor to the list of followers and adds an `Accept` to `OutboundActivity`
 - [ ] `Undo` `Follow`: removes the actor from the list of followers
 - [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateAnnouncement` for the Admin Actor
 
 Timed functions:
 
-- [ ] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed
-- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each, then process outbound activities (every four hours)
-- [ ] `OutboundActivityCleanup`: Remove each `OutboundActivity` that was successfully sent more than a week ago (every hour)
+- [ ] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed (every day)
+- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each (every hour)
+- [x] `OutboundActivitySend`: Try to send outbound activities (every five minutes)
+- [ ] `OutboundActivityCleanup`: Remove any `OutboundActivity` more than a week old, regardless of whether it was sent or not (every day)
 
 Other functions:
 
@@ -54,7 +49,7 @@ Other functions:
     * For each `PrivateAnnouncement`:
         * Send the activity to the inbox
         * Mark as sent (no longer pending)
-    * If a send fails, record the failure, and prioritize outgoing messages with fewer failures
+    * If a send fails, don't try sending it again for 4 hours
 - [x] Cache Refresh
     * If the post is cached:
         * If the post is at least 24 hours old and the cache is less than an hour old, keep it
@@ -85,3 +80,9 @@ Other tasks:
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
 - [ ] Webfinger implementation
+
+Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
+to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
+was quickly modified to support the strongly typed nature of .NET and the specificity of this app.
+Still, having a simple, working ActivityPub implementation in a language I was able to understand (if
+not compile) was incredibly helpful.

@@ -27,12 +27,14 @@ namespace Crowmask.Data.Migrations
                 name: "OutboundActivities",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ExternalId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Inbox = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     JsonBody = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PublishedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    Sent = table.Column<bool>(type: "bit", nullable: false),
-                    Failures = table.Column<long>(type: "bigint", nullable: false)
+                    StoredAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    DelayUntil = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    Sent = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {

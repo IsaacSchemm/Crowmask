@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Crowmask.Data.Migrations
 {
     [DbContext(typeof(CrowmaskDbContext))]
-    [Migration("20231218005506_Initial")]
+    [Migration("20231218014640_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,12 +46,17 @@ namespace Crowmask.Data.Migrations
 
             modelBuilder.Entity("Crowmask.Data.OutboundActivity", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<long>("Failures")
                         .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
+
+                    b.Property<DateTimeOffset>("DelayUntil")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("ExternalId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Inbox")
                         .IsRequired()
@@ -61,11 +66,11 @@ namespace Crowmask.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("PublishedAt")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<bool>("Sent")
                         .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset>("StoredAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 

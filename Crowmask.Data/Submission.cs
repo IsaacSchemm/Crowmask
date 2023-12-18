@@ -14,9 +14,11 @@ namespace Crowmask.Data
 
         public bool FriendsOnly { get; set; }
 
-        public DateTimeOffset PostedAt { get; set; }
+        public string Link { get; set; }
 
         public IEnumerable<SubmissionMedia> Media { get; set; } = new List<SubmissionMedia>(0);
+
+        public DateTimeOffset PostedAt { get; set; }
 
         public enum Rating
         {
@@ -48,5 +50,7 @@ namespace Crowmask.Data
         public DateTimeOffset CacheRefreshSucceededAt { get; set; }
 
         public string Content => Description ?? "";
+
+        public string Url => Link ?? $"https://www.weasyl.com/~lizardsocks/submissions/{SubmitId}";
     }
 }

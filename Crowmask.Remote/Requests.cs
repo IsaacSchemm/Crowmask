@@ -95,29 +95,5 @@ namespace Crowmask.Remote
 
             res.EnsureSuccessStatusCode();
         }
-
-        public static async Task ProcessOutboundActivities(CrowmaskDbContext context)
-        {
-            var activities = await context.OutboundActivities
-                .Where(a => !a.Sent)
-                .OrderBy(a => a.Failures)
-                .ThenBy(a => a.PublishedAt)
-                .Take(500)
-                .ToListAsync();
-
-            foreach (var activity in activities)
-            {
-                try
-                {
-                    await SendAsync(activity);
-                    activity.Sent = true;
-                }
-                catch (HttpRequestException)
-                {
-                    activity.Failures++;
-                }
-                await context.SaveChangesAsync();
-            }
-        }
     }
 }

@@ -10,7 +10,7 @@ using Crowmask.Remote;
 
 namespace Crowmask.Functions
 {
-    public class Submissions(CrowmaskCache cache, OutboundActivityProcessor outboundActivityProcessor)
+    public class Submissions(CrowmaskCache cache)
     {
         [FunctionName("Submissions")]
         public async Task<IActionResult> Run(
@@ -19,8 +19,6 @@ namespace Crowmask.Functions
             ILogger log)
         {
             var submission = await cache.GetSubmission(submitid);
-
-            await outboundActivityProcessor.ProcessOutboundActivities();
 
             return submission == null
                 ? new NotFoundResult()

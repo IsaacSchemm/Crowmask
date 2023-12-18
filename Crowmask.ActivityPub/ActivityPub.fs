@@ -75,6 +75,7 @@ module AP =
         pair "attributedTo" ACTOR
         pair "content" note.content
         pair "published" note.published
+        pair "url" note.url
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" $"{ACTOR}/followers"
         match note.sensitivity with
@@ -86,7 +87,6 @@ module AP =
             for attachment in note.attachments do
                 match attachment with
                 | Image image ->
-                    let uri = new Uri(image.url)
                     {|
                         ``type`` = "Document"
                         mediaType = "image/png" // TODO get type from Weasyl and cache it
