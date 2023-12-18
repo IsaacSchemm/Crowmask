@@ -2,7 +2,10 @@
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
 using Crowmask.ActivityPub;
+using JsonLD.Core;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -17,12 +20,14 @@ namespace Crowmask
     {
         private static readonly HttpClient _httpClient = new();
 
+        private record Actor(string inbox);
+
         /// <summary>
         /// Fetches and returns an actor at a URL
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public static async Task<Actor> FetchActorAsync(string url)
+        private static async Task<Actor> FetchActorAsync(string url)
         {
             var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
@@ -31,10 +36,12 @@ namespace Crowmask
 
             res.EnsureSuccessStatusCode();
 
-            // TODO implement JSON-LD here
+            string json = await res.Content.ReadAsStringAsync();
 
-            var body = await res.Content.ReadFromJsonAsync<Actor>();
-            return body;
+            JObject document = JObject.Parse(json);
+            string inbox = JsonLdProcessor.Expand(document)[0]["http://www.w3.org/ns/ldp#inbox"][0]["@id"].Value<string>();
+
+            return new Actor(inbox);
         }
 
         private static CryptographyClient GetCryptographyClient()
@@ -45,13 +52,13 @@ namespace Crowmask
             return keyClient.GetCryptographyClient("crowmask-ap");
         }
 
-        public static async Task<HttpResponseMessage> SendAsync(string sender, string recipient, AP.Object message)
+        public static async Task<HttpResponseMessage> SendAsync(string sender, string recipient, IDictionary<string, object> message)
         {
             var url = new Uri(recipient);
 
             var actor = await FetchActorAsync(recipient);
             var fragment = actor.inbox.Replace($"https://{url.Host}", "");
-            var json = JsonSerializer.Serialize(message);
+            var json = AP.SerializeWithContext(message);
             var body = Encoding.UTF8.GetBytes(json);
             var digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
             var d = DateTime.UtcNow;

@@ -12,7 +12,7 @@ module AP =
     let HOST = "crowmask20231213.azurewebsites.net"
     let ACTOR = $"https://{HOST}/api/actor"
 
-    type Object = Object of (string * obj) list
+    type Object = IDictionary<string, obj>
 
     let Context: obj list = [
         "https://w3id.org/security/v1"
@@ -22,13 +22,12 @@ module AP =
 
     let private pair key value = (key, value :> obj)
 
-    let Serialize apObject = JsonSerializer.Serialize(dict [   
+    let SerializeWithContext (apObject: Object) = JsonSerializer.Serialize(dict [   
         pair "@context" Context
-        match apObject with Object list -> yield! list
+        for p in apObject do pair p.Key p.Value
     ])
 
-    let PersonToObject (person: Person) (key: IPublicKey) = Object [
-        pair "@context" Context
+    let PersonToObject (person: Person) (key: IPublicKey) = dict [
         pair "id" ACTOR
         pair "type" "Person"
         pair "inbox" $"{ACTOR}/inbox"
@@ -62,8 +61,7 @@ module AP =
         ]
     ]
 
-    let PersonToUpdate (person: Person) (key: IPublicKey) = Object [
-        pair "@context" Context
+    let PersonToUpdate (person: Person) (key: IPublicKey) = dict [
         pair "type" "Update"
         pair "id" $"https://{HOST}/api/updates/{System.Guid.NewGuid().ToString()}"
         pair "actor" ACTOR
@@ -72,7 +70,6 @@ module AP =
     ]
 
     let AsObject (note: Note) = dict [
-        pair "@context" Context
         pair "id" $"https://{HOST}/api/submissions/{note.submitid}"
         pair "type" "Note"
         pair "attributedTo" ACTOR
@@ -88,7 +85,6 @@ module AP =
     ]
 
     let AsActivity (activity: Activity) (cc: Recipient) = dict [
-        pair "@context" Context
         match activity with
         | Create create ->
             pair "type" "Create"

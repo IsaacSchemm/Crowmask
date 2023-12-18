@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -45,7 +44,7 @@ namespace Crowmask.Functions
                 Domain.AsCreate(submission),
                 Recipient.NewActorRecipient("https://microblog.lakora.us"));
 
-            //await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
+            await Requests.SendAsync(AP.ACTOR, "https://microblog.lakora.us", activity);
 
             return new OkObjectResult("test");
         }
