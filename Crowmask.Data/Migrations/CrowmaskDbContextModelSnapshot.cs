@@ -44,11 +44,12 @@ namespace Crowmask.Data.Migrations
 
             modelBuilder.Entity("Crowmask.Data.OutboundActivity", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"), 1L, 1);
+                    b.Property<long>("Failures")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Inbox")
                         .IsRequired()
@@ -60,6 +61,9 @@ namespace Crowmask.Data.Migrations
 
                     b.Property<DateTimeOffset>("PublishedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("Sent")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
@@ -99,6 +103,9 @@ namespace Crowmask.Data.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("FirstCachedAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("FriendsOnly")
                         .HasColumnType("bit");

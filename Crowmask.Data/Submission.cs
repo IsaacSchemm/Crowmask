@@ -16,7 +16,7 @@ namespace Crowmask.Data
 
         public DateTimeOffset PostedAt { get; set; }
 
-        public IEnumerable<SubmissionMedia> Media { get; set; }
+        public IEnumerable<SubmissionMedia> Media { get; set; } = new List<SubmissionMedia>(0);
 
         public enum Rating
         {
@@ -37,12 +37,16 @@ namespace Crowmask.Data
 
         public Subtype SubtypeId { get; set; }
 
-        public IEnumerable<SubmissionTag> Tags { get; set; }
+        public IEnumerable<SubmissionTag> Tags { get; set; } = new List<SubmissionTag>(0);
 
         public string Title { get; set; }
+
+        public DateTimeOffset FirstCachedAt { get; set; }
 
         public DateTimeOffset CacheRefreshAttemptedAt { get; set; }
 
         public DateTimeOffset CacheRefreshSucceededAt { get; set; }
+
+        public string Content => Description ?? "";
     }
 }

@@ -27,8 +27,8 @@ ActivityPub HTTP endpoints:
 - [ ] `/api/actor/followers`: contains a list of followers
 - [ ] `/api/actor/following`: an empty list
 - [ ] `/api/creates/{submitid}`: returns a `Create` activity for the post from the public outbox
-- [ ] `/api/activities/{id}`: returns the matching `OutboundActivity`
-- [ ] `/api/submissions/{submitid}`: Attempts cache refresh for the post, processes outbound activities, then returns the resulting object
+- [ ] `/api/activities/{guid}`: returns the matching `OutboundActivity`
+- [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, processes outbound activities, then returns the resulting object
 
 Accepted inbox activities:
 
@@ -44,23 +44,22 @@ Timed functions:
 
 Other functions:
 
-- [ ] Add Outbound Activities
+- [x] Add Outbound Activities
     * Group followers by inbox
     * For each inbox, add the appropriate `OutboundActivity`
-- [ ] Process Outbound Activities
+- [x] Process Outbound Activities
     * For each `OutboundActivity`:
         * Send the activity to the inbox
         * Mark as sent (no longer pending)
     * For each `PrivateAnnouncement`:
         * Send the activity to the inbox
         * Mark as sent (no longer pending)
-    * If a send fails, skip it and all other activities with the same inbox
-- [ ] Cache Refresh
+    * If a send fails, record the failure, and prioritize outgoing messages with fewer failures
+- [x] Cache Refresh
     * If the post is cached:
         * If the post is at least 24 hours old and the cache is less than an hour old, keep it
         * If a cache refresh was performed on this post within the last 5 minutes, keep it
     * Pull the post from Weasyl
-    * If the post was posted over 24 hours ago, backdate it
     * Update or delete our copy
     * Add outbound activities
 - [x] User Cache Refresh
@@ -70,6 +69,9 @@ Other functions:
     * Pull the user from Weasyl
     * Update or delete our copy
     * Add outbound activities
+
+Submissions/posts that are less than 24 hours old will show a creation date of
+when they were cached by Crowmask, not when they were created.
 
 Other tasks:
 
@@ -81,5 +83,5 @@ Other tasks:
 - [ ] Try out Entra auth for DB
 - [ ] Verify HTTP signatures in inbox
 - [x] Only insert JSON-LD @context at top level
-- [ ] Use an actual JSON-LD implementation for parsing
+- [x] Use an actual JSON-LD implementation for parsing
 - [ ] Webfinger implementation

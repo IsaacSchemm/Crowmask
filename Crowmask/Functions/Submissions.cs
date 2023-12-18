@@ -5,43 +5,30 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Crowmask.ActivityPub;
-using Crowmask.Data;
-using System;
+using Crowmask.Cache;
+using Crowmask.Remote;
 
 namespace Crowmask.Functions
 {
-    public static class Submissions
+    public class Submissions(CrowmaskCache cache, OutboundActivityProcessor outboundActivityProcessor)
     {
         [FunctionName("Submissions")]
-        public static async Task<IActionResult> Run(
+        public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "api/submissions/{submitid}")] HttpRequest req,
             int submitid,
             ILogger log)
         {
-            var submission = new Submission
-            {
-                Description = "This is the <b>description</b>",
-                FriendsOnly = false,
-                PostedAt = new DateTimeOffset(2023, 12, 9, 12, 0, 0, TimeSpan.Zero),
-                RatingId = Submission.Rating.General,
-                SubmitId = submitid,
-                SubtypeId = Submission.Subtype.Visual,
-                Tags = [
-                    new SubmissionTag { Tag = "tag5" },
-                    new SubmissionTag { Tag = "tag6" }
-                ],
-                Title = "The Title",
-                Media = [
-                    new SubmissionMedia { Url = "https://cdn.weasyl.com/~lizardsocks/submissions/2326525/c774c4f03f37127be0c8183a95509b343a4d55e8602a1f6a05936824914203db/lizardsocks-nervous-odri.png" }
-                ],
-                CacheRefreshAttemptedAt = DateTimeOffset.UtcNow.AddHours(-1),
-                CacheRefreshSucceededAt = DateTimeOffset.UtcNow.AddHours(-1)
-            };
+            var submission = await cache.GetSubmission(submitid);
 
-            var apObject = AP.AsObject(
-                Domain.AsNote(submission));
+            await outboundActivityProcessor.ProcessOutboundActivities();
 
-            return new JsonResult(apObject);
+            return submission == null
+                ? new NotFoundResult()
+                : new ContentResult
+                {
+                    Content = AP.SerializeWithContext(AP.AsObject(submission)),
+                    ContentType = "application/json"
+                };
         }
     }
 }

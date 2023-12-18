@@ -2,6 +2,7 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Data;
+using Crowmask.Remote;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,8 @@ namespace Crowmask
             if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
                 builder.Services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
 
-            builder.Services.AddScoped<CrowmaskCache, CrowmaskCache>();
+            builder.Services.AddScoped<CrowmaskCache>();
+            builder.Services.AddScoped<OutboundActivityProcessor>();
 
             builder.Services.AddScoped<WeasylClient>();
         }

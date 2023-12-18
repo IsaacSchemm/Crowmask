@@ -2,25 +2,22 @@
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
 using Crowmask.ActivityPub;
+using Crowmask.Data;
 using JsonLD.Core;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 
-namespace Crowmask
+namespace Crowmask.Remote
 {
     public static class Requests
     {
         private static readonly HttpClient _httpClient = new();
 
-        private record Actor(string inbox);
+        private record Actor(string Inbox);
 
         /// <summary>
         /// Fetches and returns an actor at a URL
@@ -52,13 +49,22 @@ namespace Crowmask
             return keyClient.GetCryptographyClient("crowmask-ap");
         }
 
-        public static async Task<HttpResponseMessage> SendAsync(string sender, string recipient, IDictionary<string, object> message)
+        public static async Task SendAsync(string recipient, IDictionary<string, object> message)
         {
-            var url = new Uri(recipient);
-
             var actor = await FetchActorAsync(recipient);
-            var fragment = actor.inbox.Replace($"https://{url.Host}", "");
-            var json = AP.SerializeWithContext(message);
+            var url = new Uri(actor.Inbox);
+            await SendAsync(url, AP.SerializeWithContext(message));
+        }
+
+        public static async Task SendAsync(OutboundActivity activity)
+        {
+            var url = new Uri(activity.Inbox);
+            await SendAsync(url, activity.JsonBody);
+        }
+
+        private static async Task SendAsync(Uri url, string json)
+        {
+            var fragment = url.AbsolutePath;
             var body = Encoding.UTF8.GetBytes(json);
             var digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
             var d = DateTime.UtcNow;
@@ -75,11 +81,11 @@ namespace Crowmask
             var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
             byte[] signature = signResult.Signature;
 
-            var req = new HttpRequestMessage(HttpMethod.Post, actor.inbox);
+            var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = d;
             req.Headers.Add("Digest", $"SHA-256={digest}");
-            req.Headers.Add("Signature", $"keyId=\"{sender}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
+            req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             req.Content = new ByteArrayContent(body);
@@ -88,8 +94,30 @@ namespace Crowmask
             var res = await _httpClient.SendAsync(req);
 
             res.EnsureSuccessStatusCode();
+        }
 
-            return res;
+        public static async Task ProcessOutboundActivities(CrowmaskDbContext context)
+        {
+            var activities = await context.OutboundActivities
+                .Where(a => !a.Sent)
+                .OrderBy(a => a.Failures)
+                .ThenBy(a => a.PublishedAt)
+                .Take(500)
+                .ToListAsync();
+
+            foreach (var activity in activities)
+            {
+                try
+                {
+                    await SendAsync(activity);
+                    activity.Sent = true;
+                }
+                catch (HttpRequestException)
+                {
+                    activity.Failures++;
+                }
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

@@ -27,11 +27,12 @@ namespace Crowmask.Data.Migrations
                 name: "OutboundActivities",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Inbox = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     JsonBody = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PublishedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                    PublishedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    Sent = table.Column<bool>(type: "bit", nullable: false),
+                    Failures = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -63,6 +64,7 @@ namespace Crowmask.Data.Migrations
                     RatingId = table.Column<int>(type: "int", nullable: false),
                     SubtypeId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FirstCachedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     CacheRefreshAttemptedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     CacheRefreshSucceededAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },

@@ -18,7 +18,9 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.ActivityPub", "Cro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Weasyl", "Crowmask.Weasyl\Crowmask.Weasyl.csproj", "{B190A0FA-55C7-498C-825F-E9DE73747984}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crowmask.Cache", "Crowmask.Cache\Crowmask.Cache.csproj", "{3743C8EB-CBC0-4783-A22D-078F0BA40110}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Cache", "Crowmask.Cache\Crowmask.Cache.csproj", "{3743C8EB-CBC0-4783-A22D-078F0BA40110}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crowmask.Remote", "Crowmask.Remote\Crowmask.Remote.csproj", "{9C998ED4-8782-4254-B993-43F6F06ACBEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +48,10 @@ Global
 		{3743C8EB-CBC0-4783-A22D-078F0BA40110}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3743C8EB-CBC0-4783-A22D-078F0BA40110}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3743C8EB-CBC0-4783-A22D-078F0BA40110}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C998ED4-8782-4254-B993-43F6F06ACBEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C998ED4-8782-4254-B993-43F6F06ACBEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C998ED4-8782-4254-B993-43F6F06ACBEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C998ED4-8782-4254-B993-43F6F06ACBEA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

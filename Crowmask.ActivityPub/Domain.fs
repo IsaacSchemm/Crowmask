@@ -27,7 +27,7 @@ module Domain =
         submitid: int
         content: string
         published: DateTimeOffset
-        attachment: Attachment list
+        attachments: Attachment list
         sensitivity: Sensitivity
     }
 
@@ -72,13 +72,12 @@ module Domain =
     let AsNote (submission: Submission) =
         {
             submitid = submission.SubmitId
-            content = String.concat " " [
-                submission.Description
-                for t in submission.Tags do
-                    $"#{WebUtility.HtmlEncode(t.Tag)}"
-            ]
-            published = submission.PostedAt
-            attachment = [
+            content = submission.Content
+            published =
+                if DateTimeOffset.UtcNow - submission.PostedAt < TimeSpan.FromHours(24)
+                then submission.FirstCachedAt
+                else submission.PostedAt
+            attachments = [
                 if submission.SubtypeId = Submission.Subtype.Visual then
                     for media in submission.Media do
                         Image {

@@ -6,7 +6,7 @@ namespace Crowmask.Data
 {
     public class OutboundActivity
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         public string Inbox { get; set; }
@@ -15,5 +15,9 @@ namespace Crowmask.Data
         public string JsonBody { get; set; }
 
         public DateTimeOffset PublishedAt { get; set; }
+
+        public bool Sent { get; set; }
+
+        public long Failures { get; set; }
     }
 }

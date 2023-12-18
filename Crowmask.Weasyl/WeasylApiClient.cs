@@ -42,6 +42,7 @@ namespace CrosspostSharp3.Weasyl
 
             using HttpResponseMessage resp = await _httpClient.GetAsync(
                 $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/gallery?{qs}");
+            resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadFromJsonAsync<WeasylGallery>()
                 ?? throw new Exception("Null response from API");
         }
@@ -50,6 +51,7 @@ namespace CrosspostSharp3.Weasyl
         {
             using HttpResponseMessage resp = await _httpClient.GetAsync(
                 $"https://www.weasyl.com/api/submissions/{submitid}/view");
+            resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadFromJsonAsync<WeasylSubmissionDetail>()
                 ?? throw new Exception("Null response from API");
         }
@@ -58,6 +60,7 @@ namespace CrosspostSharp3.Weasyl
         {
             using HttpResponseMessage resp = await _httpClient.GetAsync(
                 $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view");
+            resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadFromJsonAsync<WeasylUserProfile>()
                 ?? throw new Exception("Null response from API");
         }
@@ -66,6 +69,7 @@ namespace CrosspostSharp3.Weasyl
         {
             using HttpResponseMessage resp = await _httpClient.GetAsync(
                 $"https://www.weasyl.com/api/whoami");
+            resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadFromJsonAsync<WeasylUserBase>()
                 ?? throw new Exception("Null response from API");
         }

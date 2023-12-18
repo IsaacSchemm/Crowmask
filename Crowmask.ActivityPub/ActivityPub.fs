@@ -82,39 +82,75 @@ module AP =
         | Sensitive warning ->
             pair "summary" warning
             pair "sensitive" true
+        pair "attachment" [
+            for attachment in note.attachments do
+                match attachment with
+                | Image image ->
+                    let uri = new Uri(image.url)
+                    {|
+                        ``type`` = "Document"
+                        mediaType = "image/png" // TODO get type from Weasyl and cache it
+                        name = $"{image.content} (no additional description available)"
+                        url = image.url
+                    |}
+        ]
     ]
 
-    let AsActivity (activity: Activity) (cc: Recipient) = dict [
-        match activity with
-        | Create create ->
-            pair "type" "Create"
-            pair "id" $"https://{HOST}/api/creates/{create.note.submitid}"
-            pair "actor" ACTOR
-            pair "published" create.note.published
-            pair "object" (AsObject create.note)
-        | Update update ->
-            pair "type" "Update"
-            pair "id" $"https://{HOST}/api/updates/{System.Guid.NewGuid().ToString()}"
-            pair "actor" ACTOR
-            pair "published" update.time
-            pair "object" (AsObject update.note)
-        | Delete delete ->
-            pair "type" "Delete"
-            pair "id" $"https://{HOST}/api/activities/{System.Guid.NewGuid().ToString()}"
-            pair "actor" ACTOR
-            pair "published" delete.time
-            pair "object" $"https://{HOST}/api/submissions/{delete.submitid}"
-
-        pair "to" ["https://www.w3.org/ns/activitystreams#Public"]
-
-        match cc with
-        | Followers -> pair "cc" [$"{ACTOR}/followers"]
-        | ActorRecipient actor -> pair "cc" [actor]
+    let ObjectToCreate (guid: Guid) (note: Note) = dict [
+        pair "type" "Create"
+        pair "id" $"https://{HOST}/api/activities/{guid}"
+        pair "actor" ACTOR
+        pair "published" note.published
+        pair "object" (AsObject note)
     ]
 
-    let ReplaceCc (dictionary: IDictionary<string, obj>) (actor: string) = dict [
-        for pair in dictionary do
-            if pair.Key <> "cc" then
-                pair.Key, pair.Value
-        pair "cc" actor
+    let ObjectToUpdate (guid: Guid) (note: Note) = dict [
+        pair "type" "Update"
+        pair "id" $"https://{HOST}/api/activities/{guid}"
+        pair "actor" ACTOR
+        pair "published" DateTimeOffset.UtcNow
+        pair "object" (AsObject note)
     ]
+
+    let ObjectToDelete (guid: Guid) (submitid: int) = dict [
+        pair "type" "Update"
+        pair "id" $"https://{HOST}/api/activities/{guid}"
+        pair "actor" ACTOR
+        pair "published" DateTimeOffset.UtcNow
+        pair "object" $"https://{HOST}/api/submissions/{submitid}"
+    ]
+
+    //let AsActivity (activity: Activity) (cc: Recipient) = dict [
+    //    match activity with
+    //    | Create create ->
+    //        pair "type" "Create"
+    //        pair "id" $"https://{HOST}/api/creates/{create.note.submitid}"
+    //        pair "actor" ACTOR
+    //        pair "published" create.note.published
+    //        pair "object" (AsObject create.note)
+    //    | Update update ->
+    //        pair "type" "Update"
+    //        pair "id" $"https://{HOST}/api/updates/{System.Guid.NewGuid().ToString()}"
+    //        pair "actor" ACTOR
+    //        pair "published" update.time
+    //        pair "object" (AsObject update.note)
+    //    | Delete delete ->
+    //        pair "type" "Delete"
+    //        pair "id" $"https://{HOST}/api/activities/{System.Guid.NewGuid().ToString()}"
+    //        pair "actor" ACTOR
+    //        pair "published" delete.time
+    //        pair "object" $"https://{HOST}/api/submissions/{delete.submitid}"
+
+    //    pair "to" ["https://www.w3.org/ns/activitystreams#Public"]
+
+    //    match cc with
+    //    | Followers -> pair "cc" [$"{ACTOR}/followers"]
+    //    | ActorRecipient actor -> pair "cc" [actor]
+    //]
+
+    //let ReplaceCc (dictionary: IDictionary<string, obj>) (actor: string) = dict [
+    //    for pair in dictionary do
+    //        if pair.Key <> "cc" then
+    //            pair.Key, pair.Value
+    //    pair "cc" actor
+    //]
