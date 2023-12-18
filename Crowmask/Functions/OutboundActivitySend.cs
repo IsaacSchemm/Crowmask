@@ -8,7 +8,7 @@ namespace Crowmask.Functions
     public class OutboundActivitySend(OutboundActivityProcessor outboundActivityProcessor)
     {
         [FunctionName("OutboundActivitySend")]
-        public async Task Run([TimerTrigger("0 */1 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
         {
             await outboundActivityProcessor.ProcessOutboundActivities();
         }
