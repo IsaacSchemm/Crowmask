@@ -16,7 +16,7 @@ Internal objects:
 ActivityPub HTTP endpoints:
 
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
-- [ ] `/api/actor/inbox`: accepts `Follow`, `Undo` `Follow`, `Create`, and `Delete`
+- [x] `/api/actor/inbox`: accepts `Follow`, `Undo` `Follow`, and `Create`
 - [ ] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
 - [ ] `/api/actor/following`: an empty list
@@ -26,7 +26,7 @@ ActivityPub HTTP endpoints:
 
 Accepted inbox activities:
 
-- [ ] `Follow`: adds the actor to the list of followers and adds an `Accept` to `OutboundActivity`
+- [x] `Follow`: adds the actor to the list of followers and adds an `Accept` to `OutboundActivity`
 - [ ] `Undo` `Follow`: removes the actor from the list of followers
 - [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateAnnouncement` for the Admin Actor
 
@@ -76,13 +76,21 @@ Other tasks:
       consumable by microblog.pub (posts should be visible in the Inbox tab)
 - [x] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URL"
 - [ ] Try out Entra auth for DB
-- [ ] Verify HTTP signatures in inbox
+- [ ] Implement shared inbox support
+- [ ] Verify HTTP signatures in inbox (this may not happen, I was going to copy this from bird.makeup but I don't think they have it implemented and working)
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
 - [ ] Webfinger implementation
+- [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
+- [ ] Allow certain endpoints to accept HTML instead of just redirecting to Weasyl? (I'll think about it)
+- [ ] Dedupe follow requests?
+- [ ] Periodically check actors to make sure they are still following?
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
 was quickly modified to support the strongly typed nature of .NET and the specificity of this app.
 Still, having a simple, working ActivityPub implementation in a language I was able to understand (if
 not compile) was incredibly helpful.
+
+See also [bird.makeup](https://sr.ht/~cloutier/bird.makeup/), which is another
+ActivityPub bridge written in C# / .NET.

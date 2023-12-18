@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
@@ -13,14 +14,25 @@ namespace Crowmask.Functions
     {
         [FunctionName("Actor")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "api/actor")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor")] HttpRequest req,
             ILogger log)
         {
-            var person = await crowmaskCache.GetUser();
+            try
+            {
+                var person = await crowmaskCache.GetUser();
 
-            string json = AP.SerializeWithContext(AP.PersonToObject(person, key));
+                string json = AP.SerializeWithContext(AP.PersonToObject(person, key));
 
-            return new JsonResult(json);
+                return new JsonResult(json);
+            }
+            catch (Exception ex) when (DateTime.UtcNow < new DateTime(2023, 12, 19))
+            {
+                return new ContentResult
+                {
+                    Content = ex.ToString(),
+                    ContentType = "text/plain"
+                };
+            }
         }
     }
 }

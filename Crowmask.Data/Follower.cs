@@ -8,6 +8,8 @@ namespace Crowmask.Data
     {
         public long Id { get; set; }
 
+        public string FollowActivityId { get; set; }
+
         [Required]
         public string Inbox { get; set; }
 

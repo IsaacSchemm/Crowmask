@@ -12,5 +12,7 @@ namespace Crowmask.Data
         public string AnnouncedObjectId { get; set; }
 
         public DateTimeOffset PublishedAt { get; set; }
+
+        public bool Sent { get; set; }
     }
 }

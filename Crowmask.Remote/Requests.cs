@@ -4,10 +4,9 @@ using Azure.Security.KeyVault.Keys.Cryptography;
 using Crowmask.ActivityPub;
 using Crowmask.Data;
 using JsonLD.Core;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.FSharp.Collections;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -17,28 +16,39 @@ namespace Crowmask.Remote
     {
         private static readonly HttpClient _httpClient = new();
 
-        private record Actor(string Inbox);
+        public record PublicKey(string Id, string Pem);
+
+        public record Actor(string Inbox, FSharpSet<PublicKey> PublicKeys);
 
         /// <summary>
         /// Fetches and returns an actor at a URL
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        private static async Task<Actor> FetchActorAsync(string url)
+        public static async Task<Actor> FetchActorAsync(string url)
         {
-            var req = new HttpRequestMessage(HttpMethod.Get, url);
-            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
-
-            var res = await _httpClient.SendAsync(req);
-
-            res.EnsureSuccessStatusCode();
+            var res = await GetAsync(new Uri(url));
 
             string json = await res.Content.ReadAsStringAsync();
 
             JObject document = JObject.Parse(json);
-            string inbox = JsonLdProcessor.Expand(document)[0]["http://www.w3.org/ns/ldp#inbox"][0]["@id"].Value<string>();
+            JArray expansion = JsonLdProcessor.Expand(document);
 
-            return new Actor(inbox);
+            string inbox = expansion[0]["http://www.w3.org/ns/ldp#inbox"][0]["@id"].Value<string>();
+
+            IEnumerable<PublicKey> getPublicKeys()
+            {
+                foreach (var k in expansion[0]["https://w3id.org/security#publicKey"])
+                {
+                    yield return new PublicKey(
+                        k["@id"].Value<string>(),
+                        k["https://w3id.org/security#publicKeyPem"][0]["@value"].Value<string>());
+                }
+            }
+
+            return new Actor(
+                inbox,
+                SetModule.OfSeq(getPublicKeys()));
         }
 
         private static CryptographyClient GetCryptographyClient()
@@ -53,47 +63,82 @@ namespace Crowmask.Remote
         {
             var actor = await FetchActorAsync(recipient);
             var url = new Uri(actor.Inbox);
-            await SendAsync(url, AP.SerializeWithContext(message));
+            await PostAsync(url, AP.SerializeWithContext(message));
         }
 
         public static async Task SendAsync(OutboundActivity activity)
         {
             var url = new Uri(activity.Inbox);
-            await SendAsync(url, activity.JsonBody);
+            await PostAsync(url, activity.JsonBody);
         }
 
-        private static async Task SendAsync(Uri url, string json)
+        private static async Task<HttpResponseMessage> PostAsync(Uri url, string json)
         {
-            var fragment = url.AbsolutePath;
-            var body = Encoding.UTF8.GetBytes(json);
-            var digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
-            var d = DateTime.UtcNow;
+            string fragment = url.AbsolutePath;
+            byte[] body = Encoding.UTF8.GetBytes(json);
+            string digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
+
+            var req = new HttpRequestMessage(HttpMethod.Post, url);
+            req.Headers.Host = url.Host;
+            req.Headers.Date = DateTime.UtcNow;
+            req.Headers.Add("Digest", $"SHA-256={digest}");
+            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
 
             string ds = string.Join("\n", [
                 $"(request-target): post {fragment}",
-                $"host: {url.Host}",
-                $"date: {d:r}",
+                $"host: {req.Headers.Host}",
+                $"date: {req.Headers.Date:r}",
                 $"digest: SHA-256={digest}"
             ]);
 
-            var data = Encoding.UTF8.GetBytes(ds);
+            byte[] data = Encoding.UTF8.GetBytes(ds);
 
             var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
             byte[] signature = signResult.Signature;
 
-            var req = new HttpRequestMessage(HttpMethod.Post, url);
-            req.Headers.Host = url.Host;
-            req.Headers.Date = d;
-            req.Headers.Add("Digest", $"SHA-256={digest}");
             req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
-            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
 
             req.Content = new ByteArrayContent(body);
-            req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/activity+json");
 
             var res = await _httpClient.SendAsync(req);
 
             res.EnsureSuccessStatusCode();
+
+            return res;
+        }
+
+        private static async Task<HttpResponseMessage> GetAsync(Uri url)
+        {
+            string fragment = url.AbsolutePath;
+
+            var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.Host = url.Host;
+            req.Headers.Date = DateTime.UtcNow;
+            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
+
+            string ds = string.Join("\n", [
+                $"(request-target): post {fragment}",
+                $"host: {req.Headers.Host}",
+                $"date: {req.Headers.Date:r}"
+            ]);
+
+            byte[] data = Encoding.UTF8.GetBytes(ds);
+
+            var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
+            byte[] signature = signResult.Signature;
+
+            req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
+
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
+
+            var res = await _httpClient.SendAsync(req);
+
+            res.EnsureSuccessStatusCode();
+
+            return res;
         }
     }
 }

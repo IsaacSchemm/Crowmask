@@ -120,37 +120,9 @@ module AP =
         pair "object" $"https://{HOST}/api/submissions/{submitid}"
     ]
 
-    //let AsActivity (activity: Activity) (cc: Recipient) = dict [
-    //    match activity with
-    //    | Create create ->
-    //        pair "type" "Create"
-    //        pair "id" $"https://{HOST}/api/creates/{create.note.submitid}"
-    //        pair "actor" ACTOR
-    //        pair "published" create.note.published
-    //        pair "object" (AsObject create.note)
-    //    | Update update ->
-    //        pair "type" "Update"
-    //        pair "id" $"https://{HOST}/api/updates/{System.Guid.NewGuid().ToString()}"
-    //        pair "actor" ACTOR
-    //        pair "published" update.time
-    //        pair "object" (AsObject update.note)
-    //    | Delete delete ->
-    //        pair "type" "Delete"
-    //        pair "id" $"https://{HOST}/api/activities/{System.Guid.NewGuid().ToString()}"
-    //        pair "actor" ACTOR
-    //        pair "published" delete.time
-    //        pair "object" $"https://{HOST}/api/submissions/{delete.submitid}"
-
-    //    pair "to" ["https://www.w3.org/ns/activitystreams#Public"]
-
-    //    match cc with
-    //    | Followers -> pair "cc" [$"{ACTOR}/followers"]
-    //    | ActorRecipient actor -> pair "cc" [actor]
-    //]
-
-    //let ReplaceCc (dictionary: IDictionary<string, obj>) (actor: string) = dict [
-    //    for pair in dictionary do
-    //        if pair.Key <> "cc" then
-    //            pair.Key, pair.Value
-    //    pair "cc" actor
-    //]
+    let AcceptFollow (guid: Guid) (followId: string) = dict [
+        pair "type" "Accept"
+        pair "id" $"https://{HOST}/api/activities/{guid}"
+        pair "actor" ACTOR
+        pair "object" followId
+    ]
