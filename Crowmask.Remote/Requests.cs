@@ -18,7 +18,7 @@ namespace Crowmask.Remote
 
         public record PublicKey(string Id, string Pem);
 
-        public record Actor(string Inbox, FSharpSet<PublicKey> PublicKeys);
+        public record Actor(string Inbox, string? SharedInbox, FSharpSet<PublicKey> PublicKeys);
 
         /// <summary>
         /// Fetches and returns an actor at a URL
@@ -35,6 +35,15 @@ namespace Crowmask.Remote
             JArray expansion = JsonLdProcessor.Expand(document);
 
             string inbox = expansion[0]["http://www.w3.org/ns/ldp#inbox"][0]["@id"].Value<string>();
+            string? sharedInbox = null;
+
+            foreach (var endpoint in expansion[0]["https://www.w3.org/ns/activitystreams#endpoints"])
+            {
+                foreach (var si in endpoint["https://www.w3.org/ns/activitystreams#sharedInbox"])
+                {
+                    sharedInbox = si["@id"].Value<string>();
+                }
+            }
 
             IEnumerable<PublicKey> getPublicKeys()
             {
@@ -48,6 +57,7 @@ namespace Crowmask.Remote
 
             return new Actor(
                 inbox,
+                sharedInbox,
                 SetModule.OfSeq(getPublicKeys()));
         }
 

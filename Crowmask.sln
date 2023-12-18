@@ -20,7 +20,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Weasyl", "Crowmask
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Cache", "Crowmask.Cache\Crowmask.Cache.csproj", "{3743C8EB-CBC0-4783-A22D-078F0BA40110}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crowmask.Remote", "Crowmask.Remote\Crowmask.Remote.csproj", "{9C998ED4-8782-4254-B993-43F6F06ACBEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Remote", "Crowmask.Remote\Crowmask.Remote.csproj", "{9C998ED4-8782-4254-B993-43F6F06ACBEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

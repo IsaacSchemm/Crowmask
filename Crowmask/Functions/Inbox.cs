@@ -37,6 +37,14 @@ namespace Crowmask.Functions
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
                 string id = expansion[0]["@id"].Value<string>();
+
+                bool exists = await context.Followers
+                    .Where(f => f.FollowId == id)
+                    .AnyAsync();
+
+                if (exists)
+                    return new StatusCodeResult(204);
+
                 string actor = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
 
                 var actorObj = await Requests.FetchActorAsync(actor);
@@ -45,8 +53,10 @@ namespace Crowmask.Functions
 
                 context.Followers.Add(new Follower
                 {
-                    FollowActivityId = id,
-                    Inbox = actorObj.Inbox
+                    ActorId = actor,
+                    FollowId = id,
+                    Inbox = actorObj.Inbox,
+                    SharedInbox = actorObj.SharedInbox
                 });
 
                 context.OutboundActivities.Add(new OutboundActivity
@@ -64,20 +74,17 @@ namespace Crowmask.Functions
             {
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                var follower = await context.Followers
-                    .Where(f => f.FollowActivityId == objectId)
-                    .SingleOrDefaultAsync();
+                var followers = await context.Followers
+                    .Where(f => f.FollowId == objectId)
+                    .ToListAsync();
 
-                if (follower != null)
+                foreach (var follower in followers)
                 {
                     context.Followers.Remove(follower);
                     await context.SaveChangesAsync();
-                    return new StatusCodeResult(202);
                 }
-                else
-                {
-                    return new StatusCodeResult(400);
-                }
+
+                return new StatusCodeResult(202);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
@@ -96,9 +103,12 @@ namespace Crowmask.Functions
                         await context.SaveChangesAsync();
                     }
                 }
+                return new StatusCodeResult(204);
             }
-
-            return new StatusCodeResult(204);
+            else
+            {
+                return new StatusCodeResult(204);
+            }
         }
     }
 }

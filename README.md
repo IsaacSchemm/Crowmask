@@ -27,7 +27,7 @@ ActivityPub HTTP endpoints:
 Accepted inbox activities:
 
 - [x] `Follow`: adds the actor to the list of followers and adds an `Accept` to `OutboundActivity`
-- [ ] `Undo` `Follow`: removes the actor from the list of followers
+- [x] `Undo` `Follow`: removes the actor from the list of followers
 - [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateAnnouncement` for the Admin Actor
 
 Timed functions:
@@ -76,14 +76,15 @@ Other tasks:
       consumable by microblog.pub (posts should be visible in the Inbox tab)
 - [x] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URL"
 - [ ] Try out Entra auth for DB
-- [ ] Implement shared inbox support
-- [ ] Verify HTTP signatures in inbox (this may not happen, I was going to copy this from bird.makeup but I don't think they have it implemented and working)
+- [x] Implement shared inbox support
+- [ ] Verify HTTP signatures in inbox?
+- [ ] Verify incoming replies by ensuring they are real and public
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
 - [ ] Webfinger implementation
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [ ] Allow certain endpoints to accept HTML instead of just redirecting to Weasyl? (I'll think about it)
-- [ ] Dedupe follow requests?
+- [x] Dedupe follow requests?
 - [ ] Periodically check actors to make sure they are still following?
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
