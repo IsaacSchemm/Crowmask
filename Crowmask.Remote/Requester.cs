@@ -8,10 +8,8 @@ using System.Text;
 
 namespace Crowmask.Remote
 {
-    public class Requester(IKeyProvider keyProvider)
+    public class Requester(IHttpClientFactory httpClientFactory, IKeyProvider keyProvider)
     {
-        private static readonly HttpClient _httpClient = new();
-
         public record Actor(string Inbox, string? SharedInbox);
 
         /// <summary>
@@ -46,13 +44,13 @@ namespace Crowmask.Remote
         {
             var actor = await FetchActorAsync(recipient);
             var url = new Uri(actor.Inbox);
-            await PostAsync(url, AP.SerializeWithContext(message));
+            using var _ = await PostAsync(url, AP.SerializeWithContext(message));
         }
 
         public async Task SendAsync(OutboundActivity activity)
         {
             var url = new Uri(activity.Inbox);
-            await PostAsync(url, activity.JsonBody);
+            using var _ = await PostAsync(url, activity.JsonBody);
         }
 
         private async Task<HttpResponseMessage> SendAsync(HttpMethod httpMethod, Uri url, string? jsonBody = null)
@@ -102,7 +100,8 @@ namespace Crowmask.Remote
                 req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/activity+json");
             }
 
-            var res = await _httpClient.SendAsync(req);
+            using var httpClient = httpClientFactory.CreateClient();
+            var res = await httpClient.SendAsync(req);
 
             res.EnsureSuccessStatusCode();
 

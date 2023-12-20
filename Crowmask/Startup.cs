@@ -8,7 +8,6 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Threading.Tasks;
 
 [assembly: FunctionsStartup(typeof(Crowmask.Startup))]
 
@@ -32,6 +31,8 @@ namespace Crowmask
 
             if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
                 builder.Services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
+
+            builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<CrowmaskCache>();
             builder.Services.AddScoped<OutboundActivityProcessor>();
