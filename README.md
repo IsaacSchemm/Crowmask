@@ -74,7 +74,7 @@ Other tasks:
 - [x] Create an application that can send Create, Update, and Delete activities and host Actor and Note URLs,
       using [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) as a guide,
       consumable by microblog.pub (posts should be visible in the Inbox tab)
-- [x] Figure out local and Azure configuration storage for the SQL database connection, the Weasyl API key, and the "admin actor URL"
+- [x] Figure out local and Azure configuration storage for the database connection, the Weasyl API key, and the "admin actor URL"
 - [ ] Try out Entra auth for DB
 - [x] Implement shared inbox support
 - [ ] Verify HTTP signatures in inbox?

@@ -4,7 +4,7 @@ namespace Crowmask.Data
 {
     public class SubmissionTag
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         public string Tag { get; set; } = "";

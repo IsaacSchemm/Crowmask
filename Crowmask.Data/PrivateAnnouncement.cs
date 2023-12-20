@@ -6,7 +6,7 @@ namespace Crowmask.Data
 {
     public class PrivateAnnouncement
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         public string AnnouncedObjectId { get; set; }

@@ -6,7 +6,7 @@ namespace Crowmask.Data
 {
     public class Follower
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
 
         public string ActorId { get; set; }
 

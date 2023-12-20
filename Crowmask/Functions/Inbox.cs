@@ -53,6 +53,7 @@ namespace Crowmask.Functions
 
                 context.Followers.Add(new Follower
                 {
+                    Id = Guid.NewGuid(),
                     ActorId = actor,
                     FollowId = id,
                     Inbox = actorObj.Inbox,
@@ -61,6 +62,7 @@ namespace Crowmask.Functions
 
                 context.OutboundActivities.Add(new OutboundActivity
                 {
+                    Id = Guid.NewGuid(),
                     ExternalId = guid,
                     Inbox = actorObj.Inbox,
                     JsonBody = AP.SerializeWithContext(AP.AcceptFollow(guid, id)),
@@ -97,6 +99,7 @@ namespace Crowmask.Functions
                     {
                         context.PrivateAnnouncements.Add(new PrivateAnnouncement
                         {
+                            Id = Guid.NewGuid(),
                             AnnouncedObjectId = inReplyToId,
                             PublishedAt = DateTimeOffset.UtcNow
                         });

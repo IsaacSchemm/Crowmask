@@ -7,32 +7,38 @@ namespace Crowmask.Remote
     {
         private async IAsyncEnumerable<OutboundActivity> GetOutboundActivities()
         {
-            long minId = 0;
+            HashSet<Guid> retrieved = [];
+            DateTimeOffset startAt = DateTimeOffset.MinValue;
 
             while (true)
             {
                 var activities = await context.OutboundActivities
-                    .Where(a => a.Id >= minId)
+                    .Where(a => a.StoredAt >= startAt)
                     .Where(a => !a.Sent)
-                    .OrderBy(a => a.Id)
+                    .OrderBy(a => a.StoredAt)
                     .Take(100)
                     .ToListAsync();
 
                 foreach (var a in activities)
+                {
+                    if (retrieved.Contains(a.Id))
+                        continue;
+
+                    retrieved.Add(a.Id);
+
                     yield return a;
+
+                    startAt = a.StoredAt;
+                }
 
                 if (activities.Count == 0)
                     break;
-
-                minId = activities
-                    .Select(a => a.Id)
-                    .Max() + 1;
             }
         }
 
         public async Task ProcessOutboundActivities()
         {
-            HashSet<string> inboxesToSkip = new();
+            HashSet<string> inboxesToSkip = [];
 
             await foreach (var activity in GetOutboundActivities())
             {

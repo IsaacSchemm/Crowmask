@@ -6,7 +6,7 @@ namespace Crowmask.Data
 {
     public class UserLink
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         public string Site { get; set; }

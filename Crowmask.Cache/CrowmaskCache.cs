@@ -3,7 +3,6 @@ using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace Crowmask.Cache
 {
@@ -64,6 +63,7 @@ namespace Crowmask.Cache
                 cachedSubmission.Media = weasylSubmission.media.submission
                     .Select(s => new SubmissionMedia
                     {
+                        Id = Guid.NewGuid(),
                         Url = s.url
                     })
                     .ToList();
@@ -86,6 +86,7 @@ namespace Crowmask.Cache
                 cachedSubmission.Tags = weasylSubmission.tags
                     .Select(t => new SubmissionTag
                     {
+                        Id = Guid.NewGuid(),
                         Tag = t
                     })
                     .ToList();
@@ -104,6 +105,7 @@ namespace Crowmask.Cache
                         Guid guid = Guid.NewGuid();
                         _context.OutboundActivities.Add(new OutboundActivity
                         {
+                            Id = Guid.NewGuid(),
                             ExternalId = guid,
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(
@@ -134,6 +136,7 @@ namespace Crowmask.Cache
                         Guid guid = Guid.NewGuid();
                         _context.OutboundActivities.Add(new OutboundActivity
                         {
+                            Id = Guid.NewGuid(),
                             ExternalId = guid,
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(AP.ObjectToDelete(guid, cachedSubmission.SubmitId)),
@@ -195,6 +198,7 @@ namespace Crowmask.Cache
             cachedUser.Avatars = weasylUser.media.avatar
                 .Select(a => new UserAvatar
                 {
+                    Id = Guid.NewGuid(),
                     Url = a.url,
                     MediaId = a.mediaid
                 })
@@ -211,6 +215,7 @@ namespace Crowmask.Cache
                     {
                         yield return new UserLink
                         {
+                            Id = Guid.NewGuid(),
                             Site = pair.Key,
                             UsernameOrUrl = value
                         };
@@ -230,6 +235,7 @@ namespace Crowmask.Cache
                 {
                     _context.OutboundActivities.Add(new OutboundActivity
                     {
+                        Id = Guid.NewGuid(),
                         Inbox = inbox.Key,
                         JsonBody = AP.SerializeWithContext(AP.PersonToUpdate(newUser, _publicKey)),
                         StoredAt = DateTimeOffset.UtcNow

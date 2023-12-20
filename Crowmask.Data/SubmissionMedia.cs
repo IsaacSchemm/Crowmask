@@ -4,7 +4,7 @@ namespace Crowmask.Data
 {
     public class SubmissionMedia
     {
-        public long Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         public string Url { get; set; } = "";
