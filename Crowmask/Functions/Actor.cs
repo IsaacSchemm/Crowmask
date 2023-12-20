@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Actor(CrowmaskCache crowmaskCache, IPublicKey key)
+    public class Actor(CrowmaskCache crowmaskCache, IPublicKeyProvider keyProvider)
     {
         [FunctionName("Actor")]
         public async Task<IActionResult> Run(
@@ -17,6 +17,8 @@ namespace Crowmask.Functions
             ILogger log)
         {
             var person = await crowmaskCache.GetUser();
+
+            var key = await keyProvider.GetPublicKeyAsync();
 
             string json = AP.SerializeWithContext(AP.PersonToObject(person, key));
 

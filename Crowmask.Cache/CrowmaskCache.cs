@@ -9,13 +9,13 @@ namespace Crowmask.Cache
     public class CrowmaskCache
     {
         private readonly CrowmaskDbContext _context;
-        public readonly IPublicKey _publicKey;
+        public readonly IPublicKeyProvider _publicKeyProvider;
         private readonly WeasylClient _weasylClient;
 
-        public CrowmaskCache(CrowmaskDbContext context, IPublicKey publicKey, IWeasylApiKeyProvider apiKeyProvider)
+        public CrowmaskCache(CrowmaskDbContext context, IPublicKeyProvider publicKeyProvider, IWeasylApiKeyProvider apiKeyProvider)
         {
             _context = context;
-            _publicKey = publicKey;
+            _publicKeyProvider = publicKeyProvider;
             _weasylClient = new WeasylClient(apiKeyProvider);
         }
 
@@ -228,6 +228,8 @@ namespace Crowmask.Cache
 
             if (!oldUser.Equals(newUser))
             {
+                var key = await _publicKeyProvider.GetPublicKeyAsync();
+
                 var followers = await _context.Followers.ToListAsync();
 
                 var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
@@ -237,7 +239,7 @@ namespace Crowmask.Cache
                     {
                         Id = Guid.NewGuid(),
                         Inbox = inbox.Key,
-                        JsonBody = AP.SerializeWithContext(AP.PersonToUpdate(newUser, _publicKey)),
+                        JsonBody = AP.SerializeWithContext(AP.PersonToUpdate(newUser, key)),
                         StoredAt = DateTimeOffset.UtcNow
                     });
                 }
