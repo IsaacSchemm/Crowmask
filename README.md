@@ -77,7 +77,7 @@ Other tasks:
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
 - [ ] Allow the hostname to be configurable
-- [ ] Webfinger implementation
+- [x] Webfinger implementation
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [ ] Dedupe follow requests by actor (only honor most recent Follow)
 - [ ] Implement a second actor
