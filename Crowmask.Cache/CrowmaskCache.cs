@@ -12,6 +12,8 @@ namespace Crowmask.Cache
         public readonly IKeyProvider _keyProvider;
         private readonly WeasylClient _weasylClient;
 
+        public const int WEASYL_MIRROR_ACTOR = 1;
+
         public CrowmaskCache(CrowmaskDbContext context, IKeyProvider keyProvider, IWeasylApiKeyProvider apiKeyProvider)
         {
             _context = context;
@@ -159,14 +161,10 @@ namespace Crowmask.Cache
 
         public async Task<Domain.Person> GetUser()
         {
-            var whoami = await _weasylClient.WhoamiAsync();
-
-            var weasylUser = await _weasylClient.GetUserAsync(whoami.login);
-
             var cachedUser = await _context.Users
                 .Include(u => u.Avatars)
                 .Include(u => u.Links)
-                .Where(u => u.UserId == whoami.userid)
+                .Where(u => u.UserId == WEASYL_MIRROR_ACTOR)
                 .SingleOrDefaultAsync();
 
             if (cachedUser != null)
@@ -180,11 +178,16 @@ namespace Crowmask.Cache
                 cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await _context.SaveChangesAsync();
             }
-            else
+
+            var whoami = await _weasylClient.WhoamiAsync();
+
+            var weasylUser = await _weasylClient.GetUserAsync(whoami.login);
+
+            if (cachedUser == null)
             {
                 cachedUser = new User
                 {
-                    UserId = whoami.userid
+                    UserId = WEASYL_MIRROR_ACTOR
                 };
                 _context.Users.Add(cachedUser);
             }
