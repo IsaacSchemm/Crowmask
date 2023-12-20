@@ -89,18 +89,14 @@ namespace Crowmask.Functions
             {
                 string id = expansion[0]["@id"].Value<string>();
 
+                // TODO get object by ID from original server
+
                 foreach (var inReplyTo in expansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
                     string inReplyToId = inReplyTo["@id"].Value<string>();
                     if (inReplyToId.StartsWith(AP.HOST))
                     {
-                        context.PrivateAnnouncements.Add(new PrivateAnnouncement
-                        {
-                            Id = Guid.NewGuid(),
-                            AnnouncedObjectId = inReplyToId,
-                            PublishedAt = DateTimeOffset.UtcNow
-                        });
-                        await context.SaveChangesAsync();
+                        // TODO boost with secondary actor
                     }
                 }
                 return new StatusCodeResult(204);

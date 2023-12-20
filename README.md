@@ -1,6 +1,6 @@
 ﻿# Crowmask 🐦‍⬛🎭
 
-**Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented using Azure Functions.
+**Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented using Azure Functions and Azure Cosmos DB.
 
 Internal objects:
 
@@ -10,13 +10,12 @@ Internal objects:
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
-- [x] `PrivateAnnouncement`: a list of `Announce` activities sent to particular actors or instances
 - [x] `OutboundActivity`: a list of `Accept`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
 ActivityPub HTTP endpoints:
 
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
-- [x] `/api/actor/inbox`: accepts `Follow`, `Undo` `Follow`, and `Create`
+- [x] `/api/actor/inbox`: accepts `Follow`, `Undo` for `Follow`, and `Create`
 - [x] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
 - [ ] `/api/actor/followers`: contains a list of followers
 - [ ] `/api/actor/following`: an empty list
@@ -28,7 +27,6 @@ Accepted inbox activities:
 
 - [x] `Follow`: adds the actor to the list of followers and adds an `Accept` to `OutboundActivity`
 - [x] `Undo` `Follow`: removes the actor from the list of followers
-- [ ] `Create`: if the post is in reply to this actor's post, add a `PrivateAnnouncement` for the Admin Actor
 
 Timed functions:
 
@@ -76,14 +74,15 @@ Other tasks:
       consumable by microblog.pub (posts should be visible in the Inbox tab)
 - [x] Figure out local and Azure configuration storage for the database connection, the Weasyl API key, and the "admin actor URL"
 - [x] Implement shared inbox support
-- [ ] Verify incoming replies by ensuring they are real and public
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
+- [ ] Allow the hostname to be configurable
 - [ ] Webfinger implementation
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
-- [ ] Allow certain endpoints to accept HTML instead of just redirecting to Weasyl? (I'll think about it)
-- [x] Dedupe follow requests?
-- [ ] Periodically check actors to make sure they are still following?
+- [ ] Dedupe follow requests by actor (only honor most recent Follow)
+- [ ] Implement a second actor
+- [ ] Use the second actor to boost any reply that comes in to one of the first actor's posts
+- [ ] Add HTML endpoints
 
 Potential future improvements:
 
@@ -98,3 +97,20 @@ not compile) was incredibly helpful.
 
 See also [bird.makeup](https://sr.ht/~cloutier/bird.makeup/), which is another
 ActivityPub bridge written in C# / .NET.
+
+Example `local.settings.json` (default settings omitted):
+
+    {
+      "Values": {
+        "CosmosDBConnectionString": "AccountEndpoint=...;AccountKey=...;",
+        "WeasylApiKey": "..."
+      }
+    }
+
+For Cosmos DB, you will need to create the container in Data Explorer:
+
+* Database ID: `Crowmask`
+* Container ID: `CrowmaskDbContext`
+* Partition key: `__partitionKey`
+
+The app should work with an SQL Server backend instead if you want to go that route.
