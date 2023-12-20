@@ -9,7 +9,7 @@ type Recipient = Followers | ActorRecipient of string
 module AP =
     open Domain
 
-    let HOST = "crowmask20231213.azurewebsites.net"
+    let HOST = "crowmask20231219.azurewebsites.net"
     let ACTOR = $"https://{HOST}/api/actor"
 
     type Object = IDictionary<string, obj>
