@@ -32,8 +32,8 @@ module AP =
         pair "type" "Person"
         pair "inbox" $"{ACTOR}/inbox"
         pair "outbox" $"{ACTOR}/outbox"
-        pair "followers" $"{ACTOR}/followers"
-        pair "following" $"{ACTOR}/following"
+        //pair "followers" $"{ACTOR}/followers"
+        //pair "following" $"{ACTOR}/following"
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
         pair "summary" person.summary
@@ -70,11 +70,16 @@ module AP =
     ]
 
     let AsObject (note: Note) = dict [
+        let backdate =
+            note.first_cached - note.first_upstream > TimeSpan.FromHours(24)
+        let effective_date =
+            if backdate then note.first_upstream else note.first_cached
+
         pair "id" $"https://{HOST}/api/submissions/{note.submitid}"
         pair "type" "Note"
         pair "attributedTo" ACTOR
         pair "content" note.content
-        pair "published" note.published
+        pair "published" effective_date
         pair "url" note.url
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" $"{ACTOR}/followers"
@@ -100,7 +105,7 @@ module AP =
         pair "type" "Create"
         pair "id" $"https://{HOST}/api/activities/{guid}"
         pair "actor" ACTOR
-        pair "published" note.published
+        pair "published" note.first_cached
         pair "object" (AsObject note)
     ]
 
@@ -125,4 +130,17 @@ module AP =
         pair "id" $"https://{HOST}/api/activities/{guid}"
         pair "actor" ACTOR
         pair "object" followId
+    ]
+
+    let AsOutbox (notes: IEnumerable<Note>) = dict [
+        let note_list =
+            notes
+            |> Seq.sortByDescending (fun n -> n.first_cached)
+            |> Seq.map AsObject
+            |> Seq.toList
+
+        pair "id" $"{ACTOR}/outbox"
+        pair "type" "OrderedCollection"
+        pair "totalItems" note_list.Length
+        pair "orderedItems" note_list
     ]

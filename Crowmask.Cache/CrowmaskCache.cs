@@ -159,6 +159,46 @@ namespace Crowmask.Cache
             }
         }
 
+        public async IAsyncEnumerable<Domain.Note> GetSubmissionsAsync(int max)
+        {
+            var mostRecent = await _context.Submissions
+                .OrderByDescending(s => s.FirstCachedAt)
+                .Select(s => s.SubmitId)
+                .Take(max)
+                .ToListAsync();
+
+            foreach (int submitId in mostRecent)
+            {
+                var note = await GetSubmission(submitId);
+                if (note != null)
+                    yield return note;
+            }
+
+            //var whoami = await _weasylClient.WhoamiAsync();
+
+            //int? nextid = null;
+
+            //while (true)
+            //{
+            //    var gallery = await _weasylClient.GetUserGalleryAsync(whoami.login, new WeasylClient.GalleryRequestOptions
+            //    {
+            //        nextid = nextid
+            //    });
+
+            //    if (!gallery.submissions.Any())
+            //        yield break;
+
+            //    foreach (var submission in gallery.submissions)
+            //    {
+            //        var note = await GetSubmission(submission.submitid);
+            //        if (note != null)
+            //            yield return note;
+            //    }
+
+            //    nextid = gallery.nextid;
+            //}
+        }
+
         public async Task<Domain.Person> GetUser()
         {
             var cachedUser = await _context.Users

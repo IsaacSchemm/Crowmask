@@ -27,7 +27,8 @@ module Domain =
         submitid: int
         content: string
         url: string
-        published: DateTimeOffset
+        first_upstream: DateTimeOffset
+        first_cached: DateTimeOffset
         attachments: Attachment list
         sensitivity: Sensitivity
     }
@@ -75,10 +76,8 @@ module Domain =
             submitid = submission.SubmitId
             content = submission.Content
             url = submission.Url
-            published =
-                if DateTimeOffset.UtcNow - submission.PostedAt < TimeSpan.FromHours(24)
-                then submission.FirstCachedAt
-                else submission.PostedAt
+            first_upstream = submission.PostedAt
+            first_cached = submission.FirstCachedAt
             attachments = [
                 if submission.SubtypeId = Submission.Subtype.Visual then
                     for media in submission.Media do
