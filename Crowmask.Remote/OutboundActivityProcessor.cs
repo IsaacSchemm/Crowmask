@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Remote
 {
-    public class OutboundActivityProcessor(CrowmaskDbContext context)
+    public class OutboundActivityProcessor(CrowmaskDbContext context, Requester requester)
     {
         private async IAsyncEnumerable<OutboundActivity> GetOutboundActivities()
         {
@@ -50,7 +50,7 @@ namespace Crowmask.Remote
 
                 try
                 {
-                    await Requests.SendAsync(activity);
+                    await requester.SendAsync(activity);
                     activity.Sent = true;
                 }
                 catch (HttpRequestException)

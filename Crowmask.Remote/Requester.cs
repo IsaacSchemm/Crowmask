@@ -1,7 +1,4 @@
-﻿using Azure.Identity;
-using Azure.Security.KeyVault.Keys;
-using Azure.Security.KeyVault.Keys.Cryptography;
-using Crowmask.ActivityPub;
+﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using JsonLD.Core;
 using Microsoft.FSharp.Collections;
@@ -12,7 +9,7 @@ using System.Text;
 
 namespace Crowmask.Remote
 {
-    public static class Requests
+    public class Requester(IKeyProvider keyProvider)
     {
         private static readonly HttpClient _httpClient = new();
 
@@ -25,7 +22,7 @@ namespace Crowmask.Remote
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public static async Task<Actor> FetchActorAsync(string url)
+        public async Task<Actor> FetchActorAsync(string url)
         {
             var res = await GetAsync(new Uri(url));
 
@@ -61,28 +58,20 @@ namespace Crowmask.Remote
                 SetModule.OfSeq(getPublicKeys()));
         }
 
-        private static CryptographyClient GetCryptographyClient()
-        {
-            var credential = new DefaultAzureCredential();
-            var uri = new Uri("https://crowmask.vault.azure.net/");
-            var keyClient = new KeyClient(uri, credential);
-            return keyClient.GetCryptographyClient("crowmask-ap");
-        }
-
-        public static async Task SendAsync(string recipient, IDictionary<string, object> message)
+        public async Task SendAsync(string recipient, IDictionary<string, object> message)
         {
             var actor = await FetchActorAsync(recipient);
             var url = new Uri(actor.Inbox);
             await PostAsync(url, AP.SerializeWithContext(message));
         }
 
-        public static async Task SendAsync(OutboundActivity activity)
+        public async Task SendAsync(OutboundActivity activity)
         {
             var url = new Uri(activity.Inbox);
             await PostAsync(url, activity.JsonBody);
         }
 
-        private static async Task<HttpResponseMessage> PostAsync(Uri url, string json)
+        private async Task<HttpResponseMessage> PostAsync(Uri url, string json)
         {
             string fragment = url.AbsolutePath;
             byte[] body = Encoding.UTF8.GetBytes(json);
@@ -103,8 +92,7 @@ namespace Crowmask.Remote
 
             byte[] data = Encoding.UTF8.GetBytes(ds);
 
-            var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
-            byte[] signature = signResult.Signature;
+            byte[] signature = await keyProvider.SignRsaSha256Async(data);
 
             req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
 
@@ -120,7 +108,7 @@ namespace Crowmask.Remote
             return res;
         }
 
-        private static async Task<HttpResponseMessage> GetAsync(Uri url)
+        private async Task<HttpResponseMessage> GetAsync(Uri url)
         {
             string fragment = url.AbsolutePath;
 
@@ -137,8 +125,7 @@ namespace Crowmask.Remote
 
             byte[] data = Encoding.UTF8.GetBytes(ds);
 
-            var signResult = GetCryptographyClient().SignData(SignatureAlgorithm.RS256, data);
-            byte[] signature = signResult.Signature;
+            byte[] signature = await keyProvider.SignRsaSha256Async(data);
 
             req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
 

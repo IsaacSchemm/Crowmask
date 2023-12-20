@@ -18,11 +18,6 @@ namespace Crowmask
     {
         private record AdminActor(string Handle) : IAdminActor;
 
-        private record PublicKey(string Pem) : IPublicKey, IPublicKeyProvider
-        {
-            async Task<IPublicKey> IPublicKeyProvider.GetPublicKeyAsync() => this;
-        }
-
         private record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;
 
         public override void Configure(IFunctionsHostBuilder builder)
@@ -33,9 +28,7 @@ namespace Crowmask
             if (Environment.GetEnvironmentVariable("CosmosDBConnectionString") is string connectionString)
                 builder.Services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(connectionString, databaseName: "Crowmask"));
 
-            var k = new PublicKey("-----BEGIN PUBLIC KEY-----\\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoHfLR9OTkg8mMvziXlrt8uQqWH3u13RJSlCN1w0TE7R0WvG4w1SEL+QWQY61X+STRJ/emzPX3fi6X/FTapLrMdVg4CHio3VW5Jr8qvgG56NfJ5QCxDsB+VzLiCWVp7Dge2v6WGgitfndNhMu/nvUMRft8a+Q7QWqNQ9iNCVBS1KRm2WEVs0hUvfCubQtv0DzUFTmnFi1sjHG/G1kwlukp/V+fLqGQzBjkrdQ0vvorRZwKvnTjdqRNjgq9580x+tEHfnCX4DScnwu/jWEMD9VmpZfE4/UD91yQMCihqv/NvAU0EVdgnH1hI2xWDhCeQ1zEKCS/bCcHxT30SLfsMI2PQIDAQAB\\n-----END PUBLIC KEY-----");
-            builder.Services.AddSingleton<IPublicKey>(k);
-            builder.Services.AddSingleton<IPublicKeyProvider>(k);
+            builder.Services.AddSingleton<IKeyProvider>(new KeyProvider());
 
             if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
                 builder.Services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));

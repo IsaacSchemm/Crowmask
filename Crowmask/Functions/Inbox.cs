@@ -10,16 +10,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskDbContext context)
+    public class Inbox(CrowmaskDbContext context, Requester requester)
     {
         [FunctionName("Inbox")]
         public async Task<IActionResult> Run(
@@ -47,7 +44,7 @@ namespace Crowmask.Functions
 
                 string actor = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
 
-                var actorObj = await Requests.FetchActorAsync(actor);
+                var actorObj = await requester.FetchActorAsync(actor);
 
                 Guid guid = Guid.NewGuid();
 

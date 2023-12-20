@@ -1,5 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.Remote;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Actor(CrowmaskCache crowmaskCache, IPublicKeyProvider keyProvider)
+    public class Actor(CrowmaskCache crowmaskCache, IKeyProvider keyProvider)
     {
         [FunctionName("Actor")]
         public async Task<IActionResult> Run(

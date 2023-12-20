@@ -9,13 +9,13 @@ namespace Crowmask.Cache
     public class CrowmaskCache
     {
         private readonly CrowmaskDbContext _context;
-        public readonly IPublicKeyProvider _publicKeyProvider;
+        public readonly IKeyProvider _keyProvider;
         private readonly WeasylClient _weasylClient;
 
-        public CrowmaskCache(CrowmaskDbContext context, IPublicKeyProvider publicKeyProvider, IWeasylApiKeyProvider apiKeyProvider)
+        public CrowmaskCache(CrowmaskDbContext context, IKeyProvider keyProvider, IWeasylApiKeyProvider apiKeyProvider)
         {
             _context = context;
-            _publicKeyProvider = publicKeyProvider;
+            _keyProvider = keyProvider;
             _weasylClient = new WeasylClient(apiKeyProvider);
         }
 
@@ -228,7 +228,7 @@ namespace Crowmask.Cache
 
             if (!oldUser.Equals(newUser))
             {
-                var key = await _publicKeyProvider.GetPublicKeyAsync();
+                var key = await _keyProvider.GetPublicKeyAsync();
 
                 var followers = await _context.Followers.ToListAsync();
 
