@@ -5,61 +5,47 @@ namespace Crowmask.Remote
 {
     public class OutboundActivityProcessor(CrowmaskDbContext context, Requester requester)
     {
-        private async IAsyncEnumerable<OutboundActivity> GetOutboundActivities()
-        {
-            HashSet<Guid> retrieved = [];
-            DateTimeOffset startAt = DateTimeOffset.MinValue;
-
-            while (true)
-            {
-                var activities = await context.OutboundActivities
-                    .Where(a => a.StoredAt >= startAt)
-                    .Where(a => !a.Sent)
-                    .OrderBy(a => a.StoredAt)
-                    .Take(100)
-                    .ToListAsync();
-
-                foreach (var a in activities)
-                {
-                    if (retrieved.Contains(a.Id))
-                        continue;
-
-                    retrieved.Add(a.Id);
-
-                    yield return a;
-
-                    startAt = a.StoredAt;
-                }
-
-                if (activities.Count == 0)
-                    break;
-            }
-        }
-
         public async Task ProcessOutboundActivities()
         {
             HashSet<string> inboxesToSkip = [];
 
-            await foreach (var activity in GetOutboundActivities())
+            while (true)
             {
-                if (activity.DelayUntil > DateTimeOffset.UtcNow)
-                    inboxesToSkip.Add(activity.Inbox);
+                var activities = await context.OutboundActivities
+                    .Where(a => !a.Sent)
+                    .Where(a => !inboxesToSkip.Contains(a.Inbox))
+                    .OrderBy(a => a.StoredAt)
+                    .Take(100)
+                    .ToListAsync();
 
-                if (inboxesToSkip.Contains(activity.Inbox))
-                    continue;
+                if (activities.Count == 0)
+                    return;
 
-                try
+                foreach (var activity in activities)
                 {
-                    await requester.SendAsync(activity);
-                    activity.Sent = true;
-                }
-                catch (HttpRequestException)
-                {
-                    activity.DelayUntil = DateTimeOffset.UtcNow.AddHours(4);
-                    inboxesToSkip.Add(activity.Inbox);
-                }
+                    // If this activity is to be skipped, also skip any other activity to the same inbox
+                    if (activity.DelayUntil > DateTimeOffset.UtcNow)
+                        inboxesToSkip.Add(activity.Inbox);
 
-                await context.SaveChangesAsync();
+                    // If we're now skipping this inbox, skip this activity
+                    if (inboxesToSkip.Contains(activity.Inbox))
+                        continue;
+
+                    try
+                    {
+                        await requester.SendAsync(activity);
+                        activity.Sent = true;
+                    }
+                    catch (HttpRequestException)
+                    {
+                        // Don't send this activity again for four hours
+                        // This will also skip later activities to that inbox (see above)
+                        activity.DelayUntil = DateTimeOffset.UtcNow.AddHours(4);
+                        inboxesToSkip.Add(activity.Inbox);
+                    }
+
+                    await context.SaveChangesAsync();
+                }
             }
         }
     }

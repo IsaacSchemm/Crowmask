@@ -75,9 +75,7 @@ Other tasks:
       using [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) as a guide,
       consumable by microblog.pub (posts should be visible in the Inbox tab)
 - [x] Figure out local and Azure configuration storage for the database connection, the Weasyl API key, and the "admin actor URL"
-- [ ] Try out Entra auth for DB
 - [x] Implement shared inbox support
-- [ ] Verify HTTP signatures in inbox?
 - [ ] Verify incoming replies by ensuring they are real and public
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
@@ -86,6 +84,11 @@ Other tasks:
 - [ ] Allow certain endpoints to accept HTML instead of just redirecting to Weasyl? (I'll think about it)
 - [x] Dedupe follow requests?
 - [ ] Periodically check actors to make sure they are still following?
+
+Potential future improvements:
+
+- [ ] Implement HTTP signature validation for incoming requests
+- [ ] Entra / RBAC auth for Cosmos DB (requires EF Core 7+)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but

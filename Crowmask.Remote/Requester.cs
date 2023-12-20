@@ -1,7 +1,6 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using JsonLD.Core;
-using Microsoft.FSharp.Collections;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
@@ -13,9 +12,7 @@ namespace Crowmask.Remote
     {
         private static readonly HttpClient _httpClient = new();
 
-        public record PublicKey(string Id, string Pem);
-
-        public record Actor(string Inbox, string? SharedInbox, FSharpSet<PublicKey> PublicKeys);
+        public record Actor(string Inbox, string? SharedInbox);
 
         /// <summary>
         /// Fetches and returns an actor at a URL
@@ -42,20 +39,7 @@ namespace Crowmask.Remote
                 }
             }
 
-            IEnumerable<PublicKey> getPublicKeys()
-            {
-                foreach (var k in expansion[0]["https://w3id.org/security#publicKey"])
-                {
-                    yield return new PublicKey(
-                        k["@id"].Value<string>(),
-                        k["https://w3id.org/security#publicKeyPem"][0]["@value"].Value<string>());
-                }
-            }
-
-            return new Actor(
-                inbox,
-                sharedInbox,
-                SetModule.OfSeq(getPublicKeys()));
+            return new Actor(inbox, sharedInbox);
         }
 
         public async Task SendAsync(string recipient, IDictionary<string, object> message)
@@ -71,35 +55,52 @@ namespace Crowmask.Remote
             await PostAsync(url, activity.JsonBody);
         }
 
-        private async Task<HttpResponseMessage> PostAsync(Uri url, string json)
+        private async Task<HttpResponseMessage> SendAsync(HttpMethod httpMethod, Uri url, string? jsonBody = null)
         {
             string fragment = url.AbsolutePath;
-            byte[] body = Encoding.UTF8.GetBytes(json);
-            string digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
+            byte[]? body = null;
+            string? digest = null;
 
-            var req = new HttpRequestMessage(HttpMethod.Post, url);
+            if (jsonBody != null)
+            {
+                body = Encoding.UTF8.GetBytes(jsonBody);
+                digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
+            }
+
+            var req = new HttpRequestMessage(httpMethod, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
-            req.Headers.Add("Digest", $"SHA-256={digest}");
             req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
 
-            string ds = string.Join("\n", [
-                $"(request-target): post {fragment}",
+            if (digest != null)
+            {
+                req.Headers.Add("Digest", $"SHA-256={digest}");
+            }
+
+            List<string> headersForSigning = [
+                $"(request-target): {httpMethod.Method.ToLowerInvariant()} {fragment}",
                 $"host: {req.Headers.Host}",
-                $"date: {req.Headers.Date:r}",
-                $"digest: SHA-256={digest}"
-            ]);
+                $"date: {req.Headers.Date:r}"
+            ];
 
+            if (digest != null)
+            {
+                headersForSigning.Add($"digest: SHA-256={digest}");
+            }
+
+            string ds = string.Join("\n", headersForSigning);
             byte[] data = Encoding.UTF8.GetBytes(ds);
-
             byte[] signature = await keyProvider.SignRsaSha256Async(data);
 
             req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
 
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
 
-            req.Content = new ByteArrayContent(body);
-            req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/activity+json");
+            if (body != null)
+            {
+                req.Content = new ByteArrayContent(body);
+                req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/activity+json");
+            }
 
             var res = await _httpClient.SendAsync(req);
 
@@ -108,34 +109,14 @@ namespace Crowmask.Remote
             return res;
         }
 
+        private async Task<HttpResponseMessage> PostAsync(Uri url, string json)
+        {
+            return await SendAsync(HttpMethod.Post, url, json);
+        }
+
         private async Task<HttpResponseMessage> GetAsync(Uri url)
         {
-            string fragment = url.AbsolutePath;
-
-            var req = new HttpRequestMessage(HttpMethod.Get, url);
-            req.Headers.Host = url.Host;
-            req.Headers.Date = DateTime.UtcNow;
-            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
-
-            string ds = string.Join("\n", [
-                $"(request-target): post {fragment}",
-                $"host: {req.Headers.Host}",
-                $"date: {req.Headers.Date:r}"
-            ]);
-
-            byte[] data = Encoding.UTF8.GetBytes(ds);
-
-            byte[] signature = await keyProvider.SignRsaSha256Async(data);
-
-            req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
-
-            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
-
-            var res = await _httpClient.SendAsync(req);
-
-            res.EnsureSuccessStatusCode();
-
-            return res;
+            return await SendAsync(HttpMethod.Get, url);
         }
     }
 }
