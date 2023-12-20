@@ -17,11 +17,9 @@ namespace Crowmask.Remote
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public async Task<Actor> FetchActorAsync(string url)
+        public async Task<(string? Inbox, string? SharedInbox)> FetchActorAsync(string url)
         {
-            var res = await GetAsync(new Uri(url));
-
-            string json = await res.Content.ReadAsStringAsync();
+            string json = await GetJsonAsync(new Uri(url));
 
             JObject document = JObject.Parse(json);
             JArray expansion = JsonLdProcessor.Expand(document);
@@ -37,85 +35,84 @@ namespace Crowmask.Remote
                 }
             }
 
-            return new Actor(inbox, sharedInbox);
+            return (Inbox: inbox,
+                SharedInbox: sharedInbox);
         }
 
         public async Task SendAsync(string recipient, IDictionary<string, object> message)
         {
             var actor = await FetchActorAsync(recipient);
             var url = new Uri(actor.Inbox);
-            using var _ = await PostAsync(url, AP.SerializeWithContext(message));
+            await PostAsync(url, AP.SerializeWithContext(message));
         }
 
         public async Task SendAsync(OutboundActivity activity)
         {
             var url = new Uri(activity.Inbox);
-            using var _ = await PostAsync(url, activity.JsonBody);
+            await PostAsync(url, activity.JsonBody);
         }
 
-        private async Task<HttpResponseMessage> SendAsync(HttpMethod httpMethod, Uri url, string? jsonBody = null)
+        private IEnumerable<string> GetHeadersToSign(HttpRequestMessage req)
         {
-            string fragment = url.AbsolutePath;
-            byte[]? body = null;
-            string? digest = null;
-
-            if (jsonBody != null)
+            yield return $"(request-target): {req.Method.Method.ToLowerInvariant()} {req.RequestUri!.AbsolutePath}";
+            yield return $"host: {req.Headers.Host}";
+            yield return $"date: {req.Headers.Date:r}";
+            if (req.Headers.TryGetValues("Digest", out var values))
             {
-                body = Encoding.UTF8.GetBytes(jsonBody);
-                digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
+                req.Headers.Add("Digest", values.Single());
             }
+        }
 
-            var req = new HttpRequestMessage(httpMethod, url);
+        private async Task AddSignatureAsync(HttpRequestMessage req)
+        {
+            string ds = string.Join("\n", GetHeadersToSign(req));
+            byte[] data = Encoding.UTF8.GetBytes(ds);
+            byte[] signature = await keyProvider.SignRsaSha256Async(data);
+            req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
+        }
+
+        private async Task PostAsync(Uri url, string json)
+        {
+            byte[]? body = Encoding.UTF8.GetBytes(json);
+            string? digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
+
+            using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
             req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
 
-            if (digest != null)
-            {
-                req.Headers.Add("Digest", $"SHA-256={digest}");
-            }
+            req.Headers.Add("Digest", $"SHA-256={digest}");
 
-            List<string> headersForSigning = [
-                $"(request-target): {httpMethod.Method.ToLowerInvariant()} {fragment}",
-                $"host: {req.Headers.Host}",
-                $"date: {req.Headers.Date:r}"
-            ];
-
-            if (digest != null)
-            {
-                headersForSigning.Add($"digest: SHA-256={digest}");
-            }
-
-            string ds = string.Join("\n", headersForSigning);
-            byte[] data = Encoding.UTF8.GetBytes(ds);
-            byte[] signature = await keyProvider.SignRsaSha256Async(data);
-
-            req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
+            await AddSignatureAsync(req);
 
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
 
-            if (body != null)
-            {
-                req.Content = new ByteArrayContent(body);
-                req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/activity+json");
-            }
+            req.Content = new ByteArrayContent(body);
+            req.Content.Headers.ContentType = new MediaTypeHeaderValue("application/activity+json");
 
             using var httpClient = httpClientFactory.CreateClient();
-            var res = await httpClient.SendAsync(req);
 
+            using var res = await httpClient.SendAsync(req);
+            res.EnsureSuccessStatusCode();
+        }
+
+        private async Task<string> GetJsonAsync(Uri url)
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.Host = url.Host;
+            req.Headers.Date = DateTime.UtcNow;
+            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
+
+            await AddSignatureAsync(req);
+
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
+
+            using var httpClient = httpClientFactory.CreateClient();
+
+            using var res = await httpClient.SendAsync(req);
             res.EnsureSuccessStatusCode();
 
-            return res;
-        }
-
-        private async Task<HttpResponseMessage> PostAsync(Uri url, string json)
-        {
-            return await SendAsync(HttpMethod.Post, url, json);
-        }
-
-        private async Task<HttpResponseMessage> GetAsync(Uri url)
-        {
-            return await SendAsync(HttpMethod.Get, url);
+            return await res.Content.ReadAsStringAsync();
         }
     }
 }
