@@ -12,8 +12,6 @@ module AP =
     let HOST = "crowmask20231219.azurewebsites.net"
     let ACTOR = $"https://{HOST}/api/actor"
 
-    type Object = IDictionary<string, obj>
-
     let Context: obj list = [
         "https://w3id.org/security/v1"
         "https://www.w3.org/ns/activitystreams"
@@ -22,7 +20,7 @@ module AP =
 
     let private pair key value = (key, value :> obj)
 
-    let SerializeWithContext (apObject: Object) = JsonSerializer.Serialize(dict [   
+    let SerializeWithContext (apObject: IDictionary<string, obj>) = JsonSerializer.Serialize(dict [   
         pair "@context" Context
         for p in apObject do pair p.Key p.Value
     ])
