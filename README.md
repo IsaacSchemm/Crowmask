@@ -82,8 +82,9 @@ Other tasks:
 - [ ] Throw an error if the user ID changes
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [ ] Dedupe follow requests by actor (only honor most recent Follow)
-- [ ] Create a private post to the admin actor describing each incoming like or boost
-- [ ] Create a private boost to the admin actor for any incoming reply
+- [ ] Forward unknown webfinger requests to the admin actor's server, if any
+- [ ] Create a private post to the admin actor (if any) describing each incoming like or boost
+- [ ] Create a private boost to the admin actor (if any) for any incoming reply
 - [ ] Add HTML endpoints
 
 Potential future improvements:
@@ -104,7 +105,9 @@ Example `local.settings.json` (default settings omitted):
 
     {
       "Values": {
+        "AdminActor": "https://pixelfed.example.com/users/...",
         "CosmosDBConnectionString": "AccountEndpoint=...;AccountKey=...;",
+        "CrowmaskHost": "crowmask.example.com",
         "WeasylApiKey": "..."
       }
     }

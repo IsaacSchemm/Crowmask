@@ -19,24 +19,22 @@ module AP =
     ])
 
 type Translator(host: ICrowmaskHost) =
-    let primaryActor = $"https://{host.Hostname}/api/actor"
+    let actor = $"https://{host.Hostname}/api/actor"
 
     let pair key value = (key, value :> obj)
 
     member _.PersonToObject (person: Person) (key: IPublicKey) = dict [
-        pair "id" primaryActor
+        pair "id" actor
         pair "type" "Person"
-        pair "inbox" $"{primaryActor}/inbox"
-        pair "outbox" $"{primaryActor}/outbox"
-        //pair "followers" $"{primaryActor}/followers"
-        //pair "following" $"{primaryActor}/following"
+        pair "inbox" $"{actor}/inbox"
+        pair "outbox" $"{actor}/outbox"
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
         pair "summary" person.summary
         pair "url" person.url
         pair "publicKey" {|
-            id = $"{primaryActor}#main-key"
-            owner = primaryActor
+            id = $"{actor}#main-key"
+            owner = actor
             publicKeyPem = key.Pem
         |}
         match person.iconUrls with
@@ -60,7 +58,7 @@ type Translator(host: ICrowmaskHost) =
     member this.PersonToUpdate (person: Person) (key: IPublicKey) = dict [
         pair "type" "Update"
         pair "id" $"https://{host.Hostname}/api/updates/{System.Guid.NewGuid().ToString()}"
-        pair "actor" primaryActor
+        pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" (this.PersonToObject person key)
     ]
@@ -73,12 +71,12 @@ type Translator(host: ICrowmaskHost) =
 
         pair "id" $"https://{host.Hostname}/api/submissions/{note.submitid}"
         pair "type" "Note"
-        pair "attributedTo" primaryActor
+        pair "attributedTo" actor
         pair "content" note.content
         pair "published" effective_date
         pair "url" note.url
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" $"{primaryActor}/followers"
+        pair "cc" $"{actor}/followers"
         match note.sensitivity with
         | General -> ()
         | Sensitive warning ->
@@ -100,7 +98,7 @@ type Translator(host: ICrowmaskHost) =
     member this.ObjectToCreate (guid: Guid) (note: Note) = dict [
         pair "type" "Create"
         pair "id" $"https://{host.Hostname}/api/activities/{guid}"
-        pair "actor" primaryActor
+        pair "actor" actor
         pair "published" note.first_cached
         pair "object" (this.AsObject note)
     ]
@@ -108,7 +106,7 @@ type Translator(host: ICrowmaskHost) =
     member this.ObjectToUpdate (guid: Guid) (note: Note) = dict [
         pair "type" "Update"
         pair "id" $"https://{host.Hostname}/api/activities/{guid}"
-        pair "actor" primaryActor
+        pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" (this.AsObject note)
     ]
@@ -116,7 +114,7 @@ type Translator(host: ICrowmaskHost) =
     member _.ObjectToDelete (guid: Guid) (submitid: int) = dict [
         pair "type" "Delete"
         pair "id" $"https://{host.Hostname}/api/activities/{guid}"
-        pair "actor" primaryActor
+        pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" $"https://{host.Hostname}/api/submissions/{submitid}"
     ]
@@ -124,7 +122,7 @@ type Translator(host: ICrowmaskHost) =
     member _.AcceptFollow (guid: Guid) (followId: string) = dict [
         pair "type" "Accept"
         pair "id" $"https://{host.Hostname}/api/activities/{guid}"
-        pair "actor" primaryActor
+        pair "actor" actor
         pair "object" followId
     ]
 
@@ -135,7 +133,7 @@ type Translator(host: ICrowmaskHost) =
             |> Seq.map this.AsObject
             |> Seq.toList
 
-        pair "id" $"{primaryActor}/outbox"
+        pair "id" $"{actor}/outbox"
         pair "type" "OrderedCollection"
         pair "totalItems" note_list.Length
         pair "orderedItems" note_list

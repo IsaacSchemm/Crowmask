@@ -31,14 +31,14 @@ namespace Crowmask.Functions
 
             var person = await crowmaskCache.GetUser();
 
-            string primaryActor = $"https://{host.Hostname}/api/actor";
+            string actor = $"https://{host.Hostname}/api/actor";
 
-            if (resource == $"acct:{person.preferredUsername}@{host.Hostname}" || resource == $"https://{host.Hostname}/api/actor")
+            if (resource == $"acct:{person.preferredUsername}@{host.Hostname}" || resource == actor)
             {
                 return new JsonResult(new
                 {
                     subject = resource,
-                    aliases = new[] { primaryActor },
+                    aliases = new[] { actor },
                     links = new[]
                     {
                         new
@@ -51,7 +51,7 @@ namespace Crowmask.Functions
                         {
                             rel = "self",
                             type = "application/activity+json",
-                            href = primaryActor
+                            href = actor
                         }
                     }
                 });
