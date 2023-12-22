@@ -6,11 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
-using Crowmask.Remote;
 
 namespace Crowmask.Functions
 {
-    public class Submissions(CrowmaskCache cache)
+    public class Submissions(CrowmaskCache cache, Translator translator)
     {
         [FunctionName("Submissions")]
         public async Task<IActionResult> Run(
@@ -24,7 +23,7 @@ namespace Crowmask.Functions
                 ? new NotFoundResult()
                 : new ContentResult
                 {
-                    Content = AP.SerializeWithContext(AP.AsObject(submission)),
+                    Content = AP.SerializeWithContext(translator.AsObject(submission)),
                     ContentType = "application/json"
                 };
         }

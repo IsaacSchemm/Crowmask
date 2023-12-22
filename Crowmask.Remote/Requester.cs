@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Crowmask.Remote
 {
-    public class Requester(IHttpClientFactory httpClientFactory, IKeyProvider keyProvider)
+    public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, IKeyProvider keyProvider)
     {
         public record Actor(string Inbox, string? SharedInbox);
 
@@ -68,7 +68,7 @@ namespace Crowmask.Remote
             string ds = string.Join("\n", GetHeadersToSign(req));
             byte[] data = Encoding.UTF8.GetBytes(ds);
             byte[] signature = await keyProvider.SignRsaSha256Async(data);
-            req.Headers.Add("Signature", $"keyId=\"{AP.ACTOR}#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
+            req.Headers.Add("Signature", $"keyId=\"https://{host.Hostname}/api/actor#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
         }
 
         private async Task PostAsync(Uri url, string json)

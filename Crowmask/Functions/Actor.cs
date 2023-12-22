@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Actor(CrowmaskCache crowmaskCache, IKeyProvider keyProvider)
+    public class Actor(CrowmaskCache crowmaskCache, KeyProvider keyProvider, Translator translator)
     {
         [FunctionName("Actor")]
         public async Task<IActionResult> Run(
@@ -21,7 +21,7 @@ namespace Crowmask.Functions
 
             var key = await keyProvider.GetPublicKeyAsync();
 
-            string json = AP.SerializeWithContext(AP.PersonToObject(person, key));
+            string json = AP.SerializeWithContext(translator.PersonToObject(person, key));
 
             return new ContentResult
             {

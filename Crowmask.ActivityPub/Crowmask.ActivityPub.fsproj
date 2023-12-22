@@ -7,9 +7,10 @@
 
   <ItemGroup>
     <Compile Include="Domain.fs" />
+    <Compile Include="ICrowmaskHost.fs" />
     <Compile Include="IPublicKey.fs" />
     <Compile Include="IKeyProvider.fs" />
-    <Compile Include="ActivityPub.fs" />
+    <Compile Include="Translator.fs" />
   </ItemGroup>
 
   <ItemGroup>

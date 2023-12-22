@@ -1,19 +1,16 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
-using Crowmask.Remote;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(CrowmaskCache crowmaskCache)
+    public class WebFinger(CrowmaskCache crowmaskCache, ICrowmaskHost host)
     {
         [FunctionName("WebFinger")]
         public async Task<IActionResult> Run(
@@ -34,12 +31,14 @@ namespace Crowmask.Functions
 
             var person = await crowmaskCache.GetUser();
 
-            if (resource == $"acct:{person.preferredUsername}@{AP.HOST}" || resource == AP.ACTOR)
+            string primaryActor = $"https://{host.Hostname}/api/actor";
+
+            if (resource == $"acct:{person.preferredUsername}@{host.Hostname}" || resource == $"https://{host.Hostname}/api/actor")
             {
                 return new JsonResult(new
                 {
                     subject = resource,
-                    aliases = new[] { AP.ACTOR },
+                    aliases = new[] { primaryActor },
                     links = new[]
                     {
                         new
@@ -52,14 +51,10 @@ namespace Crowmask.Functions
                         {
                             rel = "self",
                             type = "application/activity+json",
-                            href = AP.ACTOR
+                            href = primaryActor
                         }
                     }
                 });
-            }
-            else if (resource == $"acct:crowmask@{AP.HOST}" || resource == $"https://{AP.HOST}/api/secondary-actor")
-            {
-                throw new NotImplementedException();
             }
             else
             {

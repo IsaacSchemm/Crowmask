@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(CrowmaskCache crowmaskCache)
+    public class Outbox(CrowmaskCache crowmaskCache, Translator translator)
     {
         [FunctionName("Outbox")]
         public async Task<IActionResult> Run(
@@ -22,7 +22,7 @@ namespace Crowmask.Functions
                 .GetSubmissionsAsync(max: 20)
                 .ToListAsync();
 
-            var outbox = AP.AsOutbox(recent);
+            var outbox = translator.AsOutbox(recent);
 
             string json = AP.SerializeWithContext(outbox);
 

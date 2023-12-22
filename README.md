@@ -10,7 +10,7 @@ Internal objects:
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
-- [x] `OutboundActivity`: a list of `Accept`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+- [x] `OutboundActivity`: a list of `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 - [ ] `IncomingLike`: a list of incoming `Like` activities on actor's posts
 - [ ] `IncomingAnnounce`: a list of incoming `Announce` activities on actor's posts
 - [ ] `IncomingReply`: a list of incoming replies to actor's posts
@@ -20,8 +20,6 @@ ActivityPub HTTP endpoints:
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
 - [x] `/api/actor/inbox`: accepts `Follow`, `Undo` for `Follow`, and `Create`
 - [x] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
-- [ ] `/api/actor/followers`: contains a list of followers
-- [ ] `/api/actor/following`: an empty list
 - [ ] `/api/creates/{submitid}`: returns a `Create` activity for the post from the public outbox
 - [ ] `/api/activities/{guid}`: returns the matching `OutboundActivity`
 - [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, then returns the resulting object
@@ -79,14 +77,13 @@ Other tasks:
 - [x] Implement shared inbox support
 - [x] Only insert JSON-LD @context at top level
 - [x] Use an actual JSON-LD implementation for parsing
-- [ ] Allow the hostname to be configurable
+- [x] Allow the hostname to be configurable
 - [x] Webfinger implementation
+- [ ] Throw an error if the user ID changes
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [ ] Dedupe follow requests by actor (only honor most recent Follow)
-- [ ] Implement a second actor
-- [ ] Allow only the admin actor to follow the second actor
-- [ ] Use the second actor to create a post informing the admin actor of any like or boost
-- [ ] Use the second actor to boost any reply that comes in to one of the first actor's posts
+- [ ] Create a private post to the admin actor describing each incoming like or boost
+- [ ] Create a private boost to the admin actor for any incoming reply
 - [ ] Add HTML endpoints
 
 Potential future improvements:

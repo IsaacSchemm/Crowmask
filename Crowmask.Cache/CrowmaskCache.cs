@@ -10,14 +10,16 @@ namespace Crowmask.Cache
     {
         private readonly CrowmaskDbContext _context;
         public readonly IKeyProvider _keyProvider;
+        public readonly Translator _translator;
         private readonly WeasylClient _weasylClient;
 
         public const int WEASYL_MIRROR_ACTOR = 1;
 
-        public CrowmaskCache(CrowmaskDbContext context, IKeyProvider keyProvider, IWeasylApiKeyProvider apiKeyProvider)
+        public CrowmaskCache(CrowmaskDbContext context, IKeyProvider keyProvider, IWeasylApiKeyProvider apiKeyProvider, Translator translator)
         {
             _context = context;
             _keyProvider = keyProvider;
+            _translator = translator;
             _weasylClient = new WeasylClient(apiKeyProvider);
         }
 
@@ -113,8 +115,8 @@ namespace Crowmask.Cache
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(
                                 newlyCreated
-                                ? AP.ObjectToCreate(guid, newSubmission)
-                                : AP.ObjectToUpdate(guid, newSubmission)),
+                                ? _translator.ObjectToCreate(guid, newSubmission)
+                                : _translator.ObjectToUpdate(guid, newSubmission)),
                             StoredAt = DateTimeOffset.UtcNow
                         });
                     }
@@ -142,7 +144,7 @@ namespace Crowmask.Cache
                             Id = Guid.NewGuid(),
                             ExternalId = guid,
                             Inbox = inbox.Key,
-                            JsonBody = AP.SerializeWithContext(AP.ObjectToDelete(guid, cachedSubmission.SubmitId)),
+                            JsonBody = AP.SerializeWithContext(_translator.ObjectToDelete(guid, cachedSubmission.SubmitId)),
                             StoredAt = DateTimeOffset.UtcNow
                         });
                     }
@@ -283,7 +285,7 @@ namespace Crowmask.Cache
                     {
                         Id = Guid.NewGuid(),
                         Inbox = inbox.Key,
-                        JsonBody = AP.SerializeWithContext(AP.PersonToUpdate(newUser, key)),
+                        JsonBody = AP.SerializeWithContext(_translator.PersonToUpdate(newUser, key)),
                         StoredAt = DateTimeOffset.UtcNow
                     });
                 }

@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskDbContext context, Requester requester)
+    public class Inbox(CrowmaskDbContext context, ICrowmaskHost host, Requester requester, Translator translator)
     {
         [FunctionName("Inbox")]
         public async Task<IActionResult> Run(
@@ -67,7 +67,7 @@ namespace Crowmask.Functions
                     Id = Guid.NewGuid(),
                     ExternalId = guid,
                     Inbox = actorObj.Inbox,
-                    JsonBody = AP.SerializeWithContext(AP.AcceptFollow(guid, id)),
+                    JsonBody = AP.SerializeWithContext(translator.AcceptFollow(guid, id)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
                 await context.SaveChangesAsync();
@@ -99,7 +99,7 @@ namespace Crowmask.Functions
                 foreach (var inReplyTo in expansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
                     string inReplyToId = inReplyTo["@id"].Value<string>();
-                    if (inReplyToId.StartsWith(AP.HOST))
+                    if (inReplyToId.StartsWith($"https://{host.Hostname}/api/submissions"))
                     {
                         // TODO boost with secondary actor
                     }
