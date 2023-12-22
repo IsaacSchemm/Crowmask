@@ -53,6 +53,7 @@ namespace Crowmask.Cache
                     cachedSubmission = new Submission
                     {
                         SubmitId = submitid,
+                        UserId = WEASYL_MIRROR_ACTOR,
                         FirstCachedAt = DateTimeOffset.UtcNow
                     };
                     _context.Submissions.Add(cachedSubmission);

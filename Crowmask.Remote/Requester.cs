@@ -17,7 +17,7 @@ namespace Crowmask.Remote
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public async Task<(string? Inbox, string? SharedInbox)> FetchActorAsync(string url)
+        public async Task<(string Inbox, string? SharedInbox)> FetchActorAsync(string url)
         {
             string json = await GetJsonAsync(new Uri(url));
 

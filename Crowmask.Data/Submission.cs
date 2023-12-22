@@ -10,6 +10,8 @@ namespace Crowmask.Data
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int SubmitId { get; set; }
 
+        public int UserId { get; set; }
+
         public string Description { get; set; }
 
         public bool FriendsOnly { get; set; }
@@ -48,6 +50,9 @@ namespace Crowmask.Data
         public DateTimeOffset CacheRefreshAttemptedAt { get; set; }
 
         public DateTimeOffset CacheRefreshSucceededAt { get; set; }
+
+        [ForeignKey(nameof(UserId))]
+        public User User { get; set; }
 
         public string Content => Description ?? "";
 

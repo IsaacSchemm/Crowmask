@@ -11,6 +11,9 @@ Internal objects:
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
 - [x] `OutboundActivity`: a list of `Accept`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+- [ ] `IncomingLike`: a list of incoming `Like` activities on actor's posts
+- [ ] `IncomingAnnounce`: a list of incoming `Announce` activities on actor's posts
+- [ ] `IncomingReply`: a list of incoming replies to actor's posts
 
 ActivityPub HTTP endpoints:
 
@@ -81,6 +84,8 @@ Other tasks:
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [ ] Dedupe follow requests by actor (only honor most recent Follow)
 - [ ] Implement a second actor
+- [ ] Allow only the admin actor to follow the second actor
+- [ ] Use the second actor to create a post informing the admin actor of any like or boost
 - [ ] Use the second actor to boost any reply that comes in to one of the first actor's posts
 - [ ] Add HTML endpoints
 

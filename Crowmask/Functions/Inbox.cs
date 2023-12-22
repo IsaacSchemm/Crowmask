@@ -1,4 +1,5 @@
 using Crowmask.ActivityPub;
+using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.Remote;
 using JsonLD.Core;
@@ -34,28 +35,32 @@ namespace Crowmask.Functions
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
                 string id = expansion[0]["@id"].Value<string>();
-
-                bool exists = await context.Followers
-                    .Where(f => f.FollowId == id)
-                    .AnyAsync();
-
-                if (exists)
-                    return new StatusCodeResult(204);
-
                 string actor = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+
+                var existing = await context.Followers
+                    .Where(f => f.ActorId == actor)
+                    .SingleOrDefaultAsync();
 
                 var actorObj = await requester.FetchActorAsync(actor);
 
-                Guid guid = Guid.NewGuid();
-
-                context.Followers.Add(new Follower
+                if (existing != null)
                 {
-                    Id = Guid.NewGuid(),
-                    ActorId = actor,
-                    FollowId = id,
-                    Inbox = actorObj.Inbox,
-                    SharedInbox = actorObj.SharedInbox
-                });
+                    existing.MostRecentFollowId = id;
+                }
+                else
+                {
+                    context.Followers.Add(new Follower
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = CrowmaskCache.WEASYL_MIRROR_ACTOR,
+                        ActorId = actor,
+                        MostRecentFollowId = id,
+                        Inbox = actorObj.Inbox,
+                        SharedInbox = actorObj.SharedInbox
+                    });
+                }
+
+                Guid guid = Guid.NewGuid();
 
                 context.OutboundActivities.Add(new OutboundActivity
                 {
@@ -74,7 +79,7 @@ namespace Crowmask.Functions
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
                 var followers = await context.Followers
-                    .Where(f => f.FollowId == objectId)
+                    .Where(f => f.MostRecentFollowId == objectId)
                     .ToListAsync();
 
                 foreach (var follower in followers)
