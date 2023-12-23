@@ -25,7 +25,7 @@ namespace Crowmask
             var key = await _keyClient.GetKeyAsync("crowmask-ap");
             byte[] arr = key.Value.Key.ToRSA().ExportSubjectPublicKeyInfo();
             string str = Convert.ToBase64String(arr);
-            return new PublicKey($"-----BEGIN PUBLIC KEY-----\\n{str}\\n-----END PUBLIC KEY-----");
+            return new PublicKey($"-----BEGIN PUBLIC KEY-----\n{str}\n-----END PUBLIC KEY-----");
         }
 
         public async Task<byte[]> SignRsaSha256Async(byte[] data)

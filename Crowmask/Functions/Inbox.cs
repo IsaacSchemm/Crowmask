@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
@@ -92,18 +93,46 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
-                string id = expansion[0]["@id"].Value<string>();
+                string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                // TODO get object by ID from original server
+                string postJson = await requester.GetJsonAsync(new Uri(objectId));
+                JArray postExpansion = JsonLdProcessor.Expand(JObject.Parse(postJson));
 
-                foreach (var inReplyTo in expansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
+                string actorUrl = postExpansion[0]["https://www.w3.org/ns/activitystreams#attributedTo"][0]["@id"].Value<string>();
+
+                foreach (var inReplyTo in postExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
                     string inReplyToId = inReplyTo["@id"].Value<string>();
-                    if (inReplyToId.StartsWith($"https://{host.Hostname}/api/submissions"))
+                    if (Uri.TryCreate(inReplyToId, UriKind.Absolute, out Uri idUri)
+                        && idUri.Host == host.Hostname
+                        && idUri.AbsolutePath.Split('/') is string[] arr
+                        && arr.Length >= 4
+                        && int.TryParse(arr[3], out int submitid))
                     {
-                        // TODO boost with secondary actor
+                        var submission = await context.Submissions.FindAsync(submitid);
+                        if (submission != null)
+                        {
+                            Guid guid = Guid.NewGuid();
+                            string jsonBody = AP.SerializeWithContext(
+                                translator.CreatePrivateNoteTo(
+                                    guid,
+                                    ["https://microblog.lakora.us"],
+                                    $"Reply by {WebUtility.HtmlEncode(actorUrl)} to {WebUtility.HtmlEncode(submission.Url)}"));
+                            context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                ExternalId = guid,
+                                Inbox = "https://microblog.lakora.us/inbox",
+                                JsonBody = jsonBody,
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                            await context.SaveChangesAsync();
+
+                            return new StatusCodeResult(202);
+                        }
                     }
                 }
+
                 return new StatusCodeResult(204);
             }
             else

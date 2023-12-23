@@ -138,3 +138,22 @@ type Translator(host: ICrowmaskHost) =
         pair "totalItems" note_list.Length
         pair "orderedItems" note_list
     ]
+
+    member _.CreatePrivateNoteTo (guid: Guid) (actors: string seq) (html: string) = dict [
+        let effective_date = DateTimeOffset.UtcNow
+
+        pair "type" "Create"
+        pair "id" $"https://{host.Hostname}/api/activities/{guid}"
+        pair "to" [yield! actors]
+        pair "actor" actor
+        pair "published" effective_date
+
+        pair "object" (dict [
+            pair "id" $"https://{host.Hostname}/api/private/{guid}"
+            pair "type" "Note"
+            pair "attributedTo" actor
+            pair "content" html
+            pair "published" effective_date
+            pair "to" [yield! actors]
+        ])
+    ]

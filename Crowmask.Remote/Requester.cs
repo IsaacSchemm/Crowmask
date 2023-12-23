@@ -10,10 +10,8 @@ namespace Crowmask.Remote
 {
     public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, IKeyProvider keyProvider)
     {
-        public record Actor(string Inbox, string? SharedInbox);
-
         /// <summary>
-        /// Fetches and returns an actor at a URL
+        /// Fetches and returns an actor.
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
@@ -96,7 +94,7 @@ namespace Crowmask.Remote
             res.EnsureSuccessStatusCode();
         }
 
-        private async Task<string> GetJsonAsync(Uri url)
+        public async Task<string> GetJsonAsync(Uri url)
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Host = url.Host;
