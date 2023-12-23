@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Actor(CrowmaskCache crowmaskCache, KeyProvider keyProvider, Translator translator)
+    public class Actor(CrowmaskCache crowmaskCache, IKeyProvider keyProvider, Translator translator)
     {
         [FunctionName("Actor")]
         public async Task<IActionResult> Run(

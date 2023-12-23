@@ -17,6 +17,8 @@ namespace Crowmask
     {
         private record AdminActor(string Handle) : IAdminActor;
 
+        private record CrowmaskHost(string Hostname) : ICrowmaskHost;
+
         private record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;
 
         public override void Configure(IFunctionsHostBuilder builder)
@@ -27,16 +29,19 @@ namespace Crowmask
             if (Environment.GetEnvironmentVariable("CosmosDBConnectionString") is string connectionString)
                 builder.Services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(connectionString, databaseName: "Crowmask"));
 
-            builder.Services.AddSingleton<IKeyProvider>(new KeyProvider());
+            if (Environment.GetEnvironmentVariable("CrowmaskHost") is string hostname)
+                builder.Services.AddSingleton<ICrowmaskHost>(new CrowmaskHost(hostname));
 
             if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
                 builder.Services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
 
             builder.Services.AddHttpClient();
 
+            builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
+
             builder.Services.AddScoped<CrowmaskCache>();
             builder.Services.AddScoped<OutboundActivityProcessor>();
-
+            builder.Services.AddScoped<Translator>();
             builder.Services.AddScoped<WeasylClient>();
         }
     }
