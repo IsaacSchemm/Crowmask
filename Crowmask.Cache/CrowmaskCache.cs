@@ -33,33 +33,10 @@ namespace Crowmask.Cache
 
             if (cachedSubmission != null)
             {
-                var now = DateTimeOffset.UtcNow;
-
-                bool older_than_1_hour =
-                    now - cachedSubmission.PostedAt > TimeSpan.FromHours(1);
-                bool older_than_1_day =
-                    now - cachedSubmission.PostedAt > TimeSpan.FromDays(1);
-                bool older_than_14_days =
-                    now - cachedSubmission.PostedAt > TimeSpan.FromDays(14);
-
-                bool refreshed_within_1_hour =
-                    now - cachedSubmission.CacheRefreshSucceededAt < TimeSpan.FromHours(1);
-                bool refreshed_within_14_days =
-                    now - cachedSubmission.CacheRefreshSucceededAt < TimeSpan.FromDays(14);
-
-                bool refresh_attempted_within_5_minutes =
-                    now - cachedSubmission.CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5);
-
-                if (refresh_attempted_within_5_minutes)
+                if (!cachedSubmission.Stale)
                     return Domain.AsNote(cachedSubmission);
 
-                if (older_than_1_hour && refreshed_within_1_hour)
-                    return Domain.AsNote(cachedSubmission);
-
-                if (older_than_14_days && refreshed_within_14_days)
-                    return Domain.AsNote(cachedSubmission);
-
-                cachedSubmission.CacheRefreshAttemptedAt = now;
+                cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await _context.SaveChangesAsync();
             }
 

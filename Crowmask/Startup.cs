@@ -45,6 +45,7 @@ namespace Crowmask
             builder.Services.AddScoped<OutboundActivityProcessor>();
             builder.Services.AddScoped<Requester>();
             builder.Services.AddScoped<Translator>();
+            builder.Services.AddScoped<Synchronizer>();
             builder.Services.AddScoped<WeasylClient>();
         }
     }
