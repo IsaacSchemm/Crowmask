@@ -28,19 +28,6 @@ namespace Crowmask.Functions
             using var sr = new StreamReader(req.Body);
             string json = await sr.ReadToEndAsync();
 
-            if (json.Contains("dfgdreasggffgdhe4g"))
-            {
-                context.OutboundActivities.RemoveRange(context.OutboundActivities.Where(x => x.Sent));
-                context.OutboundActivities.Add(new OutboundActivity
-                {
-                    Id = Guid.NewGuid(),
-                    Sent = true,
-                    Inbox = "https://www.example.com",
-                    JsonBody = json
-                });
-                await context.SaveChangesAsync();
-            }
-
             JObject document = JObject.Parse(json);
             JArray expansion = JsonLdProcessor.Expand(document);
 
@@ -162,7 +149,7 @@ namespace Crowmask.Functions
                             var submission = await context.Submissions.FindAsync(submitid);
                             if (submission != null)
                             {
-                                if (inReplyToId == $"/api/submissions/{submission.SubmitId}" || inReplyToId == submission.Url)
+                                if (inReplyToId.EndsWith($"/api/submissions/{submission.SubmitId}") || inReplyToId == submission.Url)
                                 {
                                     string jsonBody = AP.SerializeWithContext(
                                         translator.CreatePrivateAnnounceTo(

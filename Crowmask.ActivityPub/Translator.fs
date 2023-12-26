@@ -145,6 +145,7 @@ type Translator(host: ICrowmaskHost) =
         pair "type" "Announce"
         pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
         pair "to" [yield! actors]
+        //pair "cc" ["https://www.w3.org/ns/activitystreams#Public"]
         pair "actor" actor
         pair "published" effective_date
 
