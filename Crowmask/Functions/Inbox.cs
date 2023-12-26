@@ -90,6 +90,41 @@ namespace Crowmask.Functions
 
                 return new StatusCodeResult(202);
             }
+            else if (type == "https://www.w3.org/ns/activitystreams#Like")
+            {
+                string actorUrl = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+                var actor = requester.FetchActorAsync(actorUrl);
+
+                string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
+
+                if (Uri.TryCreate(objectId, UriKind.Absolute, out Uri idUri)
+                    && idUri.Host == host.Hostname
+                    && idUri.AbsolutePath.Split('/') is string[] arr
+                    && arr.Length >= 4
+                    && int.TryParse(arr[3], out int submitid))
+                {
+                    var submission = await context.Submissions.FindAsync(submitid);
+                    if (submission != null)
+                    {
+                        string jsonBody = AP.SerializeWithContext(
+                            translator.CreatePrivateNoteTo(
+                                ["https://microblog.lakora.us"],
+                                $"{WebUtility.HtmlEncode(actorUrl)} liked the post \"{WebUtility.HtmlEncode(submission.Title)}\" ({WebUtility.HtmlEncode(submission.Url)})"));
+                        context.OutboundActivities.Add(new OutboundActivity
+                        {
+                            Id = Guid.NewGuid(),
+                            Inbox = "https://microblog.lakora.us/inbox",
+                            JsonBody = jsonBody,
+                            StoredAt = DateTimeOffset.UtcNow
+                        });
+                        await context.SaveChangesAsync();
+
+                        return new StatusCodeResult(202);
+                    }
+                }
+
+                return new StatusCodeResult(204);
+            }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
