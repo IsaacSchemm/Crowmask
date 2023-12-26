@@ -47,6 +47,33 @@ namespace CrosspostSharp3.Weasyl
                 ?? throw new Exception("Null response from API");
         }
 
+        public async IAsyncEnumerable<WeasylGallerySubmission> GetUserGallerySubmissionsAsync(string username)
+        {
+            var gallery = await GetUserGalleryAsync(username);
+
+            while (true)
+            {
+                foreach (var submission in gallery.submissions)
+                {
+                    yield return submission;
+                }
+
+                if (gallery.nextid is int nextid)
+                {
+                    gallery = await GetUserGalleryAsync(
+                        username,
+                        new GalleryRequestOptions
+                        {
+                            nextid = nextid
+                        });
+                }
+                else
+                {
+                    yield break;
+                }
+            }
+        }
+
         public async Task<WeasylSubmissionDetail> GetSubmissionAsync(int submitid)
         {
             using HttpResponseMessage resp = await _httpClient.GetAsync(

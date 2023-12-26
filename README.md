@@ -28,7 +28,8 @@ ActivityPub HTTP endpoints:
 Timed functions:
 
 - [x] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed (every day)
-- [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each (every hour)
+- [x] `ShortGalleryUpdate`: Check the associated Weasyl account for all posts within the last day and attempt cache refresh for each (every five minutes)
+- [ ] `LongGalleryUpdate`: Check the associated Weasyl account for all posts and attempt cache refresh for each (every day)
 - [x] `OutboundActivitySend`: Try to send outbound activities (every five minutes)
 - [ ] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than four weeks old (every day)
 

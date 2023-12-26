@@ -8,7 +8,7 @@ namespace Crowmask.Functions
     public class ActorUpdate(CrowmaskCache crowmaskCache)
     {
         [FunctionName("ActorUpdate")]
-        public async Task Run([TimerTrigger("0 0 0 * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("15 49 * * * *")]TimerInfo myTimer, ILogger log)
         {
             await crowmaskCache.GetUser();
         }
