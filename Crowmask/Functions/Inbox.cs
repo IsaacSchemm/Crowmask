@@ -62,18 +62,17 @@ namespace Crowmask.Functions
 
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
-                string id = expansion[0]["@id"].Value<string>();
-                string actor = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+                string objectId = expansion[0]["@id"].Value<string>();
+                string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+                var actor = await requester.FetchActorAsync(actorId);
 
                 var existing = await context.Followers
-                    .Where(f => f.ActorId == actor)
+                    .Where(f => f.ActorId == actor.Id)
                     .SingleOrDefaultAsync();
-
-                var actorObj = await requester.FetchActorAsync(actor);
 
                 if (existing != null)
                 {
-                    existing.MostRecentFollowId = id;
+                    existing.MostRecentFollowId = objectId;
                 }
                 else
                 {
@@ -81,22 +80,23 @@ namespace Crowmask.Functions
                     {
                         Id = Guid.NewGuid(),
                         UserId = CrowmaskCache.WEASYL_MIRROR_ACTOR,
-                        ActorId = actor,
-                        MostRecentFollowId = id,
-                        Inbox = actorObj.Inbox,
-                        SharedInbox = actorObj.SharedInbox
+                        ActorId = actor.Id,
+                        MostRecentFollowId = objectId,
+                        Inbox = actor.Inbox,
+                        SharedInbox = actor.SharedInbox
                     });
                 }
-
-                Guid guid = Guid.NewGuid();
 
                 context.OutboundActivities.Add(new OutboundActivity
                 {
                     Id = Guid.NewGuid(),
-                    Inbox = actorObj.Inbox,
-                    JsonBody = AP.SerializeWithContext(translator.AcceptFollow(id)),
+                    Inbox = actor.Inbox,
+                    JsonBody = AP.SerializeWithContext(
+                        translator.AcceptFollow(
+                            objectId)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
+
                 await context.SaveChangesAsync();
 
                 return new StatusCodeResult(202);
