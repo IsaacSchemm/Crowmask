@@ -13,11 +13,10 @@ namespace Crowmask
 
         private readonly KeyClient _keyClient;
 
-        public KeyProvider()
+        public KeyProvider(Uri vaultUri)
         {
             var tokenCredential = new DefaultAzureCredential();
-            var uri = new Uri("https://crowmask.vault.azure.net/");
-            _keyClient = new KeyClient(uri, tokenCredential);
+            _keyClient = new KeyClient(vaultUri, tokenCredential);
         }
 
         public async Task<IPublicKey> GetPublicKeyAsync()

@@ -32,12 +32,13 @@ namespace Crowmask
             if (Environment.GetEnvironmentVariable("CrowmaskHost") is string hostname)
                 builder.Services.AddSingleton<ICrowmaskHost>(new CrowmaskHost(hostname));
 
+            if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost && Uri.TryCreate($"https://{keyVaultHost}", UriKind.Absolute, out Uri vaultUri))
+                builder.Services.AddSingleton<IKeyProvider>(new KeyProvider(vaultUri));
+
             if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
                 builder.Services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
 
             builder.Services.AddHttpClient();
-
-            builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
 
             builder.Services.AddScoped<CrowmaskCache>();
             builder.Services.AddScoped<OutboundActivityProcessor>();

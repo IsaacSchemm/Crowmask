@@ -104,15 +104,24 @@ Example `local.settings.json` (default settings omitted):
       "Values": {
         "AdminActor": "https://pixelfed.example.com/users/...",
         "CosmosDBConnectionString": "AccountEndpoint=...;AccountKey=...;",
+        "KeyVaultHost": "crowmask.vault.azure.net",
         "CrowmaskHost": "crowmask.example.com",
         "WeasylApiKey": "..."
       }
     }
 
-For Cosmos DB, you will need to create the container in Data Explorer:
+For **Key Vault**, the app is set up to use Managed Identity - turn this on in
+the Function App (Settings > Identity) then go to the key vault's access
+control (IAM) tab to give a role assignment of Key Vault Crypto User to that
+new managed identity.
+
+For **Cosmos DB**, you will need to create the container in Data Explorer:
 
 * Database ID: `Crowmask`
 * Container ID: `CrowmaskDbContext`
 * Partition key: `__partitionKey`
 
 The app should work with an SQL Server backend instead if you want to go that route.
+In either case, it would be nice if this app used Managed Identity for that too, but
+I think that would need .NET 7+ and I'm not sure if Azure Functions is quite set up
+for that yet.
