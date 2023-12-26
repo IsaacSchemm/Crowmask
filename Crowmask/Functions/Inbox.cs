@@ -168,7 +168,7 @@ namespace Crowmask.Functions
                             notifier.CreateReplyNotification(
                                 submission,
                                 actor,
-                                objectId));
+                                replyId));
                     }
                 }
 
