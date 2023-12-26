@@ -1,31 +1,15 @@
-﻿using CrosspostSharp3.Weasyl;
+﻿using Crowmask.Weasyl;
 using Crowmask.ActivityPub;
 using Crowmask.Data;
-using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache
+    public class CrowmaskCache(CrowmaskDbContext Context, IKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
     {
-        private readonly CrowmaskDbContext _context;
-        public readonly IKeyProvider _keyProvider;
-        public readonly Translator _translator;
-        private readonly WeasylClient _weasylClient;
-
-        public const int WEASYL_MIRROR_ACTOR = 1;
-
-        public CrowmaskCache(CrowmaskDbContext context, IKeyProvider keyProvider, IWeasylApiKeyProvider apiKeyProvider, Translator translator)
-        {
-            _context = context;
-            _keyProvider = keyProvider;
-            _translator = translator;
-            _weasylClient = new WeasylClient(apiKeyProvider);
-        }
-
         public async Task<Domain.Note?> GetSubmission(int submitid)
         {
-            var cachedSubmission = await _context.Submissions
+            var cachedSubmission = await Context.Submissions
                 .Include(s => s.Media)
                 .Include(s => s.Tags)
                 .Where(s => s.SubmitId == submitid)
@@ -37,24 +21,28 @@ namespace Crowmask.Cache
                     return Domain.AsNote(cachedSubmission);
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
-                await _context.SaveChangesAsync();
+                await Context.SaveChangesAsync();
             }
 
             try
             {
-                var weasylSubmission = await _weasylClient.GetSubmissionAsync(submitid);
+                var weasylSubmission = await WeasylClient.GetSubmissionAsync(submitid);
 
                 bool newlyCreated = false;
 
                 if (cachedSubmission == null)
                 {
+                    var whoami = await WeasylClient.WhoamiAsync();
+                    if (whoami.login != weasylSubmission.owner)
+                        return null;
+
                     newlyCreated = true;
                     cachedSubmission = new Submission
                     {
                         SubmitId = submitid,
                         FirstCachedAt = DateTimeOffset.UtcNow
                     };
-                    _context.Submissions.Add(cachedSubmission);
+                    Context.Submissions.Add(cachedSubmission);
                 }
 
                 var oldSubmission = Domain.AsNote(cachedSubmission);
@@ -98,26 +86,26 @@ namespace Crowmask.Cache
 
                 if (!oldSubmission.Equals(newSubmission))
                 {
-                    var followers = await _context.Followers.ToListAsync();
+                    var followers = await Context.Followers.ToListAsync();
                     var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
 
                     foreach (var inbox in inboxes)
                     {
-                        _context.OutboundActivities.Add(new OutboundActivity
+                        Context.OutboundActivities.Add(new OutboundActivity
                         {
                             Id = Guid.NewGuid(),
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(
                                 newlyCreated
-                                ? _translator.ObjectToCreate(newSubmission)
-                                : _translator.ObjectToUpdate(newSubmission)),
+                                ? Translator.ObjectToCreate(newSubmission)
+                                : Translator.ObjectToUpdate(newSubmission)),
                             StoredAt = DateTimeOffset.UtcNow
                         });
                     }
                 }
 
                 cachedSubmission.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
-                await _context.SaveChangesAsync();
+                await Context.SaveChangesAsync();
 
                 return newSubmission;
             }
@@ -125,23 +113,23 @@ namespace Crowmask.Cache
             {
                 if (cachedSubmission != null)
                 {
-                    _context.Submissions.Remove(cachedSubmission);
+                    Context.Submissions.Remove(cachedSubmission);
 
-                    var followers = await _context.Followers.ToListAsync();
+                    var followers = await Context.Followers.ToListAsync();
                     var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
 
                     foreach (var inbox in inboxes)
                     {
-                        _context.OutboundActivities.Add(new OutboundActivity
+                        Context.OutboundActivities.Add(new OutboundActivity
                         {
                             Id = Guid.NewGuid(),
                             Inbox = inbox.Key,
-                            JsonBody = AP.SerializeWithContext(_translator.ObjectToDelete(cachedSubmission.SubmitId)),
+                            JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(cachedSubmission.SubmitId)),
                             StoredAt = DateTimeOffset.UtcNow
                         });
                     }
 
-                    await _context.SaveChangesAsync();
+                    await Context.SaveChangesAsync();
                 }
 
                 return null;
@@ -156,7 +144,7 @@ namespace Crowmask.Cache
 
         public async IAsyncEnumerable<Domain.Note> GetSubmissionsAsync(int max)
         {
-            var mostRecent = await _context.Submissions
+            var mostRecent = await Context.Submissions
                 .OrderByDescending(s => s.FirstCachedAt)
                 .Select(s => s.SubmitId)
                 .Take(max)
@@ -196,7 +184,7 @@ namespace Crowmask.Cache
 
         public async Task<Domain.Person> GetUser()
         {
-            var cachedUser = await _context.GetUserAsync();
+            var cachedUser = await Context.GetUserAsync();
 
             if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshSucceededAt < TimeSpan.FromHours(1))
                 return Domain.AsPerson(cachedUser);
@@ -205,11 +193,11 @@ namespace Crowmask.Cache
                 return Domain.AsPerson(cachedUser);
 
             cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
-            await _context.SaveChangesAsync();
+            await Context.SaveChangesAsync();
 
-            var whoami = await _weasylClient.WhoamiAsync();
+            var whoami = await WeasylClient.WhoamiAsync();
 
-            var weasylUser = await _weasylClient.GetUserAsync(whoami.login);
+            var weasylUser = await WeasylClient.GetUserAsync(whoami.login);
 
             var oldUser = Domain.AsPerson(cachedUser);
 
@@ -250,25 +238,25 @@ namespace Crowmask.Cache
 
             if (!oldUser.Equals(newUser))
             {
-                var key = await _keyProvider.GetPublicKeyAsync();
+                var key = await KeyProvider.GetPublicKeyAsync();
 
-                var followers = await _context.Followers.ToListAsync();
+                var followers = await Context.Followers.ToListAsync();
 
                 var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
                 foreach (var inbox in inboxes)
                 {
-                    _context.OutboundActivities.Add(new OutboundActivity
+                    Context.OutboundActivities.Add(new OutboundActivity
                     {
                         Id = Guid.NewGuid(),
                         Inbox = inbox.Key,
-                        JsonBody = AP.SerializeWithContext(_translator.PersonToUpdate(newUser, key)),
+                        JsonBody = AP.SerializeWithContext(Translator.PersonToUpdate(newUser, key)),
                         StoredAt = DateTimeOffset.UtcNow
                     });
                 }
             }
 
             cachedUser.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
-            await _context.SaveChangesAsync();
+            await Context.SaveChangesAsync();
 
             return newUser;
         }

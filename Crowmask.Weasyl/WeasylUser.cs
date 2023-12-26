@@ -1,4 +1,4 @@
-﻿namespace CrosspostSharp3.Weasyl {
+﻿namespace Crowmask.Weasyl {
 	public class WeasylUserBase {
 		public string login { get; set; }
 		public int userid { get; set; }

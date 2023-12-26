@@ -1,5 +1,4 @@
-﻿using CrosspostSharp3.Weasyl;
-using Crowmask.ActivityPub;
+﻿using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.Remote;

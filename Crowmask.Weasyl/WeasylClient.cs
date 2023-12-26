@@ -1,8 +1,7 @@
-﻿using Crowmask.Weasyl;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text;
 
-namespace CrosspostSharp3.Weasyl
+namespace Crowmask.Weasyl
 {
     public class WeasylClient
     {

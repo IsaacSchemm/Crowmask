@@ -81,8 +81,7 @@ Other tasks:
 - [x] Use an actual JSON-LD implementation for parsing
 - [x] Allow the hostname to be configurable
 - [x] Webfinger implementation
-- [ ] Throw an error if the user ID changes
-- [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
+- [x] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [x] Dedupe follow requests by actor (only honor most recent Follow)
 - [ ] Forward unknown webfinger requests to the admin actor's server, if any
 - [ ] Make the domain in the handle configurable

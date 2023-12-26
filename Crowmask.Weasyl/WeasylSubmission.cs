@@ -1,4 +1,4 @@
-﻿namespace CrosspostSharp3.Weasyl {
+﻿namespace Crowmask.Weasyl {
 	public abstract class WeasylSubmissionBase {
 		public string link { get; set; }
 		public WeasylSubmissionMedia media { get; set; }
