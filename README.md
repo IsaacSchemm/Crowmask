@@ -15,15 +15,15 @@ Internal objects:
 ActivityPub HTTP endpoints:
 
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
-- [x] `/api/actor/inbox`: accepts `Follow`, `Undo` for `Follow`, and `Create`
-- [x] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
-- [x] `/api/creations/{submitid}`: returns a `Create` activity for the post from the public outbox
-- [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, then returns the resulting object
-
-Accepted inbox activities:
-
-- [x] `Follow`: adds the actor to the list of followers and adds an `Accept` to `OutboundActivity`
-- [x] `Undo` `Follow`: removes the actor from the list of followers
+- [x] `/api/actor/inbox`: processes the following activities:
+    - [x] `Follow`: adds a new follower (or updates the `Follow` ID of an existing follower)
+    - [x] `Undo` with `Follow`: removes the follower with the given `Follow` ID (if any)
+    - [x] `Like`: if it matches a `Submission`, sends a transient message to the admin actor, with a link to the actor who sent the `Like`
+    - [x] `Announce`: if it matches a `Submission`, sends a transient message to the admin actor, with a link to the actor who sent the `Announce`
+    - [x] `Create`: if it's for a reply to a `Submission`, sends a transient message to the admin, with a link to the reply
+- [x] `/api/actor/outbox`: contains `Create` activities for the 20 most recent cached Weasyl posts
+- [x] `/api/submissions/{submitid}`: attempts cache refresh for the post, then returns the resulting `Note` object
+- [x] `/api/creations/{submitid}`: returns the `Create` activity included in the outbox (thus ensuring that these `Create` IDs map to valid URLs)
 
 Timed functions:
 
@@ -81,12 +81,15 @@ Other tasks:
 - [ ] Forward unknown webfinger requests to the admin actor's server, if any
 - [ ] Make the domain in the handle configurable
 - [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
-- [ ] Add HTML endpoints
+- [ ] Add HTML redirects
+- [ ] Experiment with other post types besides `Note`
 
 Potential future improvements:
 
+- [ ] Add HTML endpoints
 - [ ] Implement HTTP signature validation for incoming requests
 - [ ] Entra / RBAC auth for Cosmos DB (requires EF Core 7+)
+- [ ] Outbox paging
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
