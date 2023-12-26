@@ -10,7 +10,7 @@ Internal objects:
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
-- [x] `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+- [x] `OutboundActivity`: a list of `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities to be sent to particular actors or instances
 
 ActivityPub HTTP endpoints:
 
