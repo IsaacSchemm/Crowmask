@@ -29,7 +29,7 @@ Timed functions:
 
 - [x] `ShortUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) within the past 60 days, then send outbound activities (every five minutes)
 - [x] `LongUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) and the actor's name/avatar/etc (every day)
-- [x] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than four weeks old (every day)
+- [x] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than 24 hours old (every hour)
 
 Note that a cached submission will not be refreshed if:
 

@@ -11,14 +11,14 @@ namespace Crowmask.Functions
     public class OutboundActivityCleanup(CrowmaskDbContext context)
     {
         [FunctionName("OutboundActivityCleanup")]
-        public async Task Run([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 2 * * * *")] TimerInfo myTimer, ILogger log)
         {
-            var fourWeeksAgo = DateTime.UtcNow - TimeSpan.FromDays(28);
+            var cutoff = DateTime.UtcNow - TimeSpan.FromHours(24);
 
             while (true)
             {
                 var activities = await context.OutboundActivities
-                    .Where(a => a.StoredAt < fourWeeksAgo)
+                    .Where(a => a.StoredAt < cutoff)
                     .Take(100)
                     .ToListAsync();
 
