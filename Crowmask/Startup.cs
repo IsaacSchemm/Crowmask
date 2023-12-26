@@ -15,7 +15,7 @@ namespace Crowmask
 {
     internal class Startup : FunctionsStartup
     {
-        private record AdminActor(string Handle) : IAdminActor;
+        private record AdminActor(string Id) : IAdminActor;
 
         private record CrowmaskHost(string Hostname) : ICrowmaskHost;
 
@@ -23,8 +23,8 @@ namespace Crowmask
 
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            if (Environment.GetEnvironmentVariable("AdminActor") is string handle)
-                builder.Services.AddSingleton<IAdminActor>(new AdminActor(handle));
+            if (Environment.GetEnvironmentVariable("AdminActor") is string id)
+                builder.Services.AddSingleton<IAdminActor>(new AdminActor(id));
 
             if (Environment.GetEnvironmentVariable("CosmosDBConnectionString") is string connectionString)
                 builder.Services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(connectionString, databaseName: "Crowmask"));

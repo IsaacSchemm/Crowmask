@@ -2,6 +2,6 @@
 {
     public interface IAdminActor
     {
-        string Handle { get; }
+        string Id { get; }
     }
 }

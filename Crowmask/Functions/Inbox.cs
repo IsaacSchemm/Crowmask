@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskDbContext context, ICrowmaskHost host, Requester requester, Translator translator)
+    public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, Requester requester, Translator translator)
     {
         [FunctionName("Inbox")]
         public async Task<IActionResult> Run(
@@ -105,6 +105,8 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Like")
             {
+                var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
+
                 string actorUrl = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
                 var actor = requester.FetchActorAsync(actorUrl);
 
@@ -121,12 +123,12 @@ namespace Crowmask.Functions
                     {
                         string jsonBody = AP.SerializeWithContext(
                             translator.CreatePrivateNoteTo(
-                                ["https://microblog.lakora.us"],
+                                [adminActor.Id],
                                 $"{WebUtility.HtmlEncode(actorUrl)} liked the post \"{WebUtility.HtmlEncode(submission.Title)}\" ({WebUtility.HtmlEncode(submission.Url)})"));
                         context.OutboundActivities.Add(new OutboundActivity
                         {
                             Id = Guid.NewGuid(),
-                            Inbox = "https://microblog.lakora.us/inbox",
+                            Inbox = adminActorObject.Inbox,
                             JsonBody = jsonBody,
                             StoredAt = DateTimeOffset.UtcNow
                         });
@@ -140,6 +142,8 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
+                var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
+
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
                 string postJson = await requester.GetJsonAsync(new Uri(objectId));
@@ -162,12 +166,12 @@ namespace Crowmask.Functions
                                 {
                                     string jsonBody = AP.SerializeWithContext(
                                         translator.CreatePrivateAnnounceTo(
-                                            ["https://microblog.lakora.us"],
+                                            [adminActor.Id],
                                             objectId));
                                     context.OutboundActivities.Add(new OutboundActivity
                                     {
                                         Id = Guid.NewGuid(),
-                                        Inbox = "https://microblog.lakora.us/inbox",
+                                        Inbox = adminActorObject.Inbox,
                                         JsonBody = jsonBody,
                                         StoredAt = DateTimeOffset.UtcNow
                                     });
