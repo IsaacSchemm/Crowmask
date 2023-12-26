@@ -10,15 +10,14 @@ Internal objects:
 - [x] `SubmissionMedia`: an associated image
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
-- [x] `OutboundActivity`: a list of `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+- [x] `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
 ActivityPub HTTP endpoints:
 
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
 - [x] `/api/actor/inbox`: accepts `Follow`, `Undo` for `Follow`, and `Create`
 - [x] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
-- [ ] `/api/creates/{submitid}`: returns a `Create` activity for the post from the public outbox
-- [ ] `/api/activities/{guid}`: returns the matching `OutboundActivity`
+- [ ] `/api/creations/{submitid}`: returns a `Create` activity for the post from the public outbox
 - [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, then returns the resulting object
 
 Accepted inbox activities:
@@ -31,7 +30,7 @@ Timed functions:
 - [ ] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed (every day)
 - [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each (every hour)
 - [x] `OutboundActivitySend`: Try to send outbound activities (every five minutes)
-- [ ] `OutboundActivityCleanup`: Remove any `OutboundActivity` more than a week old, regardless of whether it was sent or not (every day)
+- [ ] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than four weeks old (every day)
 
 Other functions:
 
@@ -80,6 +79,7 @@ Other tasks:
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [x] Dedupe follow requests by actor (only honor most recent Follow)
 - [ ] Forward unknown webfinger requests to the admin actor's server, if any
+- [ ] Make the domain in the handle configurable
 - [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
 - [ ] Add HTML endpoints
 

@@ -5,7 +5,6 @@ open System.Collections.Generic
 open System.Text.Json
 
 open Domain
-open System.Net
 
 module AP =
     let Context: obj list = [
@@ -58,7 +57,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
     member this.PersonToUpdate (person: Person) (key: IPublicKey) = dict [
         pair "type" "Update"
-        pair "id" $"https://{host.Hostname}/api/updates/{System.Guid.NewGuid().ToString()}"
+        pair "id" $"https://{host.Hostname}/transient/updates/{System.Guid.NewGuid().ToString()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" (this.PersonToObject person key)
@@ -98,9 +97,11 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
     member this.ObjectToCreate (note: Note) = dict [
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "id" $"https://{host.Hostname}/api/creations/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" note.first_cached
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"; adminActor.Id]
         pair "object" (this.AsObject note)
     ]
 
@@ -109,6 +110,8 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"; adminActor.Id]
         pair "object" (this.AsObject note)
     ]
 
@@ -117,6 +120,8 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"; adminActor.Id]
         pair "object" $"https://{host.Hostname}/api/submissions/{submitid}"
     ]
 
@@ -131,7 +136,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         let note_list =
             notes
             |> Seq.sortByDescending (fun n -> n.first_cached)
-            |> Seq.map this.AsObject
+            |> Seq.map this.ObjectToCreate
             |> Seq.toList
 
         pair "id" $"{actor}/outbox"
