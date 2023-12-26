@@ -57,7 +57,7 @@ namespace Crowmask.Remote
             yield return $"date: {req.Headers.Date:r}";
             if (req.Headers.TryGetValues("Digest", out var values))
             {
-                req.Headers.Add("Digest", values.Single());
+                yield return $"digest: {values.Single()}";
             }
         }
 
