@@ -80,8 +80,7 @@ Other tasks:
 - [ ] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [ ] Dedupe follow requests by actor (only honor most recent Follow)
 - [ ] Forward unknown webfinger requests to the admin actor's server, if any
-- [ ] Create a private post to the admin actor (if any) describing each incoming like or boost
-- [ ] Create a private boost to the admin actor (if any) for any incoming reply
+- [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
 - [ ] Add HTML endpoints
 
 Potential future improvements:

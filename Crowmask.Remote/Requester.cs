@@ -10,17 +10,25 @@ namespace Crowmask.Remote
 {
     public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, IKeyProvider keyProvider)
     {
+        public record RemoteActor(string Id, string? Name, string Inbox, string? SharedInbox) : IRemoteActorDisplay
+        {
+            string IRemoteActorDisplay.DisplayName => Name ?? Id;
+        }
+
         /// <summary>
         /// Fetches and returns an actor.
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public async Task<(string Inbox, string? SharedInbox)> FetchActorAsync(string url)
+        public async Task<RemoteActor> FetchActorAsync(string url)
         {
             string json = await GetJsonAsync(new Uri(url));
 
             JObject document = JObject.Parse(json);
             JArray expansion = JsonLdProcessor.Expand(document);
+
+            string id = expansion[0]["@id"].Value<string>();
+            string name = expansion[0]["https://www.w3.org/ns/activitystreams#name"][0]["@value"].Value<string>();
 
             string inbox = expansion[0]["http://www.w3.org/ns/ldp#inbox"][0]["@id"].Value<string>();
             string? sharedInbox = null;
@@ -33,7 +41,10 @@ namespace Crowmask.Remote
                 }
             }
 
-            return (Inbox: inbox,
+            return new RemoteActor(
+                Id: id,
+                Name: name,
+                Inbox: inbox,
                 SharedInbox: sharedInbox);
         }
 

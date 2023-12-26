@@ -13,13 +13,30 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
     public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, Requester requester, Translator translator)
     {
+        private bool TryExtractSubmitId(string objectId, out int submitid)
+        {
+            if (Uri.TryCreate(objectId, UriKind.Absolute, out Uri idUri)
+                && idUri.Host == host.Hostname
+                && idUri.AbsolutePath.Split('/') is string[] arr
+                && arr.Length >= 4
+                && int.TryParse(arr[3], out int s))
+            {
+                submitid = s;
+                return true;
+            }
+            else
+            {
+                submitid = 0;
+                return false;
+            }
+        }
+
         [FunctionName("Inbox")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/actor/inbox")] HttpRequest req,
@@ -95,23 +112,52 @@ namespace Crowmask.Functions
                 var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
 
                 string actorUrl = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
-                var actor = requester.FetchActorAsync(actorUrl);
+                var actor = await requester.FetchActorAsync(actorUrl);
 
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                if (Uri.TryCreate(objectId, UriKind.Absolute, out Uri idUri)
-                    && idUri.Host == host.Hostname
-                    && idUri.AbsolutePath.Split('/') is string[] arr
-                    && arr.Length >= 4
-                    && int.TryParse(arr[3], out int submitid))
+                if (TryExtractSubmitId(objectId, out int submitid))
                 {
                     var submission = await context.Submissions.FindAsync(submitid);
                     if (submission != null)
                     {
                         string jsonBody = AP.SerializeWithContext(
-                            translator.CreatePrivateNoteTo(
-                                [adminActor.Id],
-                                $"{WebUtility.HtmlEncode(actorUrl)} liked the post \"{WebUtility.HtmlEncode(submission.Title)}\" ({WebUtility.HtmlEncode(submission.Url)})"));
+                            translator.CreateLikeNotification(
+                                submission,
+                                actor));
+                        context.OutboundActivities.Add(new OutboundActivity
+                        {
+                            Id = Guid.NewGuid(),
+                            Inbox = adminActorObject.Inbox,
+                            JsonBody = jsonBody,
+                            StoredAt = DateTimeOffset.UtcNow
+                        });
+                        await context.SaveChangesAsync();
+
+                        return new StatusCodeResult(202);
+                    }
+                }
+
+                return new StatusCodeResult(204);
+            }
+            else if (type == "https://www.w3.org/ns/activitystreams#Announce")
+            {
+                var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
+
+                string actorUrl = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+                var actor = await requester.FetchActorAsync(actorUrl);
+
+                string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
+
+                if (TryExtractSubmitId(objectId, out int submitid))
+                {
+                    var submission = await context.Submissions.FindAsync(submitid);
+                    if (submission != null)
+                    {
+                        string jsonBody = AP.SerializeWithContext(
+                            translator.CreateShareNotification(
+                                submission,
+                                actor));
                         context.OutboundActivities.Add(new OutboundActivity
                         {
                             Id = Guid.NewGuid(),
@@ -137,36 +183,31 @@ namespace Crowmask.Functions
                 JArray postExpansion = JsonLdProcessor.Expand(JObject.Parse(postJson));
 
                 string actorUrl = postExpansion[0]["https://www.w3.org/ns/activitystreams#attributedTo"][0]["@id"].Value<string>();
+                var actor = await requester.FetchActorAsync(actorUrl);
 
                 foreach (var inReplyTo in postExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
                     string inReplyToId = inReplyTo["@id"].Value<string>();
-                    string[] inReplyToSplit = inReplyToId.Split('/');
-                    foreach (string str in inReplyToSplit)
+                    if (TryExtractSubmitId(inReplyToId, out int submitid))
                     {
-                        if (int.TryParse(str, out int submitid))
+                        var submission = await context.Submissions.FindAsync(submitid);
+                        if (submission != null)
                         {
-                            var submission = await context.Submissions.FindAsync(submitid);
-                            if (submission != null)
+                            string jsonBody = AP.SerializeWithContext(
+                                translator.CreateReplyNotification(
+                                    submission,
+                                    actor,
+                                    objectId));
+                            context.OutboundActivities.Add(new OutboundActivity
                             {
-                                if (inReplyToId.EndsWith($"/api/submissions/{submission.SubmitId}") || inReplyToId == submission.Url)
-                                {
-                                    string jsonBody = AP.SerializeWithContext(
-                                        translator.CreatePrivateAnnounceTo(
-                                            [adminActor.Id],
-                                            objectId));
-                                    context.OutboundActivities.Add(new OutboundActivity
-                                    {
-                                        Id = Guid.NewGuid(),
-                                        Inbox = adminActorObject.Inbox,
-                                        JsonBody = jsonBody,
-                                        StoredAt = DateTimeOffset.UtcNow
-                                    });
-                                    await context.SaveChangesAsync();
+                                Id = Guid.NewGuid(),
+                                Inbox = adminActorObject.Inbox,
+                                JsonBody = jsonBody,
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                            await context.SaveChangesAsync();
 
-                                    return new StatusCodeResult(202);
-                                }
-                            }
+                            return new StatusCodeResult(202);
                         }
                     }
                 }

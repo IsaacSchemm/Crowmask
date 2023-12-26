@@ -5,6 +5,7 @@ open System.Collections.Generic
 open System.Text.Json
 
 open Domain
+open System.Net
 
 module AP =
     let Context: obj list = [
@@ -18,7 +19,7 @@ module AP =
         for p in apObject do p.Key, p.Value
     ])
 
-type Translator(host: ICrowmaskHost) =
+type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
     let actor = $"https://{host.Hostname}/api/actor"
 
     let pair key value = (key, value :> obj)
@@ -74,9 +75,9 @@ type Translator(host: ICrowmaskHost) =
         pair "attributedTo" actor
         pair "content" note.content
         pair "published" effective_date
-        pair "url" note.url
+        pair "url" $"https://{host.Hostname}/api/submissions/{note.submitid}" //note.url
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" $"{actor}/followers"
+        pair "cc" [$"{actor}/followers"; adminActor.Id]
         match note.sensitivity with
         | General -> ()
         | Sensitive warning ->
@@ -139,25 +140,12 @@ type Translator(host: ICrowmaskHost) =
         pair "orderedItems" note_list
     ]
 
-    member _.CreatePrivateAnnounceTo (actors: string seq) (objectId: string) = dict [
-        let effective_date = DateTimeOffset.UtcNow
-
-        pair "type" "Announce"
-        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
-        pair "to" [yield! actors]
-        //pair "cc" ["https://www.w3.org/ns/activitystreams#Public"]
-        pair "actor" actor
-        pair "published" effective_date
-
-        pair "object" objectId
-    ]
-
-    member _.CreatePrivateNoteTo (actors: string seq) (html: string) = dict [
+    member _.CreateLikeNotification (submission: Crowmask.Data.Submission) (other_actor: IRemoteActorDisplay) = dict [
         let effective_date = DateTimeOffset.UtcNow
 
         pair "type" "Create"
         pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
-        pair "to" [yield! actors]
+        pair "to" [adminActor.Id]
         pair "actor" actor
         pair "published" effective_date
 
@@ -165,8 +153,70 @@ type Translator(host: ICrowmaskHost) =
             pair "id" $"https://{host.Hostname}/transient/note/{Guid.NewGuid()}"
             pair "type" "Note"
             pair "attributedTo" actor
-            pair "content" html
+            pair "content" (String.concat "" [
+                $"""<a href="{WebUtility.HtmlEncode(other_actor.Id)}">"""
+                WebUtility.HtmlEncode(other_actor.DisplayName)
+                "</a>"
+                " liked the post "
+                $"""<a href="https://{host.Hostname}/api/submissions/{submission.SubmitId}">"""
+                WebUtility.HtmlEncode(submission.Title)
+                "</a>"
+            ])
             pair "published" effective_date
-            pair "to" [yield! actors]
+            pair "to" [adminActor.Id]
+        ])
+    ]
+
+    member _.CreateShareNotification (submission: Crowmask.Data.Submission) (other_actor: IRemoteActorDisplay) = dict [
+        let effective_date = DateTimeOffset.UtcNow
+
+        pair "type" "Create"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "to" [adminActor.Id]
+        pair "actor" actor
+        pair "published" effective_date
+
+        pair "object" (dict [
+            pair "id" $"https://{host.Hostname}/transient/note/{Guid.NewGuid()}"
+            pair "type" "Note"
+            pair "attributedTo" actor
+            pair "content" (String.concat "" [
+                $"""<a href="{WebUtility.HtmlEncode(other_actor.Id)}">"""
+                WebUtility.HtmlEncode(other_actor.DisplayName)
+                "</a>"
+                " shared the post "
+                $"""<a href="https://{host.Hostname}/api/submissions/{submission.SubmitId}">"""
+                WebUtility.HtmlEncode(submission.Title)
+                "</a>"
+            ])
+            pair "published" effective_date
+            pair "to" [adminActor.Id]
+        ])
+    ]
+
+    member _.CreateReplyNotification (submission: Crowmask.Data.Submission) (other_actor: IRemoteActorDisplay) (reply_object_id: string) = dict [
+        let effective_date = DateTimeOffset.UtcNow
+
+        pair "type" "Create"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "to" [adminActor.Id]
+        pair "actor" actor
+        pair "published" effective_date
+
+        pair "object" (dict [
+            pair "id" $"https://{host.Hostname}/transient/note/{Guid.NewGuid()}"
+            pair "type" "Note"
+            pair "attributedTo" actor
+            pair "content" (String.concat "" [
+                $"""<a href="{WebUtility.HtmlEncode(reply_object_id)}">"""
+                WebUtility.HtmlEncode(other_actor.DisplayName)
+                "</a>"
+                " replied to the post "
+                $"""<a href="https://{host.Hostname}/api/submissions/{submission.SubmitId}">"""
+                WebUtility.HtmlEncode(submission.Title)
+                "</a>"
+            ])
+            pair "published" effective_date
+            pair "to" [adminActor.Id]
         ])
     ]

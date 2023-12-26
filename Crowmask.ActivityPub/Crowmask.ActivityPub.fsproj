@@ -7,9 +7,11 @@
 
   <ItemGroup>
     <Compile Include="Domain.fs" />
+    <Compile Include="IAdminActor.fs" />
     <Compile Include="ICrowmaskHost.fs" />
     <Compile Include="IPublicKey.fs" />
     <Compile Include="IKeyProvider.fs" />
+    <Compile Include="IRemoteActorDisplay.fs" />
     <Compile Include="Translator.fs" />
   </ItemGroup>
 
