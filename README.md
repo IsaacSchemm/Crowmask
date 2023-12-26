@@ -27,9 +27,8 @@ ActivityPub HTTP endpoints:
 
 Timed functions:
 
-- [x] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed (every day)
 - [x] `ShortUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) within the past 60 days, then send outbound activities (every five minutes)
-- [x] `LongUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) (every day)
+- [x] `LongUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) and the actor's name/avatar/etc (every day)
 - [ ] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than four weeks old (every day)
 
 Note that a cached submission will not be refreshed if:
