@@ -27,7 +27,7 @@ ActivityPub HTTP endpoints:
 
 Timed functions:
 
-- [ ] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed (every day)
+- [x] `ActorUpdate`: Update the name, avatar, etc of the actor and add an `Update` to `OutboundActivity` if needed (every day)
 - [ ] `GalleryUpdate`: Check the associated Weasyl account for new posts since the last `GalleryUpdate` and attempt cache refresh for each (every hour)
 - [x] `OutboundActivitySend`: Try to send outbound activities (every five minutes)
 - [ ] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than four weeks old (every day)
@@ -81,6 +81,7 @@ Other tasks:
 - [ ] Forward unknown webfinger requests to the admin actor's server, if any
 - [ ] Make the domain in the handle configurable
 - [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
+- [ ] Linkify the external links from Weasyl in the same way Weasyl does
 - [ ] Add HTML redirects
 - [ ] Experiment with other post types besides `Note`
 

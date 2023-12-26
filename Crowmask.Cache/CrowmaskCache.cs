@@ -208,8 +208,8 @@ namespace Crowmask.Cache
 
             if (cachedUser != null)
             {
-                if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshSucceededAt < TimeSpan.FromHours(1))
-                    return Domain.AsPerson(cachedUser);
+                //if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshSucceededAt < TimeSpan.FromHours(1))
+                //    return Domain.AsPerson(cachedUser);
 
                 if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5))
                     return Domain.AsPerson(cachedUser);
