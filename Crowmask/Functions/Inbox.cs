@@ -28,6 +28,19 @@ namespace Crowmask.Functions
             using var sr = new StreamReader(req.Body);
             string json = await sr.ReadToEndAsync();
 
+            if (json.Contains("dfgdreasggffgdhe4g"))
+            {
+                context.OutboundActivities.RemoveRange(context.OutboundActivities.Where(x => x.Sent));
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Sent = true,
+                    Inbox = "https://www.example.com",
+                    JsonBody = json
+                });
+                await context.SaveChangesAsync();
+            }
+
             JObject document = JObject.Parse(json);
             JArray expansion = JsonLdProcessor.Expand(document);
 
@@ -137,29 +150,32 @@ namespace Crowmask.Functions
                 foreach (var inReplyTo in postExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
                     string inReplyToId = inReplyTo["@id"].Value<string>();
-                    if (Uri.TryCreate(inReplyToId, UriKind.Absolute, out Uri idUri)
-                        && idUri.Host == host.Hostname
-                        && idUri.AbsolutePath.Split('/') is string[] arr
-                        && arr.Length >= 4
-                        && int.TryParse(arr[3], out int submitid))
+                    string[] inReplyToSplit = inReplyToId.Split('/');
+                    foreach (string str in inReplyToSplit)
                     {
-                        var submission = await context.Submissions.FindAsync(submitid);
-                        if (submission != null)
+                        if (int.TryParse(str, out int submitid))
                         {
-                            string jsonBody = AP.SerializeWithContext(
-                                translator.CreatePrivateAnnounceTo(
-                                    ["https://microblog.lakora.us"],
-                                    objectId));
-                            context.OutboundActivities.Add(new OutboundActivity
+                            var submission = await context.Submissions.FindAsync(submitid);
+                            if (submission != null)
                             {
-                                Id = Guid.NewGuid(),
-                                Inbox = "https://microblog.lakora.us/inbox",
-                                JsonBody = jsonBody,
-                                StoredAt = DateTimeOffset.UtcNow
-                            });
-                            await context.SaveChangesAsync();
+                                if (inReplyToId == $"/api/submissions/{submission.SubmitId}" || inReplyToId == submission.Url)
+                                {
+                                    string jsonBody = AP.SerializeWithContext(
+                                        translator.CreatePrivateAnnounceTo(
+                                            ["https://microblog.lakora.us"],
+                                            objectId));
+                                    context.OutboundActivities.Add(new OutboundActivity
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        Inbox = "https://microblog.lakora.us/inbox",
+                                        JsonBody = jsonBody,
+                                        StoredAt = DateTimeOffset.UtcNow
+                                    });
+                                    await context.SaveChangesAsync();
 
-                            return new StatusCodeResult(202);
+                                    return new StatusCodeResult(202);
+                                }
+                            }
                         }
                     }
                 }
