@@ -17,7 +17,7 @@ ActivityPub HTTP endpoints:
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
 - [x] `/api/actor/inbox`: accepts `Follow`, `Undo` for `Follow`, and `Create`
 - [x] `/api/actor/outbox`: contains a `Create` activity for each cached Weasyl post
-- [ ] `/api/creations/{submitid}`: returns a `Create` activity for the post from the public outbox
+- [x] `/api/creations/{submitid}`: returns a `Create` activity for the post from the public outbox
 - [x] `/api/submissions/{submitid}`: Attempts cache refresh for the post, then returns the resulting object
 
 Accepted inbox activities:

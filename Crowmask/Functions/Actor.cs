@@ -25,7 +25,7 @@ namespace Crowmask.Functions
             return new ContentResult
             {
                 Content = json,
-                ContentType = "application/json"
+                ContentType = "application/activity+json"
             };
         }
     }

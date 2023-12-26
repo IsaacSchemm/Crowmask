@@ -97,7 +97,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
     member this.ObjectToCreate (note: Note) = dict [
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/api/creations/{Guid.NewGuid()}"
+        pair "id" $"https://{host.Hostname}/api/creations/{note.submitid}"
         pair "actor" actor
         pair "published" note.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"

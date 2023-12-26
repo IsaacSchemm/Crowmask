@@ -1,19 +1,19 @@
-using System.Threading.Tasks;
+using Crowmask.ActivityPub;
+using Crowmask.Cache;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Crowmask.ActivityPub;
-using Crowmask.Cache;
+using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Submissions(CrowmaskCache cache, Translator translator)
+    public class Creations(CrowmaskCache cache, Translator translator)
     {
-        [FunctionName("Submissions")]
+        [FunctionName("Creations")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/creations/{submitid}")] HttpRequest req,
             int submitid,
             ILogger log)
         {
@@ -23,7 +23,7 @@ namespace Crowmask.Functions
                 ? new NotFoundResult()
                 : new ContentResult
                 {
-                    Content = AP.SerializeWithContext(translator.AsObject(submission)),
+                    Content = AP.SerializeWithContext(translator.ObjectToCreate(submission)),
                     ContentType = "application/activity+json"
                 };
         }
