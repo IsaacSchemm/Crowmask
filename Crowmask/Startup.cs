@@ -41,6 +41,7 @@ namespace Crowmask
             builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<CrowmaskCache>();
+            builder.Services.AddScoped<Notifier>();
             builder.Services.AddScoped<OutboundActivityProcessor>();
             builder.Services.AddScoped<Requester>();
             builder.Services.AddScoped<Translator>();

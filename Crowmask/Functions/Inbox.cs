@@ -11,30 +11,40 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, Requester requester, Translator translator)
+    public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, Notifier notifier, Requester requester, Translator translator)
     {
-        private bool TryExtractSubmitId(string objectId, out int submitid)
+        private async Task<Submission> FindSubmissionByObjectIdAsync(string objectId)
         {
-            if (Uri.TryCreate(objectId, UriKind.Absolute, out Uri idUri)
-                && idUri.Host == host.Hostname
-                && idUri.AbsolutePath.Split('/') is string[] arr
-                && arr.Length >= 4
-                && int.TryParse(arr[3], out int s))
+            string prefix = $"https://{host.Hostname}/api/submissions/";
+            if (!objectId.StartsWith(prefix))
+                return null;
+
+            string remainder = objectId[prefix.Length..];
+            if (!int.TryParse(remainder, out int submitid))
+                return null;
+
+            return await context.Submissions.FindAsync(submitid);
+        }
+
+        private async Task SendToAdminActorAsync(IDictionary<string, object> activityPubObject)
+        {
+            var adminActorDetails = await requester.FetchActorAsync(adminActor.Id);
+
+            context.OutboundActivities.Add(new OutboundActivity
             {
-                submitid = s;
-                return true;
-            }
-            else
-            {
-                submitid = 0;
-                return false;
-            }
+                Id = Guid.NewGuid(),
+                Inbox = adminActorDetails.Inbox,
+                JsonBody = AP.SerializeWithContext(activityPubObject),
+                StoredAt = DateTimeOffset.UtcNow
+            });
+            await context.SaveChangesAsync();
         }
 
         [FunctionName("Inbox")]
@@ -109,110 +119,60 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Like")
             {
-                var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
-
-                string actorUrl = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorUrl);
-
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
+                string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+                var actor = await requester.FetchActorAsync(actorId);
 
-                if (TryExtractSubmitId(objectId, out int submitid))
+                if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
-                    var submission = await context.Submissions.FindAsync(submitid);
-                    if (submission != null)
-                    {
-                        string jsonBody = AP.SerializeWithContext(
-                            translator.CreateLikeNotification(
-                                submission,
-                                actor));
-                        context.OutboundActivities.Add(new OutboundActivity
-                        {
-                            Id = Guid.NewGuid(),
-                            Inbox = adminActorObject.Inbox,
-                            JsonBody = jsonBody,
-                            StoredAt = DateTimeOffset.UtcNow
-                        });
-                        await context.SaveChangesAsync();
-
-                        return new StatusCodeResult(202);
-                    }
+                    await SendToAdminActorAsync(
+                        notifier.CreateLikeNotification(
+                            submission,
+                            actor));
                 }
 
-                return new StatusCodeResult(204);
+                return new StatusCodeResult(202);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Announce")
             {
-                var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
-
-                string actorUrl = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorUrl);
-
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
+                string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+                var actor = await requester.FetchActorAsync(actorId);
 
-                if (TryExtractSubmitId(objectId, out int submitid))
+                if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
-                    var submission = await context.Submissions.FindAsync(submitid);
-                    if (submission != null)
-                    {
-                        string jsonBody = AP.SerializeWithContext(
-                            translator.CreateShareNotification(
-                                submission,
-                                actor));
-                        context.OutboundActivities.Add(new OutboundActivity
-                        {
-                            Id = Guid.NewGuid(),
-                            Inbox = adminActorObject.Inbox,
-                            JsonBody = jsonBody,
-                            StoredAt = DateTimeOffset.UtcNow
-                        });
-                        await context.SaveChangesAsync();
-
-                        return new StatusCodeResult(202);
-                    }
+                    await SendToAdminActorAsync(
+                        notifier.CreateShareNotification(
+                            submission,
+                            actor));
                 }
 
-                return new StatusCodeResult(204);
+                return new StatusCodeResult(202);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
-                var adminActorObject = await requester.FetchActorAsync(adminActor.Id);
+                string replyId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
+                string replyJson = await requester.GetJsonAsync(new Uri(replyId));
+                JArray replyExpansion = JsonLdProcessor.Expand(JObject.Parse(replyJson));
 
-                string postJson = await requester.GetJsonAsync(new Uri(objectId));
-                JArray postExpansion = JsonLdProcessor.Expand(JObject.Parse(postJson));
+                string actorId = replyExpansion[0]["https://www.w3.org/ns/activitystreams#attributedTo"][0]["@id"].Value<string>();
+                var actor = await requester.FetchActorAsync(actorId);
 
-                string actorUrl = postExpansion[0]["https://www.w3.org/ns/activitystreams#attributedTo"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorUrl);
-
-                foreach (var inReplyTo in postExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
+                foreach (var inReplyTo in replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
-                    string inReplyToId = inReplyTo["@id"].Value<string>();
-                    if (TryExtractSubmitId(inReplyToId, out int submitid))
+                    string objectId = inReplyTo["@id"].Value<string>();
+                    if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                     {
-                        var submission = await context.Submissions.FindAsync(submitid);
-                        if (submission != null)
-                        {
-                            string jsonBody = AP.SerializeWithContext(
-                                translator.CreateReplyNotification(
-                                    submission,
-                                    actor,
-                                    objectId));
-                            context.OutboundActivities.Add(new OutboundActivity
-                            {
-                                Id = Guid.NewGuid(),
-                                Inbox = adminActorObject.Inbox,
-                                JsonBody = jsonBody,
-                                StoredAt = DateTimeOffset.UtcNow
-                            });
-                            await context.SaveChangesAsync();
-
-                            return new StatusCodeResult(202);
-                        }
+                        await SendToAdminActorAsync(
+                            notifier.CreateReplyNotification(
+                                submission,
+                                actor,
+                                objectId));
                     }
                 }
 
-                return new StatusCodeResult(204);
+                return new StatusCodeResult(202);
             }
             else
             {

@@ -13,6 +13,7 @@
     <Compile Include="IKeyProvider.fs" />
     <Compile Include="IRemoteActorDisplay.fs" />
     <Compile Include="Translator.fs" />
+    <Compile Include="Notifier.fs" />
   </ItemGroup>
 
   <ItemGroup>
