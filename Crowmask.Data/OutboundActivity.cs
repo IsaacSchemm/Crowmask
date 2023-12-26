@@ -8,8 +8,6 @@ namespace Crowmask.Data
     {
         public Guid Id { get; set; }
 
-        public Guid ExternalId { get; set; }
-
         [Required]
         public string Inbox { get; set; }
 

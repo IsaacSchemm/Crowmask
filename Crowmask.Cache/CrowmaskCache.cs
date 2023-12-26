@@ -107,16 +107,14 @@ namespace Crowmask.Cache
 
                     foreach (var inbox in inboxes)
                     {
-                        Guid guid = Guid.NewGuid();
                         _context.OutboundActivities.Add(new OutboundActivity
                         {
                             Id = Guid.NewGuid(),
-                            ExternalId = guid,
                             Inbox = inbox.Key,
                             JsonBody = AP.SerializeWithContext(
                                 newlyCreated
-                                ? _translator.ObjectToCreate(guid, newSubmission)
-                                : _translator.ObjectToUpdate(guid, newSubmission)),
+                                ? _translator.ObjectToCreate(newSubmission)
+                                : _translator.ObjectToUpdate(newSubmission)),
                             StoredAt = DateTimeOffset.UtcNow
                         });
                     }
@@ -138,13 +136,11 @@ namespace Crowmask.Cache
 
                     foreach (var inbox in inboxes)
                     {
-                        Guid guid = Guid.NewGuid();
                         _context.OutboundActivities.Add(new OutboundActivity
                         {
                             Id = Guid.NewGuid(),
-                            ExternalId = guid,
                             Inbox = inbox.Key,
-                            JsonBody = AP.SerializeWithContext(_translator.ObjectToDelete(guid, cachedSubmission.SubmitId)),
+                            JsonBody = AP.SerializeWithContext(_translator.ObjectToDelete(cachedSubmission.SubmitId)),
                             StoredAt = DateTimeOffset.UtcNow
                         });
                     }

@@ -66,9 +66,8 @@ namespace Crowmask.Functions
                 context.OutboundActivities.Add(new OutboundActivity
                 {
                     Id = Guid.NewGuid(),
-                    ExternalId = guid,
                     Inbox = actorObj.Inbox,
-                    JsonBody = AP.SerializeWithContext(translator.AcceptFollow(guid, id)),
+                    JsonBody = AP.SerializeWithContext(translator.AcceptFollow(id)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
                 await context.SaveChangesAsync();
@@ -112,16 +111,13 @@ namespace Crowmask.Functions
                         var submission = await context.Submissions.FindAsync(submitid);
                         if (submission != null)
                         {
-                            Guid guid = Guid.NewGuid();
                             string jsonBody = AP.SerializeWithContext(
                                 translator.CreatePrivateNoteTo(
-                                    guid,
                                     ["https://microblog.lakora.us"],
                                     $"Reply by {WebUtility.HtmlEncode(actorUrl)} to {WebUtility.HtmlEncode(submission.Url)}"));
                             context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
-                                ExternalId = guid,
                                 Inbox = "https://microblog.lakora.us/inbox",
                                 JsonBody = jsonBody,
                                 StoredAt = DateTimeOffset.UtcNow

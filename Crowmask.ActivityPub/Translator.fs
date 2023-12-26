@@ -95,33 +95,33 @@ type Translator(host: ICrowmaskHost) =
         ]
     ]
 
-    member this.ObjectToCreate (guid: Guid) (note: Note) = dict [
+    member this.ObjectToCreate (note: Note) = dict [
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/api/activities/{guid}"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" note.first_cached
         pair "object" (this.AsObject note)
     ]
 
-    member this.ObjectToUpdate (guid: Guid) (note: Note) = dict [
+    member this.ObjectToUpdate (note: Note) = dict [
         pair "type" "Update"
-        pair "id" $"https://{host.Hostname}/api/activities/{guid}"
+        pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" (this.AsObject note)
     ]
 
-    member _.ObjectToDelete (guid: Guid) (submitid: int) = dict [
+    member _.ObjectToDelete (submitid: int) = dict [
         pair "type" "Delete"
-        pair "id" $"https://{host.Hostname}/api/activities/{guid}"
+        pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" $"https://{host.Hostname}/api/submissions/{submitid}"
     ]
 
-    member _.AcceptFollow (guid: Guid) (followId: string) = dict [
+    member _.AcceptFollow (followId: string) = dict [
         pair "type" "Accept"
-        pair "id" $"https://{host.Hostname}/api/activities/{guid}"
+        pair "id" $"https://{host.Hostname}/transient/accept/{Guid.NewGuid()}"
         pair "actor" actor
         pair "object" followId
     ]
@@ -139,17 +139,17 @@ type Translator(host: ICrowmaskHost) =
         pair "orderedItems" note_list
     ]
 
-    member _.CreatePrivateNoteTo (guid: Guid) (actors: string seq) (html: string) = dict [
+    member _.CreatePrivateNoteTo (actors: string seq) (html: string) = dict [
         let effective_date = DateTimeOffset.UtcNow
 
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/api/activities/{guid}"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
         pair "to" [yield! actors]
         pair "actor" actor
         pair "published" effective_date
 
         pair "object" (dict [
-            pair "id" $"https://{host.Hostname}/api/private/{guid}"
+            pair "id" $"https://{host.Hostname}/transient/note/{Guid.NewGuid()}"
             pair "type" "Note"
             pair "attributedTo" actor
             pair "content" html

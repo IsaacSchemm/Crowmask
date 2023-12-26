@@ -11,9 +11,6 @@ Internal objects:
 - [x] `SubmissionTag`: an associated tag
 - [x] `Follower`: an ActivityPub actor who follows this actor
 - [x] `OutboundActivity`: a list of `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
-- [ ] `IncomingLike`: a list of incoming `Like` activities on actor's posts
-- [ ] `IncomingAnnounce`: a list of incoming `Announce` activities on actor's posts
-- [ ] `IncomingReply`: a list of incoming replies to actor's posts
 
 ActivityPub HTTP endpoints:
 
