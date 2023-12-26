@@ -66,7 +66,12 @@ namespace Crowmask.Remote
             string ds = string.Join("\n", GetHeadersToSign(req));
             byte[] data = Encoding.UTF8.GetBytes(ds);
             byte[] signature = await keyProvider.SignRsaSha256Async(data);
-            req.Headers.Add("Signature", $"keyId=\"https://{host.Hostname}/api/actor#main-key\",algorithm=\"rsa-sha256\",headers=\"(request-target) host date digest\",signature=\"{Convert.ToBase64String(signature)}\"");
+            string headerNames = "(request-target) host date";
+            if (req.Headers.Contains("Digest"))
+            {
+                headerNames += " digest";
+            }
+            req.Headers.Add("Signature", $"keyId=\"https://{host.Hostname}/api/actor#main-key\",algorithm=\"rsa-sha256\",headers=\"{headerNames}\",signature=\"{Convert.ToBase64String(signature)}\"");
         }
 
         private async Task PostAsync(Uri url, string json)
