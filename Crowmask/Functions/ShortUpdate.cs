@@ -5,22 +5,23 @@ using System.Threading.Tasks;
 using CrosspostSharp3.Weasyl;
 using Crowmask.Cache;
 using Crowmask.Data;
+using Crowmask.Remote;
 using Microsoft.Azure.WebJobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Crowmask.Functions
 {
-    public class GalleryUpdate(CrowmaskCache crowmaskCache, CrowmaskDbContext context, WeasylClient weasylClient)
+    public class ShortUpdate(CrowmaskCache crowmaskCache, CrowmaskDbContext context, OutboundActivityProcessor outboundActivityProcessor, WeasylClient weasylClient)
     {
-        [FunctionName("ShortGalleryUpdate")]
+        [FunctionName("ShortUpdate")]
         public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, ILogger log)
         {
             var user = await context.Users
                 .AsNoTracking()
                 .SingleAsync();
 
-            var cutoff = DateTimeOffset.UtcNow - TimeSpan.FromDays(1);
+            var cutoff = DateTimeOffset.UtcNow - TimeSpan.FromDays(14);
 
             await foreach (var submission in weasylClient.GetUserGallerySubmissionsAsync(user.Username))
             {
@@ -46,6 +47,8 @@ namespace Crowmask.Functions
 
                 await crowmaskCache.GetSubmission(submission.SubmitId);
             }
+
+            await outboundActivityProcessor.ProcessOutboundActivities();
         }
     }
 }
