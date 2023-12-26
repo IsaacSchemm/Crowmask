@@ -8,7 +8,7 @@ namespace Crowmask.Data
     public class User
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public int UserId { get; set; }
+        public int InternalUserId { get; set; }
 
         [Required]
         public string Username { get; set; }

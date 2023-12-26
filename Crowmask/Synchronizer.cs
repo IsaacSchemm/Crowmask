@@ -12,9 +12,7 @@ namespace Crowmask
     {
         public async Task SynchronizeAsync(DateTimeOffset cutoff)
         {
-            var user = await context.Users
-                .AsNoTracking()
-                .SingleAsync();
+            var user = await context.GetUserAsync();
 
             await foreach (var submission in weasylClient.GetUserGallerySubmissionsAsync(user.Username))
             {

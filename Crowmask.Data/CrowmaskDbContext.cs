@@ -12,6 +12,24 @@ namespace Crowmask.Data
 
         public DbSet<Submission> Submissions { get; set; }
 
-        public DbSet<User> Users { get; set; }
+        internal DbSet<User> Users { get; set; }
+
+        private const int INTERNAL_USER_ID = 0;
+
+        public async Task<User> GetUserAsync()
+        {
+            var user = await Users
+                .Include(u => u.Avatars)
+                .Include(u => u.Links)
+                .Where(u => u.InternalUserId == INTERNAL_USER_ID)
+                .SingleOrDefaultAsync();
+            if (user == null)
+            {
+                user = new User { InternalUserId = INTERNAL_USER_ID };
+                await Users.AddAsync(user);
+                await SaveChangesAsync();
+            }
+            return user;
+        }
     }
 }

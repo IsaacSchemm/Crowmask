@@ -52,7 +52,6 @@ namespace Crowmask.Cache
                     cachedSubmission = new Submission
                     {
                         SubmitId = submitid,
-                        UserId = WEASYL_MIRROR_ACTOR,
                         FirstCachedAt = DateTimeOffset.UtcNow
                     };
                     _context.Submissions.Add(cachedSubmission);
@@ -197,36 +196,20 @@ namespace Crowmask.Cache
 
         public async Task<Domain.Person> GetUser()
         {
-            var cachedUser = await _context.Users
-                .Include(u => u.Avatars)
-                .Include(u => u.Links)
-                .Where(u => u.UserId == WEASYL_MIRROR_ACTOR)
-                .SingleOrDefaultAsync();
+            var cachedUser = await _context.GetUserAsync();
 
-            if (cachedUser != null)
-            {
-                if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshSucceededAt < TimeSpan.FromHours(1))
-                    return Domain.AsPerson(cachedUser);
+            if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshSucceededAt < TimeSpan.FromHours(1))
+                return Domain.AsPerson(cachedUser);
 
-                if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5))
-                    return Domain.AsPerson(cachedUser);
+            if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5))
+                return Domain.AsPerson(cachedUser);
 
-                cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
-                await _context.SaveChangesAsync();
-            }
+            cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
+            await _context.SaveChangesAsync();
 
             var whoami = await _weasylClient.WhoamiAsync();
 
             var weasylUser = await _weasylClient.GetUserAsync(whoami.login);
-
-            if (cachedUser == null)
-            {
-                cachedUser = new User
-                {
-                    UserId = WEASYL_MIRROR_ACTOR
-                };
-                _context.Users.Add(cachedUser);
-            }
 
             var oldUser = Domain.AsPerson(cachedUser);
 

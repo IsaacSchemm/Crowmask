@@ -79,7 +79,6 @@ namespace Crowmask.Functions
                     context.Followers.Add(new Follower
                     {
                         Id = Guid.NewGuid(),
-                        UserId = CrowmaskCache.WEASYL_MIRROR_ACTOR,
                         ActorId = actor.Id,
                         MostRecentFollowId = objectId,
                         Inbox = actor.Inbox,
