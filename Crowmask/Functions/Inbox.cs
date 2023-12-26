@@ -147,9 +147,9 @@ namespace Crowmask.Functions
                         if (submission != null)
                         {
                             string jsonBody = AP.SerializeWithContext(
-                                translator.CreatePrivateNoteTo(
+                                translator.CreatePrivateAnnounceTo(
                                     ["https://microblog.lakora.us"],
-                                    $"Reply by {WebUtility.HtmlEncode(actorUrl)} to {WebUtility.HtmlEncode(submission.Url)}"));
+                                    objectId));
                             context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),

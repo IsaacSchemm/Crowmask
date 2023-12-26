@@ -139,6 +139,18 @@ type Translator(host: ICrowmaskHost) =
         pair "orderedItems" note_list
     ]
 
+    member _.CreatePrivateAnnounceTo (actors: string seq) (objectId: string) = dict [
+        let effective_date = DateTimeOffset.UtcNow
+
+        pair "type" "Announce"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "to" [yield! actors]
+        pair "actor" actor
+        pair "published" effective_date
+
+        pair "object" objectId
+    ]
+
     member _.CreatePrivateNoteTo (actors: string seq) (html: string) = dict [
         let effective_date = DateTimeOffset.UtcNow
 
