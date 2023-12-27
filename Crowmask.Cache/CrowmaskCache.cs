@@ -7,7 +7,7 @@ namespace Crowmask.Cache
 {
     public class CrowmaskCache(CrowmaskDbContext Context, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
     {
-        public async Task<Domain.Note?> GetSubmission(int submitid)
+        public async Task<Domain.Post?> GetSubmission(int submitid)
         {
             var cachedSubmission = await Context.Submissions
                 .Include(s => s.Media)

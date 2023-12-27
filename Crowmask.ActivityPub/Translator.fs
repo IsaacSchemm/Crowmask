@@ -63,7 +63,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" (this.PersonToObject person key)
     ]
 
-    member _.AsObject (note: Note) = dict [
+    member _.AsObject (note: Post) = dict [
         let backdate =
             note.first_cached - note.first_upstream > TimeSpan.FromHours(24)
         let effective_date =
@@ -94,7 +94,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         ]
     ]
 
-    member this.ObjectToCreate (note: Note) = dict [
+    member this.ObjectToCreate (note: Post) = dict [
         pair "type" "Create"
         pair "id" $"https://{host.Hostname}/api/creations/{note.submitid}"
         pair "actor" actor
@@ -104,7 +104,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" (this.AsObject note)
     ]
 
-    member this.ObjectToUpdate (note: Note) = dict [
+    member this.ObjectToUpdate (note: Post) = dict [
         pair "type" "Update"
         pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
         pair "actor" actor
@@ -131,7 +131,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" followId
     ]
 
-    member this.AsOutbox (notes: IEnumerable<Note>) = dict [
+    member this.AsOutbox (notes: IEnumerable<Post>) = dict [
         let note_list =
             notes
             |> Seq.sortByDescending (fun n -> n.first_cached)

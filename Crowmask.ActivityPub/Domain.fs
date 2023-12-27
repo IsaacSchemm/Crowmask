@@ -22,7 +22,7 @@ module Domain =
 
     type Sensitivity = General | Sensitive of warning: string
 
-    type Note = {
+    type Post = {
         submitid: int
         content: string
         url: string
@@ -33,11 +33,11 @@ module Domain =
     }
 
     type Create = {
-        note: Note
+        note: Post
     }
 
     type Update = {
-        note: Note
+        note: Post
         time: DateTimeOffset
     }
 
