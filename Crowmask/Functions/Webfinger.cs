@@ -5,12 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(CrowmaskCache crowmaskCache, ICrowmaskHost host)
+    public class WebFinger(CrowmaskCache crowmaskCache, IAdminActor adminActor, ICrowmaskHost host)
     {
         [FunctionName("WebFinger")]
         public async Task<IActionResult> Run(
@@ -21,7 +22,7 @@ namespace Crowmask.Functions
             {
                 return new ContentResult
                 {
-                    Content = "\"resource\" parameter is missing",
+                    Content = "\"resource\" parameter is missing or invalid",
                     ContentType = "text/plain",
                     StatusCode = 400
                 };
@@ -55,6 +56,11 @@ namespace Crowmask.Functions
                         }
                     }
                 });
+            }
+            else if (Uri.TryCreate(adminActor.Id, UriKind.Absolute, out Uri adminActorUri))
+            {
+                var redirectUri = new Uri(adminActorUri, $"/.well-known/webfinger?resource={Uri.EscapeDataString(resource)}");
+                return new RedirectResult(redirectUri.AbsoluteUri);
             }
             else
             {

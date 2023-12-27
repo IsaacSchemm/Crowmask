@@ -67,9 +67,6 @@ A cached user (name, icon, etc.) will not be refreshed if:
 * the last attempted cache refresh was within the past 5 minutes
 * the last successful cache refresh was within the past hour
 
-Submissions/posts that are less than 24 hours old will show a creation date of
-when they were cached by Crowmask, not when they were created.
-
 Other tasks:
 
 - [x] Sign HTTP requets using Azure Key Vault
@@ -84,7 +81,7 @@ Other tasks:
 - [x] Webfinger implementation
 - [x] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [x] Dedupe follow requests by actor (only honor most recent Follow)
-- [ ] Forward unknown webfinger requests to the admin actor's server, if any
+- [x] Forward unknown webfinger requests to the admin actor's server, if any
 - [ ] Make the domain in the handle configurable
 - [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
 - [ ] Linkify the external links from Weasyl in the same way Weasyl does
