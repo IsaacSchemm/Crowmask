@@ -3,21 +3,7 @@
 open System
 open System.Collections.Generic
 open System.Net
-open System.Text.Json
-
-open Domain
-
-module AP =
-    let Context: obj list = [
-        "https://w3id.org/security/v1"
-        "https://www.w3.org/ns/activitystreams"
-        {| sensitive = "as:sensitive" |}
-    ]
-
-    let SerializeWithContext (apObject: IDictionary<string, obj>) = JsonSerializer.Serialize(dict [   
-        "@context", Context :> obj
-        for p in apObject do p.Key, p.Value
-    ])
+open Crowmask.DomainModeling
 
 type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
     let actor = $"https://{host.Hostname}/api/actor"
@@ -31,7 +17,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "outbox" $"{actor}/outbox"
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
-        pair "summary" (WebUtility.HtmlEncode(person.summary))
+        pair "summary" person.summary
         pair "url" person.url
         pair "publicKey" {|
             id = $"{actor}#main-key"
@@ -136,15 +122,9 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" followId
     ]
 
-    member this.AsOutbox (notes: IEnumerable<Post>) = dict [
-        let note_list =
-            notes
-            |> Seq.sortByDescending (fun n -> n.first_cached)
-            |> Seq.map this.ObjectToCreate
-            |> Seq.toList
-
+    member this.AsOutbox (posts: IReadOnlyList<Post>) = dict [
         pair "id" $"{actor}/outbox"
         pair "type" "OrderedCollection"
-        pair "totalItems" note_list.Length
-        pair "orderedItems" note_list
+        pair "totalItems" posts.Count
+        pair "orderedItems" [for p in posts do this.ObjectToCreate p]
     ]

@@ -1,61 +1,61 @@
-﻿namespace Crowmask.ActivityPub
+﻿namespace Crowmask.DomainModeling
 
 open System
 open MimeMapping
 open Crowmask.Data
 
+type PersonMetadata = {
+    name: string
+    value: string
+    uri: Uri option
+}
+
+type Person = {
+    preferredUsername: string
+    name: string
+    summary: string
+    url: string
+    iconUrls: string list
+    attachments: PersonMetadata list
+}
+
+type Image = {
+    mediaType: string
+    url: string
+}
+
+type Attachment = Image of Image
+
+type Sensitivity = General | Sensitive of warning: string
+
+type Post = {
+    submitid: int
+    title: string
+    content: string
+    url: string
+    first_upstream: DateTimeOffset
+    first_cached: DateTimeOffset
+    attachments: Attachment list
+    sensitivity: Sensitivity
+}
+
+type Create = {
+    note: Post
+}
+
+type Update = {
+    note: Post
+    time: DateTimeOffset
+}
+
+type Delete = {
+    submitid: int
+    time: DateTimeOffset
+}
+
+type Activity = Create of Create | Update of Update | Delete of Delete
+
 module Domain =
-    type PersonMetadata = {
-        name: string
-        value: string
-        uri: Uri option
-    }
-
-    type Person = {
-        preferredUsername: string
-        name: string
-        summary: string
-        url: string
-        iconUrls: string list
-        attachments: PersonMetadata list
-    }
-
-    type Image = {
-        mediaType: string
-        url: string
-    }
-
-    type Attachment = Image of Image
-
-    type Sensitivity = General | Sensitive of warning: string
-
-    type Post = {
-        submitid: int
-        title: string
-        content: string
-        url: string
-        first_upstream: DateTimeOffset
-        first_cached: DateTimeOffset
-        attachments: Attachment list
-        sensitivity: Sensitivity
-    }
-
-    type Create = {
-        note: Post
-    }
-
-    type Update = {
-        note: Post
-        time: DateTimeOffset
-    }
-
-    type Delete = {
-        submitid: int
-        time: DateTimeOffset
-    }
-
-    type Activity = Create of Create | Update of Update | Delete of Delete
-
     let AsPerson (user: User) =
         {
             preferredUsername = user.Username

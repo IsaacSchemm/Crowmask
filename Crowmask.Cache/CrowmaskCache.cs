@@ -1,13 +1,14 @@
-﻿using Crowmask.Weasyl;
-using Crowmask.ActivityPub;
+﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
+using Crowmask.DomainModeling;
+using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Cache
 {
     public class CrowmaskCache(CrowmaskDbContext Context, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
     {
-        public async Task<Domain.Post?> GetSubmission(int submitid)
+        public async Task<Post?> GetSubmission(int submitid)
         {
             var cachedSubmission = await Context.Submissions
                 .Include(s => s.Media)
@@ -142,7 +143,7 @@ namespace Crowmask.Cache
             }
         }
 
-        public async Task<Domain.Person> GetUser()
+        public async Task<Person> GetUser()
         {
             var cachedUser = await Context.GetUserAsync();
 

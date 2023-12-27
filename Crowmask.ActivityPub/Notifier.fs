@@ -2,6 +2,7 @@
 
 open System
 open System.Net
+open Crowmask.DomainModeling
 
 type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
     let actor = $"https://{host.Hostname}/api/actor"

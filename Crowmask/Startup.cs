@@ -1,6 +1,7 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Data;
+using Crowmask.DomainModeling;
 using Crowmask.Remote;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;

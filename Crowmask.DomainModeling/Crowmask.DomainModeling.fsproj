@@ -6,15 +6,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="IPublicKey.fs" />
-    <Compile Include="AP.fs" />
-    <Compile Include="Translator.fs" />
-    <Compile Include="Notifier.fs" />
+    <Compile Include="IAdminActor.fs" />
+    <Compile Include="ICrowmaskHost.fs" />
+    <Compile Include="IHandleHost.fs" />
+    <Compile Include="Domain.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MimeMapping" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
-    <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
   </ItemGroup>
 
 </Project>

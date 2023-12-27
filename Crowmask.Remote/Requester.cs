@@ -1,5 +1,6 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
+using Crowmask.DomainModeling;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
