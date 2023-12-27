@@ -97,6 +97,7 @@ namespace Crowmask.Remote
 
             await AddSignatureAsync(req);
 
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""));
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
 
             req.Content = new ByteArrayContent(body);
@@ -117,6 +118,7 @@ namespace Crowmask.Remote
 
             await AddSignatureAsync(req);
 
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""));
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/activity+json"));
 
             using var httpClient = httpClientFactory.CreateClient();
