@@ -85,12 +85,12 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "attachment" [
             for attachment in note.attachments do
                 match attachment with
-                | Image image ->
-                    {|
-                        ``type`` = "Document"
-                        name = $"{image.title} (from weasyl.com; no additional description available)"
-                        url = image.url
-                    |}
+                | Image image -> dict [
+                    pair "type" "Document"
+                    pair "name" $"{image.title} (from weasyl.com; no additional description available)"
+                    pair "mediaType" image.mediaType
+                    pair "url" image.url
+                ]
         ]
     ]
 

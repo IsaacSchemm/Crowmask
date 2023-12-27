@@ -1,6 +1,7 @@
 ﻿namespace Crowmask.ActivityPub
 
 open System
+open MimeMapping
 open Crowmask.Data
 
 module Domain =
@@ -15,6 +16,7 @@ module Domain =
 
     type Image = {
         title: string
+        mediaType: string
         url: string
     }
 
@@ -82,6 +84,10 @@ module Domain =
                     for media in submission.Media do
                         Image {
                             title = submission.Title
+                            mediaType =
+                                (new Uri(media.Url)).Segments
+                                |> Array.last
+                                |> MimeUtility.GetMimeMapping
                             url = media.Url
                         }
             ]
