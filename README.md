@@ -85,8 +85,8 @@ Other tasks:
 - [x] Make the domain in the handle configurable
 - [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
 - [ ] Linkify the external links from Weasyl in the same way Weasyl does
-- [ ] Add HTML redirects
-- [ ] Experiment with other post types besides `Note`
+- [ ] Add handlers to GET endpoints for `text/html`
+- [x] Experiment with other post types besides `Note`
 
 Potential future improvements:
 
