@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(CrowmaskCache crowmaskCache, IAdminActor adminActor, ICrowmaskHost host)
+    public class WebFinger(CrowmaskCache crowmaskCache, IHandleHost handleHost, IAdminActor adminActor, ICrowmaskHost host)
     {
         [FunctionName("WebFinger")]
         public async Task<IActionResult> Run(
@@ -34,11 +34,13 @@ namespace Crowmask.Functions
 
             string actor = $"https://{host.Hostname}/api/actor";
 
-            if (resource == $"acct:{person.preferredUsername}@{host.Hostname}" || resource == actor)
+            string handle = $"acct:{person.preferredUsername}@{handleHost.Hostname}";
+
+            if (resource == handle || resource == actor)
             {
                 return new JsonResult(new
                 {
-                    subject = resource,
+                    subject = handle,
                     aliases = new[] { actor },
                     links = new[]
                     {

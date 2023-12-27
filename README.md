@@ -82,7 +82,7 @@ Other tasks:
 - [x] Make sure that a submission belongs to the logged-in user before adding and returning it
 - [x] Dedupe follow requests by actor (only honor most recent Follow)
 - [x] Forward unknown webfinger requests to the admin actor's server, if any
-- [ ] Make the domain in the handle configurable
+- [x] Make the domain in the handle configurable
 - [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
 - [ ] Linkify the external links from Weasyl in the same way Weasyl does
 - [ ] Add HTML redirects
@@ -110,8 +110,9 @@ Example `local.settings.json` (default settings omitted):
       "Values": {
         "AdminActor": "https://pixelfed.example.com/users/...",
         "CosmosDBConnectionString": "AccountEndpoint=...;AccountKey=...;",
-        "KeyVaultHost": "crowmask.vault.azure.net",
         "CrowmaskHost": "crowmask.example.com",
+        "HandleHost": "crowmask.example.com",
+        "KeyVaultHost": "crowmask.vault.azure.net",
         "WeasylApiKey": "..."
       }
     }

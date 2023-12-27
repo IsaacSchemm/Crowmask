@@ -16,7 +16,7 @@ namespace Crowmask
     {
         private record AdminActor(string Id) : IAdminActor;
 
-        private record CrowmaskHost(string Hostname) : ICrowmaskHost;
+        private record Host(string Hostname) : ICrowmaskHost, IHandleHost;
 
         private record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;
 
@@ -28,12 +28,15 @@ namespace Crowmask
             if (Environment.GetEnvironmentVariable("CosmosDBConnectionString") is string connectionString)
                 builder.Services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(connectionString, databaseName: "Crowmask"));
 
-            if (Environment.GetEnvironmentVariable("CrowmaskHost") is string hostname)
-                builder.Services.AddSingleton<ICrowmaskHost>(new CrowmaskHost(hostname));
+            if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
+                builder.Services.AddSingleton<ICrowmaskHost>(new Host(crowmaskHost));
 
-            if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost && Uri.TryCreate($"https://{keyVaultHost}", UriKind.Absolute, out Uri vaultUri))
+            if (Environment.GetEnvironmentVariable("HandleHost") is string handleHost)
+                builder.Services.AddSingleton<IHandleHost>(new Host(handleHost));
+
+            if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost)
             {
-                var provider = new KeyProvider(vaultUri);
+                var provider = new KeyProvider(new Uri($"https://{keyVaultHost}"));
                 builder.Services.AddSingleton<ISigner>(provider);
                 builder.Services.AddSingleton<IPublicKeyProvider>(provider);
             }
