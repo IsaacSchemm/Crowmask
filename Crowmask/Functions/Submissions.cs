@@ -6,10 +6,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.Markdown;
+using System.Net;
+using Crowmask.DomainModeling;
 
 namespace Crowmask.Functions
 {
-    public class Submissions(CrowmaskCache cache, Translator translator)
+    public class Submissions(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
     {
         [FunctionName("Submissions")]
         public async Task<IActionResult> Run(
@@ -17,15 +20,40 @@ namespace Crowmask.Functions
             int submitid,
             ILogger log)
         {
-            var submission = await cache.GetSubmission(submitid);
+            var submission = await crowmaskCache.GetSubmission(submitid);
 
-            return submission == null
-                ? new NotFoundResult()
-                : new ContentResult
+            if (submission == null)
+                return new NotFoundResult();
+
+            foreach (var format in ContentNegotiation.FindAppropriateFormats(req.GetTypedHeaders().Accept))
+            {
+                if (format.IsActivityJson)
                 {
-                    Content = AP.SerializeWithContext(translator.AsObject(submission)),
-                    ContentType = "application/activity+json"
-                };
+                    return new ContentResult
+                    {
+                        Content = AP.SerializeWithContext(translator.AsObject(submission)),
+                        ContentType = format.ContentType
+                    };
+                }
+                else if (format.IsMarkdown)
+                {
+                    return new ContentResult
+                    {
+                        Content = markdownTranslator.ToMarkdown(submission),
+                        ContentType = format.ContentType
+                    };
+                }
+                else if (format.IsHTML)
+                {
+                    return new ContentResult
+                    {
+                        Content = markdownTranslator.ToHtml(submission),
+                        ContentType = format.ContentType
+                    };
+                }
+            }
+
+            return new StatusCodeResult((int)HttpStatusCode.NotAcceptable);
         }
     }
 }

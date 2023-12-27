@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Remote", "Crowmask
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.DomainModeling", "Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj", "{4EC8603A-1847-40F1-94CC-4A76199E0F1E}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.Markdown", "Crowmask.Markdown\Crowmask.Markdown.fsproj", "{3AD78D98-E601-4FE9-88F8-DED30DA20854}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{4EC8603A-1847-40F1-94CC-4A76199E0F1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EC8603A-1847-40F1-94CC-4A76199E0F1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4EC8603A-1847-40F1-94CC-4A76199E0F1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AD78D98-E601-4FE9-88F8-DED30DA20854}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AD78D98-E601-4FE9-88F8-DED30DA20854}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AD78D98-E601-4FE9-88F8-DED30DA20854}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AD78D98-E601-4FE9-88F8-DED30DA20854}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -2,6 +2,7 @@
 using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Markdown;
 using Crowmask.Remote;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -48,6 +49,7 @@ namespace Crowmask
             builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<CrowmaskCache>();
+            builder.Services.AddScoped<MarkdownTranslator>();
             builder.Services.AddScoped<Notifier>();
             builder.Services.AddScoped<OutboundActivityProcessor>();
             builder.Services.AddScoped<Requester>();
