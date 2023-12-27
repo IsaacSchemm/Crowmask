@@ -39,5 +39,27 @@ namespace Crowmask.Data
 
         [NotMapped]
         public string Summary => ProfileText ?? "";
+
+        public bool Stale
+        {
+            get
+            {
+                var now = DateTimeOffset.UtcNow;
+
+                bool refreshed_within_1_hour =
+                    now - CacheRefreshSucceededAt < TimeSpan.FromHours(1);
+
+                bool refresh_attempted_within_5_minutes =
+                    now - CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5);
+
+                if (refresh_attempted_within_5_minutes)
+                    return false;
+
+                if (refreshed_within_1_hour)
+                    return false;
+
+                return true;
+            }
+        }
     }
 }

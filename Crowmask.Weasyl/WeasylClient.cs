@@ -1,54 +1,33 @@
 ﻿using System.Net.Http.Json;
-using System.Text;
 
 namespace Crowmask.Weasyl
 {
     public class WeasylClient
     {
-        private readonly HttpClient _httpClient = new();
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IWeasylApiKeyProvider _apiKeyProvider;
 
-        public WeasylClient(IWeasylApiKeyProvider apiKeyProvider)
+        public WeasylClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
         {
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
+            _httpClientFactory = httpClientFactory;
+            _apiKeyProvider = apiKeyProvider;
         }
 
-        public struct GalleryRequestOptions
+        private async Task<T> GetJsonAsync<T>(string uri)
         {
-            public DateTimeOffset? since;
-            public int? count;
-            public int? folderid;
-            public int? backid;
-            public int? nextid;
-        }
+            using var httpClient = _httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", _apiKeyProvider.ApiKey);
 
-        public async Task<WeasylGallery> GetUserGalleryAsync(string user, GalleryRequestOptions options = default)
-        {
-            if (user == null)
-                throw new ArgumentNullException(nameof(user));
-
-            StringBuilder qs = new();
-            if (options.since != null)
-                qs.Append($"&since={options.since:o}");
-            if (options.count != null)
-                qs.Append($"&count={options.count}");
-            if (options.folderid != null)
-                qs.Append($"&folderid={options.folderid}");
-            if (options.backid != null)
-                qs.Append($"&backid={options.backid}");
-            if (options.nextid != null)
-                qs.Append($"&nextid={options.nextid}");
-
-            using HttpResponseMessage resp = await _httpClient.GetAsync(
-                $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/gallery?{qs}");
+            using HttpResponseMessage resp = await httpClient.GetAsync(uri);
             resp.EnsureSuccessStatusCode();
-            return await resp.Content.ReadFromJsonAsync<WeasylGallery>()
+            return await resp.Content.ReadFromJsonAsync<T>()
                 ?? throw new Exception("Null response from API");
         }
 
         public async IAsyncEnumerable<WeasylGallerySubmission> GetUserGallerySubmissionsAsync(string username)
         {
-            var gallery = await GetUserGalleryAsync(username);
+            var gallery = await GetJsonAsync<WeasylGallery>(
+                $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery");
 
             while (true)
             {
@@ -59,12 +38,8 @@ namespace Crowmask.Weasyl
 
                 if (gallery.nextid is int nextid)
                 {
-                    gallery = await GetUserGalleryAsync(
-                        username,
-                        new GalleryRequestOptions
-                        {
-                            nextid = nextid
-                        });
+                    gallery = await GetJsonAsync<WeasylGallery>(
+                        $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery?nextid={nextid}");
                 }
                 else
                 {
@@ -75,29 +50,20 @@ namespace Crowmask.Weasyl
 
         public async Task<WeasylSubmissionDetail> GetSubmissionAsync(int submitid)
         {
-            using HttpResponseMessage resp = await _httpClient.GetAsync(
+            return await GetJsonAsync<WeasylSubmissionDetail>(
                 $"https://www.weasyl.com/api/submissions/{submitid}/view");
-            resp.EnsureSuccessStatusCode();
-            return await resp.Content.ReadFromJsonAsync<WeasylSubmissionDetail>()
-                ?? throw new Exception("Null response from API");
         }
 
         public async Task<WeasylUserProfile> GetUserAsync(string user)
         {
-            using HttpResponseMessage resp = await _httpClient.GetAsync(
+            return await GetJsonAsync<WeasylUserProfile>(
                 $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view");
-            resp.EnsureSuccessStatusCode();
-            return await resp.Content.ReadFromJsonAsync<WeasylUserProfile>()
-                ?? throw new Exception("Null response from API");
         }
 
         public async Task<WeasylUserBase> WhoamiAsync()
         {
-            using HttpResponseMessage resp = await _httpClient.GetAsync(
+            return await GetJsonAsync<WeasylUserBase>(
                 $"https://www.weasyl.com/api/whoami");
-            resp.EnsureSuccessStatusCode();
-            return await resp.Content.ReadFromJsonAsync<WeasylUserBase>()
-                ?? throw new Exception("Null response from API");
         }
     }
 }

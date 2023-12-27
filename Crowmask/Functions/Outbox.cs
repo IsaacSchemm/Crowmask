@@ -1,5 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.Weasyl;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -11,15 +12,18 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(CrowmaskCache crowmaskCache, Translator translator)
+    public class Outbox(CrowmaskCache crowmaskCache, Translator translator, WeasylClient weasylClient)
     {
         [FunctionName("Outbox")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequest req,
             ILogger log)
         {
-            var recent = await crowmaskCache
-                .GetSubmissionsAsync(max: 20)
+            var whoami = await weasylClient.WhoamiAsync();
+
+            var recent = await weasylClient.GetUserGallerySubmissionsAsync(whoami.login)
+                .Take(20)
+                .SelectAwait(async x => await crowmaskCache.GetSubmission(x.submitid))
                 .ToListAsync();
 
             var outbox = translator.AsOutbox(recent);

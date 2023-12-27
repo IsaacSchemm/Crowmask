@@ -1,7 +1,6 @@
 ﻿namespace Crowmask.ActivityPub
 
 open System
-open System.Net
 open Crowmask.Data
 
 module Domain =
@@ -15,7 +14,7 @@ module Domain =
     }
 
     type Image = {
-        content: string
+        title: string
         url: string
     }
 
@@ -82,7 +81,7 @@ module Domain =
                 if submission.SubtypeId = Submission.Subtype.Visual then
                     for media in submission.Media do
                         Image {
-                            content = submission.Title
+                            title = submission.Title
                             url = media.Url
                         }
             ]

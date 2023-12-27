@@ -30,26 +30,28 @@ type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
     let objectIdFor (submission: Crowmask.Data.Submission) =
         $"https://{host.Hostname}/api/submissions/{submission.SubmitId}"
 
-    let enc =
-        WebUtility.HtmlEncode
+    let enc str =
+        WebUtility.HtmlEncode str
 
-    member _.CreateLikeNotification (submission: Crowmask.Data.Submission) (other_actor: IRemoteActorDisplay) =
+    member _.CreateLikeNotification submission actorId actorName =
         createActivity (String.concat " " [
-            $"""<a href="{enc other_actor.Id}">{enc other_actor.DisplayName}</a>"""
+            $"""<a href="{enc actorId}">{enc actorName}</a>"""
             "liked the post"
             $"""<a href="{objectIdFor submission}">{enc submission.Title}</a>"""
         ])
 
-    member _.CreateShareNotification (submission: Crowmask.Data.Submission) (other_actor: IRemoteActorDisplay) =
+    member _.CreateShareNotification submission actorId actorName =
         createActivity (String.concat " " [
-            $"""<a href="{enc other_actor.Id}">{enc other_actor.DisplayName}</a>"""
+            $"""<a href="{enc actorId}">{enc actorName}</a>"""
             "shared the post"
             $"""<a href="{objectIdFor submission}">{enc submission.Title}</a>"""
         ])
 
-    member _.CreateReplyNotification (submission: Crowmask.Data.Submission) (other_actor: IRemoteActorDisplay) (reply_object_id: string) =
+    member _.CreateReplyNotification submission actorId actorName replyId =
         createActivity (String.concat " " [
-            $"""<a href="{enc reply_object_id}">{enc other_actor.DisplayName} replied</a>"""
-            "to the post"
+            $"""<a href="{enc replyId}">New reply</a>"""
+            "posted by"
+            $"""<a href="{enc actorId}">{enc actorName}</a>"""
+            "on"
             $"""<a href="{objectIdFor submission}">{enc submission.Title}</a>"""
         ])

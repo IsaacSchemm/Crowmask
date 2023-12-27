@@ -29,14 +29,7 @@ Timed functions:
 
 - [x] `ShortUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) within the past 60 days, then send outbound activities (every five minutes)
 - [x] `LongUpdate`: Attempt cache refresh for all posts (cached or on Weasyl) and the actor's name/avatar/etc (every day)
-- [x] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` more than 24 hours old (every hour)
-
-Note that a cached submission will not be refreshed if:
-
-* the last attempted cache refresh was within the past 5 minutes
-* the last successful cache refresh was within the past hour, and the post is more than an hour old
-* the last successful cache refresh was within the past 7 days, and the post is more than 7 days old
-* the last successful cache refresh was within the past 28 days, and the post is more than 28 days old
+- [x] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
 
 Other functions:
 
@@ -52,19 +45,27 @@ Other functions:
         * Mark as sent (no longer pending)
     * If a send fails, don't try sending it again for 4 hours
 - [x] Cache Refresh
-    * If the post is cached:
-        * If the post is at least 24 hours old and the cache is less than an hour old, keep it
-        * If a cache refresh was performed on this post within the last 5 minutes, keep it
-    * Pull the post from Weasyl
-    * Update or delete our copy
-    * Add outbound activities
+    * If the post is stale:
+        * Pull the post from Weasyl
+        * Update or delete our copy
+        * Add outbound activities
 - [x] User Cache Refresh
-    * If the post is cached:
-        * If the post is at least 24 hours old and the cache is less than an hour old, keep it
-        * If a cache refresh was performed on this post within the last 5 minutes, keep it
-    * Pull the user from Weasyl
-    * Update or delete our copy
-    * Add outbound activities
+    * If the user info is stale:
+        * Pull the user from Weasyl
+        * Update or delete our copy
+        * Add outbound activities
+
+Note that a cached submission will not be refreshed if:
+
+* the last attempted cache refresh was within the past 5 minutes
+* the last successful cache refresh was within the past hour, and the post is more than an hour old
+* the last successful cache refresh was within the past 7 days, and the post is more than 7 days old
+* the last successful cache refresh was within the past 28 days, and the post is more than 28 days old
+
+A cached user (name, icon, etc.) will not be refreshed if:
+
+* the last attempted cache refresh was within the past 5 minutes
+* the last successful cache refresh was within the past hour
 
 Submissions/posts that are less than 24 hours old will show a creation date of
 when they were cached by Crowmask, not when they were created.

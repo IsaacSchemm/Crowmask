@@ -12,7 +12,6 @@ namespace Crowmask.Remote
             while (true)
             {
                 var activities = await context.OutboundActivities
-                    .Where(a => !a.Sent)
                     .Where(a => !inboxesToSkip.Contains(a.Inbox))
                     .OrderBy(a => a.StoredAt)
                     .Take(100)
@@ -34,7 +33,7 @@ namespace Crowmask.Remote
                     try
                     {
                         await requester.SendAsync(activity);
-                        activity.Sent = true;
+                        context.OutboundActivities.Remove(activity);
                     }
                     catch (HttpRequestException)
                     {

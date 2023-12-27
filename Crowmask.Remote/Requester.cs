@@ -8,12 +8,9 @@ using System.Text;
 
 namespace Crowmask.Remote
 {
-    public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, IKeyProvider keyProvider)
+    public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, ISigner signer)
     {
-        public record RemoteActor(string Id, string? Name, string Inbox, string? SharedInbox) : IRemoteActorDisplay
-        {
-            string IRemoteActorDisplay.DisplayName => Name ?? Id;
-        }
+        public record RemoteActor(string Id, string? Name, string Inbox, string? SharedInbox);
 
         /// <summary>
         /// Fetches and returns an actor.
@@ -76,7 +73,7 @@ namespace Crowmask.Remote
         {
             string ds = string.Join("\n", GetHeadersToSign(req));
             byte[] data = Encoding.UTF8.GetBytes(ds);
-            byte[] signature = await keyProvider.SignRsaSha256Async(data);
+            byte[] signature = await signer.SignRsaSha256Async(data);
             string headerNames = "(request-target) host date";
             if (req.Headers.Contains("Digest"))
             {

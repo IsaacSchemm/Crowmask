@@ -17,7 +17,5 @@ namespace Crowmask.Data
         public DateTimeOffset StoredAt { get; set; }
 
         public DateTimeOffset DelayUntil { get; set; }
-
-        public bool Sent { get; set; }
     }
 }

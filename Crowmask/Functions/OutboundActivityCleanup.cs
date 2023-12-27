@@ -13,7 +13,7 @@ namespace Crowmask.Functions
         [FunctionName("OutboundActivityCleanup")]
         public async Task Run([TimerTrigger("0 2 * * * *")] TimerInfo myTimer, ILogger log)
         {
-            var cutoff = DateTime.UtcNow - TimeSpan.FromHours(24);
+            var cutoff = DateTime.UtcNow - TimeSpan.FromDays(7);
 
             while (true)
             {

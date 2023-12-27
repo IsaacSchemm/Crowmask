@@ -12,9 +12,9 @@ namespace Crowmask
     {
         public async Task SynchronizeAsync(DateTimeOffset cutoff)
         {
-            var user = await context.GetUserAsync();
+            var whoami = await weasylClient.WhoamiAsync();
 
-            await foreach (var submission in weasylClient.GetUserGallerySubmissionsAsync(user.Username))
+            await foreach (var submission in weasylClient.GetUserGallerySubmissionsAsync(whoami.login))
             {
                 if (submission.posted_at < cutoff)
                 {

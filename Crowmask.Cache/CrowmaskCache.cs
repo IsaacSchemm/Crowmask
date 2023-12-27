@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
     {
         public async Task<Domain.Note?> GetSubmission(int submitid)
         {
@@ -140,46 +140,6 @@ namespace Crowmask.Cache
                     ? null
                     : Domain.AsNote(cachedSubmission);
             }
-        }
-
-        public async IAsyncEnumerable<Domain.Note> GetSubmissionsAsync(int max)
-        {
-            var mostRecent = await Context.Submissions
-                .OrderByDescending(s => s.FirstCachedAt)
-                .Select(s => s.SubmitId)
-                .Take(max)
-                .ToListAsync();
-
-            foreach (int submitId in mostRecent)
-            {
-                var note = await GetSubmission(submitId);
-                if (note != null)
-                    yield return note;
-            }
-
-            //var whoami = await _weasylClient.WhoamiAsync();
-
-            //int? nextid = null;
-
-            //while (true)
-            //{
-            //    var gallery = await _weasylClient.GetUserGalleryAsync(whoami.login, new WeasylClient.GalleryRequestOptions
-            //    {
-            //        nextid = nextid
-            //    });
-
-            //    if (!gallery.submissions.Any())
-            //        yield break;
-
-            //    foreach (var submission in gallery.submissions)
-            //    {
-            //        var note = await GetSubmission(submission.submitid);
-            //        if (note != null)
-            //            yield return note;
-            //    }
-
-            //    nextid = gallery.nextid;
-            //}
         }
 
         public async Task<Domain.Person> GetUser()

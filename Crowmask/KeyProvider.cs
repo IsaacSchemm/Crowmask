@@ -2,12 +2,14 @@
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
 using Crowmask.ActivityPub;
+using Crowmask.Cache;
+using Crowmask.Remote;
 using System;
 using System.Threading.Tasks;
 
 namespace Crowmask
 {
-    public class KeyProvider : IKeyProvider
+    public class KeyProvider : IPublicKeyProvider, ISigner
     {
         private record PublicKey(string Pem) : IPublicKey;
 

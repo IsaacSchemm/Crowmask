@@ -127,7 +127,8 @@ namespace Crowmask.Functions
                     await SendToAdminActorAsync(
                         notifier.CreateLikeNotification(
                             submission,
-                            actor));
+                            actor.Id,
+                            actor.Name ?? actor.Id));
                 }
 
                 return new StatusCodeResult(202);
@@ -143,7 +144,8 @@ namespace Crowmask.Functions
                     await SendToAdminActorAsync(
                         notifier.CreateShareNotification(
                             submission,
-                            actor));
+                            actor.Id,
+                            actor.Name ?? actor.Id));
                 }
 
                 return new StatusCodeResult(202);
@@ -166,7 +168,8 @@ namespace Crowmask.Functions
                         await SendToAdminActorAsync(
                             notifier.CreateReplyNotification(
                                 submission,
-                                actor,
+                                actor.Id,
+                                actor.Name ?? actor.Id,
                                 replyId));
                     }
                 }

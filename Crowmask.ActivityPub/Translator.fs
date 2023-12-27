@@ -88,8 +88,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
                 | Image image ->
                     {|
                         ``type`` = "Document"
-                        mediaType = "image/png" // TODO get type from Weasyl and cache it
-                        name = $"{image.content} (no additional description available)"
+                        name = $"{image.title} (from weasyl.com; no additional description available)"
                         url = image.url
                     |}
         ]
