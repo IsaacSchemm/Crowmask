@@ -2,6 +2,7 @@
 
 open System
 open System.Collections.Generic
+open System.Net
 open System.Text.Json
 
 open Domain
@@ -30,7 +31,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "outbox" $"{actor}/outbox"
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
-        pair "summary" person.summary
+        pair "summary" (WebUtility.HtmlEncode(person.summary))
         pair "url" person.url
         pair "publicKey" {|
             id = $"{actor}#main-key"
@@ -46,11 +47,14 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
                 url = url
             |}
         pair "attachment" [
-            for (name, value) in person.attachments do
+            for metadata in person.attachments do
                 {|
                     ``type`` = "PropertyValue"
-                    name = name
-                    value = value
+                    name = metadata.name
+                    value =
+                        match metadata.uri with
+                        | Some uri -> $"<a href='{uri.AbsoluteUri}'>{WebUtility.HtmlEncode(metadata.value)}</a>"
+                        | None -> WebUtility.HtmlEncode(metadata.value)
                 |}
         ]
     ]

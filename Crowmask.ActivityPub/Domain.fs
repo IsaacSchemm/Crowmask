@@ -5,13 +5,19 @@ open MimeMapping
 open Crowmask.Data
 
 module Domain =
+    type PersonMetadata = {
+        name: string
+        value: string
+        uri: Uri option
+    }
+
     type Person = {
         preferredUsername: string
         name: string
         summary: string
         url: string
         iconUrls: string list
-        attachments: (string * string) list
+        attachments: PersonMetadata list
     }
 
     type Image = {
@@ -59,16 +65,32 @@ module Domain =
             iconUrls = [for a in user.Avatars do a.Url]
             attachments = [
                 if user.Age.HasValue then
-                    ("Age", $"{user.Age}")
+                    {
+                        name = "Age"
+                        value = $"{user.Age}"
+                        uri = None
+                    }
 
                 if not (String.IsNullOrWhiteSpace(user.Gender)) then
-                    ("Gender", user.Gender)
+                    {
+                        name = "Gender"
+                        value = $"{user.Gender}"
+                        uri = None
+                    }
 
                 if not (String.IsNullOrWhiteSpace(user.Location)) then
-                    ("Location", user.Location)
+                    {
+                        name = "Location"
+                        value = $"{user.Location}"
+                        uri = None
+                    }
 
                 for link in user.Links do
-                    (link.Site, link.UsernameOrUrl)
+                    {
+                        name = link.Site
+                        value = link.UsernameOrUrl
+                        uri = Option.ofObj link.Uri
+                    }
             ]
         }
 
