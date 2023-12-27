@@ -15,7 +15,6 @@ module Domain =
     }
 
     type Image = {
-        title: string
         mediaType: string
         url: string
     }
@@ -26,6 +25,7 @@ module Domain =
 
     type Post = {
         submitid: int
+        title: string
         content: string
         url: string
         first_upstream: DateTimeOffset
@@ -75,6 +75,7 @@ module Domain =
     let AsNote (submission: Submission) =
         {
             submitid = submission.SubmitId
+            title = submission.Title
             content = submission.Content
             url = submission.Url
             first_upstream = submission.PostedAt
@@ -83,7 +84,6 @@ module Domain =
                 if submission.SubtypeId = Submission.Subtype.Visual then
                     for media in submission.Media do
                         Image {
-                            title = submission.Title
                             mediaType =
                                 (new Uri(media.Url)).Segments
                                 |> Array.last

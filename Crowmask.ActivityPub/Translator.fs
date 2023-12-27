@@ -71,6 +71,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
         pair "id" $"https://{host.Hostname}/api/submissions/{note.submitid}"
         pair "type" "Note"
+        pair "name" note.title
         pair "attributedTo" actor
         pair "content" note.content
         pair "published" effective_date
@@ -87,7 +88,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
                 match attachment with
                 | Image image -> dict [
                     pair "type" "Document"
-                    pair "name" $"{image.title} (from weasyl.com; no additional description available)"
+                    pair "name" $"{note.title} (from weasyl.com; no additional description available)"
                     pair "mediaType" image.mediaType
                     pair "url" image.url
                 ]
