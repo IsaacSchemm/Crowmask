@@ -1,6 +1,56 @@
 ﻿# Crowmask 🐦‍⬛🎭
 
-**Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented using Azure Functions and Azure Cosmos DB.
+**Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented
+using Azure Functions and Azure Cosmos DB. It is intended for users who:
+
+* post artwork to Weasyl
+* have an ActivityPub account elsewhere (e.g. Mastodon) but want to keep
+  artwork on a separate account
+* have an Azure account, are familiar with deploying .NET web apps, and are
+  comfortable setting things up in the portal
+
+Crowmask is written mostly in C# with some parts in F#.
+
+The Crowmask server is configured with a Weasyl API key and generates a single
+automated user account, using the name, info, avatar, and submissions of the
+Weasyl user who created the API key. This user account can be followed by
+users on Mastodon, Pixelfed, and microblog.pub, among others. (Submissions are
+exposed as `Note` objects - this was used instead of `Article` for a better
+experience in Mastodon and to keep compatibility with Pixelfed.)
+
+When a user likes, replies to, or shares/boosts one of this account's posts,
+Crowmask will send a private message to the "admin actor" defined in its
+configuration variables and shown on its profile page.
+
+Outgoing calls (like "accept follow" or "create new post") are processed every
+five minutes. Weasyl profile data and recent submissions are updated hourly;
+older submissions are updated daily.
+
+## Browsing
+
+Crowmask is primarily an [ActivityPub](https://www.w3.org/TR/activitypub/)
+server, but it does include profile, submission list, and submission pages,
+which you can access by pointing a web browser (or another non-ActivityPub
+user agent) at the actor, outbox, and object URIs, respectively. For example,
+the URL `/api/actor` will send ActivityPub info to a program that asks for it
+(in the `Accept` header), but it will send an HTML profile page to a web
+browser, and a Markdown version of that page to something like `curl` that
+oesn't indicate any particular media type.
+
+## Missing functionality
+
+* Crowmask does not verify HTTP signatures. (This turns out to be a difficult
+  thing to do, and I wasn't able to find a .NET library that could handle this
+  easily in an ActivityPub context.) This means it's possible to forge
+  "follow", "unfollow", "like", "share", and "create reply" activites
+  (although the last three simply send a message to the admin actor and are
+  then discarded.)
+* Crowmask does not keep track of interaction with posts (beyond notifying the
+  admin actor).
+* The Crowmask outbox only contains the 20 most recent posts. (Note that
+  Mastodon does not use the outbox.)
+
+## Implementation details
 
 Internal objects:
 
@@ -89,7 +139,6 @@ Other tasks:
 
 Potential future improvements:
 
-- [ ] Add HTML endpoints
 - [ ] Implement HTTP signature validation for incoming requests
 - [ ] Outbox paging
 

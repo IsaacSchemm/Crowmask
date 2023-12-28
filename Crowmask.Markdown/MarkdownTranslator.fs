@@ -58,8 +58,8 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"## ActivityPub"
         $""
-        $"    @{person.preferredUsername}@{crowmaskHost.Hostname}"
-        $"    @{person.preferredUsername}@{handleHost.Hostname}"
+        for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
+            $"    @{person.preferredUsername}@{hostname}"
         $""
         $"[Browse recent posts](/api/actor/outbox)"
         $""
