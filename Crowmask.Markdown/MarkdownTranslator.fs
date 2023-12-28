@@ -10,10 +10,13 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         "<html>"
         "<head>"
         "<title>"
-        WebUtility.HtmlEncode(title)
+        WebUtility.HtmlEncode($"{title} - Crowmask")
         "</title>"
+        "<meta name='viewport' content='width=device-width, initial-scale=1' />"
         "<style type='text/css'>"
+        "body { line-height: 1.5; font-family: sans-serif; }"
         "img { max-width: 300px; max-height: 240px; }"
+        "pre { white-space: pre-wrap; }"
         "</style>"
         "</head>"
         "<body>"
@@ -35,12 +38,10 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"--------"
         $""
-        $"# {person.name}"
+        $"## {person.name}"
         $""
         for iconUrl in person.iconUrls do
             $"![]({iconUrl})"
-        $""
-        $"`@{person.preferredUsername}@{handleHost.Hostname}`"
         $""
         $"{person.summary}"
         $""
@@ -51,7 +52,15 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             | None ->
                 $"* {metadata.name}: {metadata.value}"
         $""
-        $"[View the outbox](/api/actor/outbox)"
+        $"[View original profile]({person.url})"
+        $""
+        $"----------"
+        $""
+        $"## ActivityPub"
+        $""
+        $"    @{person.preferredUsername}@{handleHost.Hostname}"
+        $""
+        $"[Browse recent posts](/api/actor/outbox)"
         $""
         $"🐦‍⬛🎭"
     ]
@@ -63,7 +72,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"--------"
         $""
-        $"# Outbox"
+        $"## Outbox"
         $""
         $"Showing {posts.Count} posts. (Older posts may not be shown.)"
         $""
@@ -89,7 +98,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"--------"
         $""
-        $"# {post.title}"
+        $"## {post.title}"
         $""
         if post.sensitivity = Sensitivity.General then
             for attachment in post.attachments do
