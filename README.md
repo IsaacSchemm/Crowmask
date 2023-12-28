@@ -74,7 +74,7 @@ ActivityPub HTTP endpoints:
 - [x] `/api/actor/outbox`: contains links to the first and last gallery page
 - [x] `/api/actor/outbox/page`: contains `Create` activities for known Weasyl posts (20 per page)
 - [x] `/api/actor/followers`: contains the IDs of all followers (20 per page)
-- [ ] `/api/actor/following`: an empty list
+- [x] `/api/actor/following`: an empty list
 - [x] `/api/submissions/{submitid}`: attempts cache refresh for the post, then returns the resulting `Note` object
 
 Timed functions:

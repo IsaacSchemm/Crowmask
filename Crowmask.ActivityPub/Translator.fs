@@ -15,6 +15,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "inbox" $"{actor}/inbox"
         pair "outbox" $"{actor}/outbox"
         pair "followers" $"{actor}/followers"
+        pair "following" $"{actor}/following"
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
         pair "summary" person.summary
@@ -161,4 +162,11 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
         pair "partOf" $"{actor}/outbox"
         pair "orderedItems" [for f in followers do f.ActorId]
+    ]
+
+    member _.Following = dict [
+        pair "id" $"{actor}/following"
+        pair "type" "Collection"
+        pair "totalItems" 0
+        pair "items" []
     ]
