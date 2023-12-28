@@ -68,20 +68,31 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
 
-    member _.ToMarkdown (posts: IReadOnlyList<Post>) = String.concat "\n" [
+    member _.ToMarkdown (outbox: IReadOnlyList<Post>) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
         $""
         $"## Outbox"
         $""
-        $"Showing {posts.Count} posts. (Older posts may not be shown.)"
-        $""
-        for post in posts do
+        if outbox.Count > 0 then
+            $"Showing {outbox.Count} posts."
+            $""
+        for post in outbox do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
             $"* [{post.title}](/api/submissions/{post.submitid}) ({date})"
         $""
-        for post in posts |> Seq.truncate 1 do
+        match Domain.GetExtrema outbox with
+        | Some extrema ->
+            $"[Back](/api/actor/outbox/page?backid={extrema.backid})"
+            $"[Next](/api/actor/outbox/page?nextid={extrema.nextid})"
+        | None ->
+            $"[Restart from first page](/api/actor/outbox/page)"
+            $"[Restart from last page](/api/actor/outbox/page?backid=1)"
+        $""
+        for post in outbox |> Seq.truncate 1 do
+            $"----------"
+            $""
             $"To interact with a specific post, add the numeric ID from the Weasyl submission URL to the `/api/submissions/` endpoint. For example, the submission at:"
             $""
             $"    {post.url}"
@@ -92,7 +103,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             $""
     ]
 
-    member this.ToHtml (posts: IReadOnlyList<Post>) = this.ToMarkdown posts |> toHtml "Outbox"
+    member this.ToHtml (outbox: IReadOnlyList<Post>) = this.ToMarkdown outbox |> toHtml "Outbox"
 
     member _.ToMarkdown (post: Post) = String.concat "\n" [
         sharedHeader

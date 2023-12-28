@@ -128,6 +128,16 @@ module Domain =
                 | _ -> Sensitive "Potentially sensitive (nature unknown)"
         }
 
+    let GetExtrema (posts: Post seq) =
+        let ids = [for p in posts do p.submitid]
+
+        if ids = []
+        then None
+        else Some {|
+            backid = Seq.max ids
+            nextid = Seq.min ids
+        |}
+
     let AsCreate (submission: Submission) =
         Create {
             note = AsNote submission

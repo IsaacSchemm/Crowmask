@@ -4,14 +4,12 @@ using Crowmask.Markdown;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator, WeasylClient weasylClient)
+    public class Outbox(Translator translator, MarkdownTranslator markdownTranslator, WeasylClient weasylClient)
     {
         [Function("Outbox")]
         public async Task<HttpResponseData> Run(
@@ -19,16 +17,13 @@ namespace Crowmask.Functions
         {
             var whoami = await weasylClient.WhoamiAsync();
 
-            var recent = await weasylClient.GetUserGallerySubmissionsAsync(whoami.login)
-                .Take(20)
-                .SelectAwait(async x => await crowmaskCache.GetSubmission(x.submitid))
-                .ToListAsync();
+            var user = await weasylClient.GetUserAsync(whoami.login);
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {
-                    var outbox = translator.AsOutbox(recent);
+                    var outbox = translator.AsOutbox(totalItems: user.statistics.submissions);
 
                     string json = AP.SerializeWithContext(outbox);
 
@@ -36,11 +31,11 @@ namespace Crowmask.Functions
                 }
                 else if (format.IsHTML)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(recent));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(outbox: []));
                 }
                 else if (format.IsMarkdown)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(recent));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(outbox: []));
                 }
             }
 

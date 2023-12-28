@@ -24,10 +24,21 @@ namespace Crowmask.Weasyl
                 ?? throw new Exception("Null response from API");
         }
 
+        public async Task<WeasylGallery> GetUserGalleryAsync(string username, int? nextid = null, int? backid = null)
+        {
+            IEnumerable<string> query()
+            {
+                if (nextid is int n) yield return $"nextid={n}";
+                if (backid is int b) yield return $"backid={b}";
+            }
+
+            return await GetJsonAsync<WeasylGallery>(
+                $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery?{string.Join("&", query())}");
+        }
+
         public async IAsyncEnumerable<WeasylGallerySubmission> GetUserGallerySubmissionsAsync(string username)
         {
-            var gallery = await GetJsonAsync<WeasylGallery>(
-                $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery");
+            var gallery = await GetUserGalleryAsync(username);
 
             while (true)
             {
@@ -38,8 +49,7 @@ namespace Crowmask.Weasyl
 
                 if (gallery.nextid is int nextid)
                 {
-                    gallery = await GetJsonAsync<WeasylGallery>(
-                        $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery?nextid={nextid}");
+                    gallery = await GetUserGalleryAsync(username, nextid: nextid);
                 }
                 else
                 {

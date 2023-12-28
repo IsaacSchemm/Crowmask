@@ -122,9 +122,24 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" followId
     ]
 
-    member this.AsOutbox (posts: IReadOnlyList<Post>) = dict [
+    member _.AsOutbox (totalItems: int) = dict [
         pair "id" $"{actor}/outbox"
         pair "type" "OrderedCollection"
-        pair "totalItems" posts.Count
-        pair "orderedItems" [for p in posts do this.ObjectToCreate p]
+        pair "totalItems" totalItems
+        pair "first" $"{actor}/outbox/page"
+        pair "last" $"{actor}/outbox/page?backid=1"
+    ]
+
+    member this.AsOutboxPage (id: string) (posts: Post seq) = dict [
+        pair "id" id
+        pair "type" "OrderedCollectionPage"
+
+        match Domain.GetExtrema posts with
+        | None -> ()
+        | Some extrema ->
+            pair "next" $"{actor}/outbox/page?nextid={extrema.nextid}"
+            pair "prev" $"{actor}/outbox/page?backid={extrema.backid}"
+
+        pair "partOf" $"{actor}/outbox"
+        pair "orderedItems" [for p in posts do this.AsObject p]
     ]
