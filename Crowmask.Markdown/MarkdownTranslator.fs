@@ -68,6 +68,21 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
 
+    member _.OutboxMarkdown = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"## Outbox"
+        $""
+        $"[Start from first page](/api/actor/outbox/page)"
+        $""
+        $"[Start from last page](/api/actor/outbox/page?backid=1)"
+        $""
+    ]
+
+    member this.OutboxHtml = toHtml "Outbox" this.OutboxMarkdown
+
     member _.ToMarkdown (outbox: IReadOnlyList<Post>) = String.concat "\n" [
         sharedHeader
         $""
@@ -84,11 +99,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         match Domain.GetExtrema outbox with
         | Some extrema ->
-            $"[Back](/api/actor/outbox/page?backid={extrema.backid})"
-            $"[Next](/api/actor/outbox/page?nextid={extrema.nextid})"
+            $"[View newer posts](/api/actor/outbox/page?backid={extrema.backid}) ·[View older posts](/api/actor/outbox/page?nextid={extrema.nextid})"
         | None ->
-            $"[Restart from first page](/api/actor/outbox/page)"
-            $"[Restart from last page](/api/actor/outbox/page?backid=1)"
+            $"[Restart from first page](/api/actor/outbox/page) · [Restart from last page](/api/actor/outbox/page?backid=1)"
         $""
         for post in outbox |> Seq.truncate 1 do
             $"----------"

@@ -31,11 +31,11 @@ namespace Crowmask.Functions
                 }
                 else if (format.IsHTML)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(outbox: []));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.OutboxHtml);
                 }
                 else if (format.IsMarkdown)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(outbox: []));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.OutboxMarkdown);
                 }
             }
 
