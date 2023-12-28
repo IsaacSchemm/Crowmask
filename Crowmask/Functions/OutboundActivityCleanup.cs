@@ -2,16 +2,15 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Crowmask.Data;
-using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Crowmask.Functions
 {
     public class OutboundActivityCleanup(CrowmaskDbContext context)
     {
-        [FunctionName("OutboundActivityCleanup")]
-        public async Task Run([TimerTrigger("0 2 * * * *")] TimerInfo myTimer, ILogger log)
+        [Function("OutboundActivityCleanup")]
+        public async Task Run([TimerTrigger("0 2 * * * *")] TimerInfo myTimer)
         {
             var cutoff = DateTime.UtcNow - TimeSpan.FromDays(7);
 

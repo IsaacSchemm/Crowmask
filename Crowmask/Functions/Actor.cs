@@ -1,13 +1,8 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Markdown;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
-using Microsoft.Net.Http.Headers;
-using System.Linq;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -15,14 +10,13 @@ namespace Crowmask.Functions
 {
     public class Actor(CrowmaskCache crowmaskCache, IPublicKeyProvider keyProvider, MarkdownTranslator markdownTranslator, Translator translator)
     {
-        [FunctionName("Actor")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor")] HttpRequest req,
-            ILogger log)
+        [Function("Actor")]
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor")] HttpRequestData req)
         {
             var person = await crowmaskCache.GetUser();
 
-            foreach (var format in ContentNegotiation.FindAppropriateFormats(req.GetTypedHeaders().Accept))
+            foreach (var format in ContentNegotiation.ForHeaders(req.Headers))
             {
                 if (format.IsActivityJson)
                 {
@@ -30,31 +24,19 @@ namespace Crowmask.Functions
 
                     string json = AP.SerializeWithContext(translator.PersonToObject(person, key));
 
-                    return new ContentResult
-                    {
-                        Content = json,
-                        ContentType = format.ContentType
-                    };
+                    return await req.WriteCrowmaskResponseAsync(format, json);
                 }
                 else if (format.IsHTML)
                 {
-                    return new ContentResult
-                    {
-                        Content = markdownTranslator.ToHtml(person),
-                        ContentType = format.ContentType
-                    };
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(person));
                 }
                 else if (format.IsMarkdown)
                 {
-                    return new ContentResult
-                    {
-                        Content = markdownTranslator.ToMarkdown(person),
-                        ContentType = format.ContentType
-                    };
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person));
                 }
             }
 
-            return new StatusCodeResult(406);
+            return req.CreateResponse(HttpStatusCode.NotAcceptable);
         }
     }
 }

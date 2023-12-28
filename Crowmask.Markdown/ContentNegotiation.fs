@@ -1,6 +1,7 @@
 ﻿namespace Crowmask.Markdown
 
 open System.Linq
+open System.Net.Http.Headers
 open Microsoft.Net.Http.Headers
 
 module ContentNegotiation =
@@ -29,11 +30,18 @@ module ContentNegotiation =
         member this.ContentType =
             $"{this.MediaType}; charset=utf-8"
 
-    let FindAppropriateFormats (headers: MediaTypeHeaderValue seq) = [
-        let ordered = headers.OrderByDescending(id, MediaTypeHeaderValueComparer.QualityComparer)
-        for acceptedType in ordered do
-            for format in [Markdown; ActivityJson; HTML] do
-                for correspondingType in format.MediaTypes do
-                    if correspondingType.IsSubsetOf(acceptedType) then
-                        yield format
-    ]
+    let Sort (headers: MediaTypeHeaderValue seq) =
+        headers.OrderByDescending(id, MediaTypeHeaderValueComparer.QualityComparer)
+
+    let ForValue (accept: MediaTypeHeaderValue) = seq {
+        for format in [Markdown; HTML; ActivityJson] do
+            for correspondingType in format.MediaTypes do
+                if correspondingType.IsSubsetOf(accept) then
+                    yield format
+    }
+
+    let ForHeaders (headers: HttpHeaders) =
+        headers.GetValues("Accept")
+        |> Seq.map (fun str -> MediaTypeHeaderValue.Parse(str))
+        |> Sort
+        |> Seq.collect ForValue

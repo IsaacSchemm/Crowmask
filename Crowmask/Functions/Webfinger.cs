@@ -1,34 +1,25 @@
 using Crowmask.Cache;
 using Crowmask.DomainModeling;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Logging;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
     public class WebFinger(CrowmaskCache crowmaskCache, IHandleHost handleHost, IAdminActor adminActor, ICrowmaskHost host)
     {
-        [FunctionName("WebFinger")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = ".well-known/webfinger")] HttpRequest req,
-            ILogger log)
+        [Function("WebFinger")]
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = ".well-known/webfinger")] HttpRequestData req)
         {
-            if (req.Query["resource"].Count != 1)
+            if (req.Query["resource"] is not string resource)
             {
-                return new ContentResult
-                {
-                    Content = "\"resource\" parameter is missing or invalid",
-                    ContentType = "text/plain",
-                    StatusCode = 400
-                };
+                return req.CreateResponse(HttpStatusCode.BadRequest);
             }
-
-            string resource = req.Query["resource"].Single();
 
             var person = await crowmaskCache.GetUser();
 
@@ -38,7 +29,8 @@ namespace Crowmask.Functions
 
             if (resource == handle || resource == actor)
             {
-                return new JsonResult(new
+                var resp = req.CreateResponse(HttpStatusCode.OK);
+                await resp.WriteAsJsonAsync(new
                 {
                     subject = handle,
                     aliases = new[] { actor },
@@ -58,15 +50,18 @@ namespace Crowmask.Functions
                         }
                     }
                 });
+                return resp;
             }
             else if (Uri.TryCreate(adminActor.Id, UriKind.Absolute, out Uri adminActorUri))
             {
                 var redirectUri = new Uri(adminActorUri, $"/.well-known/webfinger?resource={Uri.EscapeDataString(resource)}");
-                return new RedirectResult(redirectUri.AbsoluteUri);
+                var resp = req.CreateResponse(HttpStatusCode.TemporaryRedirect);
+                resp.Headers.Add("Location", redirectUri.AbsoluteUri);
+                return resp;
             }
             else
             {
-                return new NotFoundResult();
+                return req.CreateResponse(HttpStatusCode.NotFound);
             }
         }
     }

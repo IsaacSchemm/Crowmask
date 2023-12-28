@@ -92,11 +92,12 @@ module Domain =
                         uri = Option.ofObj link.Uri
                     }
 
-                {
-                    name = "Weasyl"
-                    value = user.Username
-                    uri = Some (new Uri(user.Url))
-                }
+                if not (isNull user.Url) then
+                    {
+                        name = "Weasyl"
+                        value = user.Username
+                        uri = Some (new Uri(user.Url))
+                    }
             ]
         }
 

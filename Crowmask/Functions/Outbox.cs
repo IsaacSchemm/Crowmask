@@ -1,16 +1,12 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
-using Crowmask.DomainModeling;
 using Crowmask.Markdown;
 using Crowmask.Weasyl;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Net.Http.Headers;
-using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -19,10 +15,9 @@ namespace Crowmask.Functions
 {
     public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator, WeasylClient weasylClient)
     {
-        [FunctionName("Outbox")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequest req,
-            ILogger log)
+        [Function("Outbox")]
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
             var whoami = await weasylClient.WhoamiAsync();
 
@@ -31,7 +26,7 @@ namespace Crowmask.Functions
                 .SelectAwait(async x => await crowmaskCache.GetSubmission(x.submitid))
                 .ToListAsync();
 
-            foreach (var format in ContentNegotiation.FindAppropriateFormats(req.GetTypedHeaders().Accept))
+            foreach (var format in ContentNegotiation.ForHeaders(req.Headers))
             {
                 if (format.IsActivityJson)
                 {
@@ -39,31 +34,19 @@ namespace Crowmask.Functions
 
                     string json = AP.SerializeWithContext(outbox);
 
-                    return new ContentResult
-                    {
-                        Content = json,
-                        ContentType = format.ContentType
-                    };
+                    return await req.WriteCrowmaskResponseAsync(format, json);
                 }
                 else if (format.IsHTML)
                 {
-                    return new ContentResult
-                    {
-                        Content = markdownTranslator.ToHtml(recent),
-                        ContentType = format.ContentType
-                    };
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(recent));
                 }
                 else if (format.IsMarkdown)
                 {
-                    return new ContentResult
-                    {
-                        Content = markdownTranslator.ToMarkdown(recent),
-                        ContentType = format.ContentType
-                    };
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(recent));
                 }
             }
 
-            return new StatusCodeResult((int)HttpStatusCode.NotAcceptable);
+            return req.CreateResponse(HttpStatusCode.NotAcceptable);
         }
     }
 }

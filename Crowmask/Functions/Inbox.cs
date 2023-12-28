@@ -3,17 +3,16 @@ using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Remote;
 using JsonLD.Core;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
@@ -47,10 +46,9 @@ namespace Crowmask.Functions
             await context.SaveChangesAsync();
         }
 
-        [FunctionName("Inbox")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/actor/inbox")] HttpRequest req,
-            ILogger log)
+        [Function("Inbox")]
+        public async Task<HttpResponseData> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/actor/inbox")] HttpRequestData req)
         {
             using var sr = new StreamReader(req.Body);
             string json = await sr.ReadToEndAsync();
@@ -98,7 +96,7 @@ namespace Crowmask.Functions
 
                 await context.SaveChangesAsync();
 
-                return new StatusCodeResult(202);
+                return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Undo")
             {
@@ -114,7 +112,7 @@ namespace Crowmask.Functions
                     await context.SaveChangesAsync();
                 }
 
-                return new StatusCodeResult(202);
+                return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Like")
             {
@@ -131,7 +129,7 @@ namespace Crowmask.Functions
                             actor.Name ?? actor.Id));
                 }
 
-                return new StatusCodeResult(202);
+                return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Announce")
             {
@@ -148,7 +146,7 @@ namespace Crowmask.Functions
                             actor.Name ?? actor.Id));
                 }
 
-                return new StatusCodeResult(202);
+                return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
@@ -174,11 +172,11 @@ namespace Crowmask.Functions
                     }
                 }
 
-                return new StatusCodeResult(202);
+                return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else
             {
-                return new StatusCodeResult(204);
+                return req.CreateResponse(HttpStatusCode.NoContent);
             }
         }
     }

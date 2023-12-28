@@ -104,16 +104,19 @@ not compile) was incredibly helpful.
 See also [bird.makeup](https://sr.ht/~cloutier/bird.makeup/), which is another
 ActivityPub bridge written in C# / .NET.
 
-Example `local.settings.json` (default settings omitted):
+Example `local.settings.json`:
 
     {
+      "IsEncrypted": false,
       "Values": {
         "AdminActor": "https://pixelfed.example.com/users/...",
         "CosmosDBConnectionString": "AccountEndpoint=...;AccountKey=...;",
         "CrowmaskHost": "crowmask.example.com",
         "HandleHost": "crowmask.example.com",
         "KeyVaultHost": "crowmask.vault.azure.net",
-        "WeasylApiKey": "..."
+        "WeasylApiKey": "...",
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
       }
     }
 

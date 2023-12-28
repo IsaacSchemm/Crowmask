@@ -1,36 +1,44 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-	<LangVersion>12</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.5.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="6.0.25" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.25">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="4.2.0" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Crowmask.ActivityPub\Crowmask.ActivityPub.fsproj" />
-    <ProjectReference Include="..\Crowmask.Cache\Crowmask.Cache.csproj" />
-    <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
-    <ProjectReference Include="..\Crowmask.Markdown\Crowmask.Markdown.fsproj" />
-    <ProjectReference Include="..\Crowmask.Remote\Crowmask.Remote.csproj" />
-    <ProjectReference Include="..\Crowmask.Weasyl\Crowmask.Weasyl.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="host.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="local.settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.5.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.0" />
+		<PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Http" Version="3.2.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.20.0" />
+		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.16.2" />
+		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Crowmask.ActivityPub\Crowmask.ActivityPub.fsproj" />
+		<ProjectReference Include="..\Crowmask.Cache\Crowmask.Cache.csproj" />
+		<ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
+		<ProjectReference Include="..\Crowmask.Markdown\Crowmask.Markdown.fsproj" />
+		<ProjectReference Include="..\Crowmask.Remote\Crowmask.Remote.csproj" />
+		<ProjectReference Include="..\Crowmask.Weasyl\Crowmask.Weasyl.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="host.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="local.settings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToPublishDirectory>Never</CopyToPublishDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
+	</ItemGroup>
 </Project>
