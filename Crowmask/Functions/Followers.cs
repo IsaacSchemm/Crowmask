@@ -1,5 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Data;
+using Crowmask.DomainModeling;
 using Crowmask.Markdown;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Functions.Worker;
@@ -17,11 +18,13 @@ namespace Crowmask.Functions
         {
             var count = await context.Followers.CountAsync();
 
+            var followerCollection = Domain.AsFollowerCollection(count);
+
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {
-                    var outbox = translator.AsFollowers(totalItems: count);
+                    var outbox = translator.AsFollowers(followerCollection);
 
                     string json = AP.SerializeWithContext(outbox);
 
@@ -29,11 +32,11 @@ namespace Crowmask.Functions
                 }
                 else if (format.IsHTML)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.FollowersHtml);
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(followerCollection));
                 }
                 else if (format.IsMarkdown)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.FollowersMarkdown);
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(followerCollection));
                 }
             }
 

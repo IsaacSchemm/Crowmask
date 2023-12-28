@@ -63,59 +63,12 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"[View followers](/api/actor/followers)"
         $""
-        $"[Browse posts](/api/actor/outbox)"
+        $"[View gallery](/api/actor/outbox)"
         $""
         $"🐦‍⬛🎭"
     ]
 
     member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
-
-    member _.OutboxMarkdown = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
-        $"## Outbox"
-        $""
-        $"[Start from first page](/api/actor/outbox/page)"
-        $""
-        $"[Start from last page](/api/actor/outbox/page?backid=1)"
-        $""
-    ]
-
-    member this.OutboxHtml = toHtml "Outbox" this.OutboxMarkdown
-
-    member _.ToMarkdown (outbox: IReadOnlyList<Post>) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
-        $"## Outbox"
-        $""
-        for post in outbox do
-            let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
-            $"* [{post.title}](/api/submissions/{post.submitid}) ({date})"
-        $""
-        match Domain.GetExtrema outbox with
-        | Some extrema ->
-            $"[View newer posts](/api/actor/outbox/page?backid={extrema.backid}) ·[View older posts](/api/actor/outbox/page?nextid={extrema.nextid})"
-        | None ->
-            $"[Restart from first page](/api/actor/outbox/page) · [Restart from last page](/api/actor/outbox/page?backid=1)"
-        $""
-        for post in outbox |> Seq.truncate 1 do
-            $"----------"
-            $""
-            $"To interact with a specific post, add the numeric ID from the Weasyl submission URL to the `/api/submissions/` endpoint. For example, the submission at:"
-            $""
-            $"    {post.url}"
-            $""
-            $"can be accessed at:"
-            $""
-            $"    https://{crowmaskHost.Hostname}/api/submissions/{post.submitid}"
-            $""
-    ]
-
-    member this.ToHtml (outbox: IReadOnlyList<Post>) = this.ToMarkdown outbox |> toHtml "Outbox"
 
     member _.ToMarkdown (post: Post) = String.concat "\n" [
         sharedHeader
@@ -136,33 +89,84 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
 
-    member _.FollowersMarkdown = String.concat "\n" [
+    member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"## Gallery"
+        $""
+        $"{gallery.gallery_count} item(s)."
+        $""
+        $"[Start from first page](/api/actor/outbox/page)"
+        $""
+    ]
+
+    member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Gallery"
+
+    member _.ToMarkdown (galleryPage: GalleryPage) = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"## Gallery"
+        $""
+        for post in galleryPage.gallery_posts do
+            let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
+            $"* [{post.title}](/api/submissions/{post.submitid}) ({date})"
+        $""
+        match galleryPage.Extrema with
+        | Some extrema ->
+            $"[View newer posts](/api/actor/outbox/page?backid={extrema.backid}) ·[View older posts](/api/actor/outbox/page?nextid={extrema.nextid})"
+        | None ->
+            $"[Restart from first page](/api/actor/outbox/page) · [Restart from last page](/api/actor/outbox/page?backid=1)"
+        $""
+        match galleryPage.gallery_posts with
+        | [] -> ()
+        | post::_ ->
+            $"----------"
+            $""
+            $"To interact with a specific post, add the numeric ID from the Weasyl submission URL to the `/api/submissions/` endpoint. For example, the submission at:"
+            $""
+            $"    {post.url}"
+            $""
+            $"can be accessed at:"
+            $""
+            $"    https://{crowmaskHost.Hostname}/api/submissions/{post.submitid}"
+            $""
+    ]
+
+    member this.ToHtml (galleryPage: GalleryPage) = this.ToMarkdown galleryPage |> toHtml "Gallery"
+
+    member _.ToMarkdown (followerCollection: FollowerCollection) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
         $""
         $"## Followers"
+        $""
+        $"{followerCollection.followers_count} item(s)."
         $""
         $"[Start from first page](/api/actor/followers/page)"
         $""
     ]
 
-    member this.FollowersHtml = toHtml "Followers" this.FollowersMarkdown
+    member this.ToHtml (followerCollection: FollowerCollection) = this.ToMarkdown followerCollection |> toHtml "Followers"
 
-    member _.ToMarkdown (followers: IReadOnlyList<Crowmask.Data.Follower>) = String.concat "\n" [
+    member _.ToMarkdown (followerCollectionPage: FollowerCollectionPage) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
         $""
         $"## Followers"
         $""
-        for f in followers do
-            $"* [{f.ActorId}]({f.ActorId})"
+        for f in followerCollectionPage.followers do
+            $"* [{f.actorId}]({f.actorId})"
         $""
-        let ids = [for f in followers do f.Id]
-        if ids <> [] then
-            $"[View more](/api/actor/followers/page?after={Seq.max ids})"
+        match followerCollectionPage.MaxId with
+        | None -> ()
+        | Some maxId ->
+            $"[View more](/api/actor/followers/page?after={maxId})"
     ]
 
-    member this.ToHtml (outbox: IReadOnlyList<Crowmask.Data.Follower>) = this.ToMarkdown outbox |> toHtml "Outbox"
-
+    member this.ToHtml (followerCollectionPage: FollowerCollectionPage) = this.ToMarkdown followerCollectionPage |> toHtml "Followers"

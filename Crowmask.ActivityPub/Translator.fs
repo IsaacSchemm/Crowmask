@@ -123,45 +123,46 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" followId
     ]
 
-    member _.AsOutbox (totalItems: int) = dict [
+    member _.AsOutbox (gallery: Gallery) = dict [
         pair "id" $"{actor}/outbox"
         pair "type" "OrderedCollection"
-        pair "totalItems" totalItems
+        pair "totalItems" gallery.gallery_count
         pair "first" $"{actor}/outbox/page"
         pair "last" $"{actor}/outbox/page?backid=1"
     ]
 
-    member this.AsOutboxPage (id: string) (posts: Post seq) = dict [
+    member this.AsOutboxPage (id: string) (page: GalleryPage) = dict [
         pair "id" id
         pair "type" "OrderedCollectionPage"
 
-        match Domain.GetExtrema posts with
+        match page.Extrema with
         | None -> ()
         | Some extrema ->
             pair "next" $"{actor}/outbox/page?nextid={extrema.nextid}"
             pair "prev" $"{actor}/outbox/page?backid={extrema.backid}"
 
         pair "partOf" $"{actor}/outbox"
-        pair "orderedItems" [for p in posts do this.AsObject p]
+        pair "orderedItems" [for p in page.gallery_posts do this.AsObject p]
     ]
 
-    member _.AsFollowers (totalItems: int) = dict [
+    member _.AsFollowers (followerCollection: FollowerCollection) = dict [
         pair "id" $"{actor}/followers"
         pair "type" "OrderedCollection"
-        pair "totalItems" totalItems
+        pair "totalItems" followerCollection.followers_count
         pair "first" $"{actor}/followers/page"
     ]
 
-    member _.AsFollowersPage (id: string) (followers: Crowmask.Data.Follower seq) = dict [
+    member _.AsFollowersPage (id: string) (followerCollectionPage: FollowerCollectionPage) = dict [
         pair "id" id
         pair "type" "OrderedCollectionPage"
 
-        let ids = [for f in followers do f.Id]
-        if ids <> [] then
-            pair "next" $"{actor}/followers/page?after={Seq.max ids}"
+        match followerCollectionPage.MaxId with
+        | None -> ()
+        | Some maxId ->
+            pair "next" $"{actor}/followers/page?after={maxId}"
 
         pair "partOf" $"{actor}/outbox"
-        pair "orderedItems" [for f in followers do f.ActorId]
+        pair "orderedItems" [for f in followerCollectionPage.followers do f.actorId]
     ]
 
     member _.Following = dict [

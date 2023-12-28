@@ -55,6 +55,42 @@ type Delete = {
 
 type Activity = Create of Create | Update of Update | Delete of Delete
 
+type Gallery = {
+    gallery_count: int
+}
+
+type GalleryPage = {
+    gallery_posts: Post list
+} with
+    member this.Extrema =
+        let ids = [for p in this.gallery_posts do p.submitid]
+
+        if ids = []
+        then None
+        else Some {|
+            backid = Seq.max ids
+            nextid = Seq.min ids
+        |}
+
+type FollowerActor = {
+    followerId: Guid
+    actorId: string
+}
+
+type FollowerCollection = {
+    followers_count: int
+}
+
+type FollowerCollectionPage = {
+    followers: FollowerActor list
+} with
+    member this.MaxId =
+        let ids = [for f in this.followers do f.followerId]
+
+        if ids = []
+        then None
+        else Some (Seq.max ids)
+
 module Domain =
     let AsPerson (user: User) =
         {
@@ -128,16 +164,6 @@ module Domain =
                 | _ -> Sensitive "Potentially sensitive (nature unknown)"
         }
 
-    let GetExtrema (posts: Post seq) =
-        let ids = [for p in posts do p.submitid]
-
-        if ids = []
-        then None
-        else Some {|
-            backid = Seq.max ids
-            nextid = Seq.min ids
-        |}
-
     let AsCreate (submission: Submission) =
         Create {
             note = AsNote submission
@@ -154,3 +180,24 @@ module Domain =
             submitid = submitid
             time = DateTimeOffset.UtcNow
         }
+
+    let AsGallery (count: int) = {
+        gallery_count = count
+    }
+
+    let AsGalleryPage (posts: Post seq) = {
+        gallery_posts = Seq.toList posts
+    }
+
+    let AsFollowerActor (follower: Follower) = {
+        followerId = follower.Id
+        actorId = follower.ActorId
+    }
+
+    let AsFollowerCollection (count: int) = {
+        followers_count = count
+    }
+
+    let AsFollowerCollectionPage (followers: Follower seq) = {
+        followers = [for f in followers do AsFollowerActor f]
+    }

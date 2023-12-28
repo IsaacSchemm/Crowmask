@@ -1,5 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.DomainModeling;
 using Crowmask.Markdown;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Worker;
@@ -19,11 +20,13 @@ namespace Crowmask.Functions
 
             var user = await weasylClient.GetUserAsync(whoami.login);
 
+            var gallery = Domain.AsGallery(count: user.statistics.submissions);
+
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {
-                    var outbox = translator.AsOutbox(totalItems: user.statistics.submissions);
+                    var outbox = translator.AsOutbox(gallery);
 
                     string json = AP.SerializeWithContext(outbox);
 
@@ -31,11 +34,11 @@ namespace Crowmask.Functions
                 }
                 else if (format.IsHTML)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.OutboxHtml);
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(gallery));
                 }
                 else if (format.IsMarkdown)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.OutboxMarkdown);
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(gallery));
                 }
             }
 
