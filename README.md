@@ -91,7 +91,6 @@ Potential future improvements:
 
 - [ ] Add HTML endpoints
 - [ ] Implement HTTP signature validation for incoming requests
-- [ ] Entra / RBAC auth for Cosmos DB (requires EF Core 7+)
 - [ ] Outbox paging
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
@@ -109,7 +108,7 @@ Example `local.settings.json`:
       "IsEncrypted": false,
       "Values": {
         "AdminActor": "https://pixelfed.example.com/users/...",
-        "CosmosDBConnectionString": "AccountEndpoint=...;AccountKey=...;",
+        "CosmosDBAccountEndpoint": "https://example.documents.azure.com:443/",
         "CrowmaskHost": "crowmask.example.com",
         "HandleHost": "crowmask.example.com",
         "KeyVaultHost": "crowmask.vault.azure.net",
@@ -129,6 +128,15 @@ For **Cosmos DB**, you will need to create the container in Data Explorer:
 * Database ID: `Crowmask`
 * Container ID: `CrowmaskDbContext`
 * Partition key: `__partitionKey`
+
+Run something like this in Azure CLI (PowerShell) to give the appropriate
+permissions to the function app's managed identity:
+
+    az login
+    az cosmosdb sql role assignment create --account-name {...} --resource-group {...} --scope "/" --principal-id {...} --role-definition-id 00000000-0000-0000-0000-000000000002
+
+The `{...}` for the principal ID should be the ID shown in the Identity tab of
+the function app settings.
 
 The app should work with an SQL Server backend instead if you want to go that route.
 In either case, it would be nice if this app used Managed Identity for that too, but

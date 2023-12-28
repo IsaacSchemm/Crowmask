@@ -1,4 +1,5 @@
-﻿using Crowmask;
+﻿using Azure.Identity;
+using Crowmask;
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Data;
@@ -17,8 +18,11 @@ var host = new HostBuilder()
         if (Environment.GetEnvironmentVariable("AdminActor") is string id)
             services.AddSingleton<IAdminActor>(new AdminActor(id));
 
-        if (Environment.GetEnvironmentVariable("CosmosDBConnectionString") is string connectionString)
-            services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(connectionString, databaseName: "Crowmask"));
+        if (Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint") is string accountEndpoint)
+            services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
+                accountEndpoint,
+                new DefaultAzureCredential(),
+                databaseName: "Crowmask"));
 
         if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
             services.AddSingleton<ICrowmaskHost>(new Host(crowmaskHost));
