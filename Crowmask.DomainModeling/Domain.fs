@@ -1,7 +1,6 @@
 ﻿namespace Crowmask.DomainModeling
 
 open System
-open MimeMapping
 open Crowmask.Data
 
 type PersonMetadata = {
@@ -36,6 +35,7 @@ type Post = {
     first_upstream: DateTimeOffset
     first_cached: DateTimeOffset
     attachments: Attachment list
+    thumbnails: Image list
     sensitivity: Sensitivity
 }
 
@@ -149,11 +149,16 @@ module Domain =
                 if submission.SubtypeId = Submission.Subtype.Visual then
                     for media in submission.Media do
                         Image {
-                            mediaType =
-                                (new Uri(media.Url)).Segments
-                                |> Array.last
-                                |> MimeUtility.GetMimeMapping
+                            mediaType = media.ContentType
                             url = media.Url
+                        }
+            ]
+            thumbnails = [
+                if submission.SubtypeId = Submission.Subtype.Visual then
+                    for thumbnail in submission.Thumbnails do
+                        {
+                            mediaType = thumbnail.ContentType
+                            url = thumbnail.Url
                         }
             ]
             sensitivity =

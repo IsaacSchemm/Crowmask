@@ -18,6 +18,8 @@ namespace Crowmask.Data
 
         public IEnumerable<SubmissionMedia> Media { get; set; } = new List<SubmissionMedia>(0);
 
+        public IEnumerable<SubmissionThumbnail> Thumbnails { get; set; } = new List<SubmissionThumbnail>(0);
+
         public DateTimeOffset PostedAt { get; set; }
 
         public enum Rating
@@ -57,6 +59,9 @@ namespace Crowmask.Data
         {
             get
             {
+                if (!Thumbnails.Any() && CacheRefreshSucceededAt < new DateTime(2023, 12, 28))
+                    return true;
+
                 var now = DateTimeOffset.UtcNow;
 
                 bool older_than_1_hour =

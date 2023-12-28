@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MimeMapping" Version="2.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
   </ItemGroup>
 

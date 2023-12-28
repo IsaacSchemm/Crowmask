@@ -3,11 +3,23 @@ using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
     {
+        private async Task<string> GetContentTypeAsync(string url)
+        {
+            using var httpClient = httpClientFactory.CreateClient();
+            using var req = new HttpRequestMessage(HttpMethod.Head, url);
+            using var resp = await httpClient.SendAsync(req);
+            MediaTypeHeaderValue? val = resp.IsSuccessStatusCode
+                ? resp.Content.Headers.ContentType
+                : null;
+            return val?.MediaType ?? "application/octet-stream";
+        }
+
         public async Task<Post?> GetSubmission(int submitid)
         {
             var cachedSubmission = await Context.Submissions
@@ -50,13 +62,24 @@ namespace Crowmask.Cache
 
                 cachedSubmission.Description = weasylSubmission.description;
                 cachedSubmission.FriendsOnly = weasylSubmission.friends_only;
-                cachedSubmission.Media = weasylSubmission.media.submission
-                    .Select(s => new SubmissionMedia
+                cachedSubmission.Media = await weasylSubmission.media.submission
+                    .ToAsyncEnumerable()
+                    .SelectAwait(async s => new SubmissionMedia
                     {
                         Id = Guid.NewGuid(),
-                        Url = s.url
+                        Url = s.url,
+                        ContentType = await GetContentTypeAsync(s.url)
                     })
-                    .ToList();
+                    .ToListAsync();
+                cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
+                    .ToAsyncEnumerable()
+                    .SelectAwait(async s => new SubmissionThumbnail
+                    {
+                        Id = Guid.NewGuid(),
+                        Url = s.url,
+                        ContentType = await GetContentTypeAsync(s.url)
+                    })
+                    .ToListAsync();
                 cachedSubmission.PostedAt = weasylSubmission.posted_at;
                 cachedSubmission.RatingId = weasylSubmission.rating switch
                 {

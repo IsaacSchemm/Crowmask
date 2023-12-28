@@ -6,5 +6,6 @@
 
 	public class WeasylSubmissionMedia {
 		public IEnumerable<WeasylMediaFile> submission { get; set; }
-	}
+		public IEnumerable<WeasylMediaFile> thumbnail { get; set; }
+    }
 }

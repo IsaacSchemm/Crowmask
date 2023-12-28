@@ -2,7 +2,7 @@
 
 namespace Crowmask.Data
 {
-    public class SubmissionMedia
+    public class SubmissionThumbnail
     {
         public Guid Id { get; set; }
 
