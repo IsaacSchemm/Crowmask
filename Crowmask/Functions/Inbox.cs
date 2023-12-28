@@ -96,6 +96,11 @@ namespace Crowmask.Functions
 
                 await context.SaveChangesAsync();
 
+                await SendToAdminActorAsync(
+                    notifier.CreateFollowNotification(
+                        actor.Id,
+                        actor.Name ?? actor.Id));
+
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Undo")

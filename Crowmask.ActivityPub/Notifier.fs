@@ -34,6 +34,12 @@ type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
     let enc str =
         WebUtility.HtmlEncode str
 
+    member _.CreateFollowNotification actorId actorName =
+        createActivity (String.concat " " [
+            $"""<a href="{enc actorId}">{enc actorName}</a>"""
+            "followed this account"
+        ])
+
     member _.CreateLikeNotification submission actorId actorName =
         createActivity (String.concat " " [
             $"""<a href="{enc actorId}">{enc actorName}</a>"""
