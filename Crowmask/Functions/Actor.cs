@@ -16,7 +16,7 @@ namespace Crowmask.Functions
         {
             var person = await crowmaskCache.GetUser();
 
-            foreach (var format in ContentNegotiation.ForHeaders(req.Headers))
+            foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {

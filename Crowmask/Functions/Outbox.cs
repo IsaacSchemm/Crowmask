@@ -2,8 +2,6 @@ using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Markdown;
 using Crowmask.Weasyl;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +24,7 @@ namespace Crowmask.Functions
                 .SelectAwait(async x => await crowmaskCache.GetSubmission(x.submitid))
                 .ToListAsync();
 
-            foreach (var format in ContentNegotiation.ForHeaders(req.Headers))
+            foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {

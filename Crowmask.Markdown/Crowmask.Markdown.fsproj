@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <Compile Include="MarkdownTranslator.fs" />
-    <Compile Include="ContentNegotiation.fs" />
+    <Compile Include="CrowmaskFormat.fs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,7 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Markdown;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -21,7 +20,7 @@ namespace Crowmask.Functions
             if (submission == null)
                 return req.CreateResponse(HttpStatusCode.NotFound);
 
-            foreach (var format in ContentNegotiation.ForHeaders(req.Headers))
+            foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {
