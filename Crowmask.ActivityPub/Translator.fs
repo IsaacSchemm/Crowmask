@@ -18,7 +18,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
         pair "summary" person.summary
-        pair "url" person.url
+        pair "url" actor
         pair "publicKey" {|
             id = $"{actor}#main-key"
             owner = actor
@@ -65,7 +65,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "attributedTo" actor
         pair "content" note.content
         pair "published" effective_date
-        pair "url" $"https://{host.Hostname}/api/submissions/{note.submitid}" //note.url
+        pair "url" $"https://{host.Hostname}/api/submissions/{note.submitid}"
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"; adminActor.Id]
         match note.sensitivity with
