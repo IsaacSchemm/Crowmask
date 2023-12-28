@@ -19,10 +19,16 @@ var host = new HostBuilder()
             services.AddSingleton<IAdminActor>(new AdminActor(id));
 
         if (Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint") is string accountEndpoint)
-            services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
-                accountEndpoint,
-                new DefaultAzureCredential(),
-                databaseName: "Crowmask"));
+            if (Environment.GetEnvironmentVariable("CosmosDBAccountKey") is string accountKey)
+                services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
+                    accountEndpoint,
+                    accountKey,
+                    databaseName: "Crowmask"));
+            else
+                services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
+                    accountEndpoint,
+                    new DefaultAzureCredential(),
+                    databaseName: "Crowmask"));
 
         if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
             services.AddSingleton<ICrowmaskHost>(new Host(crowmaskHost));

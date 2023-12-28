@@ -109,6 +109,7 @@ Example `local.settings.json`:
       "Values": {
         "AdminActor": "https://pixelfed.example.com/users/...",
         "CosmosDBAccountEndpoint": "https://example.documents.azure.com:443/",
+        "CosmosDBAccountKey": "...",
         "CrowmaskHost": "crowmask.example.com",
         "HandleHost": "crowmask.example.com",
         "KeyVaultHost": "crowmask.vault.azure.net",
@@ -129,16 +130,13 @@ For **Cosmos DB**, you will need to create the container in Data Explorer:
 * Container ID: `CrowmaskDbContext`
 * Partition key: `__partitionKey`
 
-Run something like this in Azure CLI (PowerShell) to give the appropriate
-permissions to the function app's managed identity:
+If you don't want to include `CosmosDBAccountKey`, then Crowmask will try to
+use role-based access control (RBAC) via `DefaultAzureCredential`. In that
+case, run something like this in Azure CLI (PowerShell) to give the
+appropriate permissions to the function app's managed identity:
 
     az login
     az cosmosdb sql role assignment create --account-name {...} --resource-group {...} --scope "/" --principal-id {...} --role-definition-id 00000000-0000-0000-0000-000000000002
 
 The `{...}` for the principal ID should be the ID shown in the Identity tab of
 the function app settings.
-
-The app should work with an SQL Server backend instead if you want to go that route.
-In either case, it would be nice if this app used Managed Identity for that too, but
-I think that would need .NET 7+ and I'm not sure if Azure Functions is quite set up
-for that yet.
