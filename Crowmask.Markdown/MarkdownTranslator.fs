@@ -61,7 +61,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
             $"    @{person.preferredUsername}@{hostname}"
         $""
-        $"[Browse recent posts](/api/actor/outbox)"
+        $"[View followers](/api/actor/followers)"
+        $""
+        $"[Browse posts](/api/actor/outbox)"
         $""
         $"🐦‍⬛🎭"
     ]
@@ -90,9 +92,6 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"## Outbox"
         $""
-        if outbox.Count > 0 then
-            $"Showing {outbox.Count} posts."
-            $""
         for post in outbox do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
             $"* [{post.title}](/api/submissions/{post.submitid}) ({date})"
@@ -136,3 +135,34 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
     ]
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
+
+    member _.FollowersMarkdown = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"## Followers"
+        $""
+        $"[Start from first page](/api/actor/followers/page)"
+        $""
+    ]
+
+    member this.FollowersHtml = toHtml "Followers" this.FollowersMarkdown
+
+    member _.ToMarkdown (followers: IReadOnlyList<Crowmask.Data.Follower>) = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"## Followers"
+        $""
+        for f in followers do
+            $"* [{f.ActorId}]({f.ActorId})"
+        $""
+        let ids = [for f in followers do f.Id]
+        if ids <> [] then
+            $"[View more](/api/actor/followers/page?after={Seq.max ids})"
+    ]
+
+    member this.ToHtml (outbox: IReadOnlyList<Crowmask.Data.Follower>) = this.ToMarkdown outbox |> toHtml "Outbox"
+

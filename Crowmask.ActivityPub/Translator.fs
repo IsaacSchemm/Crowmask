@@ -1,7 +1,6 @@
 ﻿namespace Crowmask.ActivityPub
 
 open System
-open System.Collections.Generic
 open System.Net
 open Crowmask.DomainModeling
 
@@ -15,6 +14,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "type" "Person"
         pair "inbox" $"{actor}/inbox"
         pair "outbox" $"{actor}/outbox"
+        pair "followers" $"{actor}/followers"
         pair "preferredUsername" person.preferredUsername
         pair "name" person.name
         pair "summary" person.summary
@@ -142,4 +142,23 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
         pair "partOf" $"{actor}/outbox"
         pair "orderedItems" [for p in posts do this.AsObject p]
+    ]
+
+    member _.AsFollowers (totalItems: int) = dict [
+        pair "id" $"{actor}/followers"
+        pair "type" "OrderedCollection"
+        pair "totalItems" totalItems
+        pair "first" $"{actor}/followers/page"
+    ]
+
+    member _.AsFollowersPage (id: string) (followers: Crowmask.Data.Follower seq) = dict [
+        pair "id" id
+        pair "type" "OrderedCollectionPage"
+
+        let ids = [for f in followers do f.Id]
+        if ids <> [] then
+            pair "next" $"{actor}/followers/page?after={Seq.max ids}"
+
+        pair "partOf" $"{actor}/outbox"
+        pair "orderedItems" [for f in followers do f.ActorId]
     ]
