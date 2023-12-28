@@ -16,12 +16,12 @@ namespace Crowmask.Functions
         {
             var person = await crowmaskCache.GetUser();
 
+            var key = await keyProvider.GetPublicKeyAsync();
+
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
                 if (format.IsActivityJson)
                 {
-                    var key = await keyProvider.GetPublicKeyAsync();
-
                     string json = AP.SerializeWithContext(translator.PersonToObject(person, key));
 
                     return await req.WriteCrowmaskResponseAsync(format, json);

@@ -58,6 +58,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"## ActivityPub"
         $""
+        $"    @{person.preferredUsername}@{crowmaskHost.Hostname}"
         $"    @{person.preferredUsername}@{handleHost.Hostname}"
         $""
         $"[Browse recent posts](/api/actor/outbox)"
