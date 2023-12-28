@@ -24,10 +24,11 @@ namespace Crowmask.Weasyl
                 ?? throw new Exception("Null response from API");
         }
 
-        public async Task<WeasylGallery> GetUserGalleryAsync(string username, int? nextid = null, int? backid = null)
+        public async Task<WeasylGallery> GetUserGalleryAsync(string username, int? count = null, int? nextid = null, int? backid = null)
         {
             IEnumerable<string> query()
             {
+                if (count is int c) yield return $"count={c}";
                 if (nextid is int n) yield return $"nextid={n}";
                 if (backid is int b) yield return $"backid={b}";
             }

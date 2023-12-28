@@ -1,6 +1,5 @@
 ﻿namespace Crowmask.Markdown
 
-open System.Collections.Generic
 open System.Net
 open Crowmask.DomainModeling
 
@@ -15,7 +14,6 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         "<meta name='viewport' content='width=device-width, initial-scale=1' />"
         "<style type='text/css'>"
         "body { line-height: 1.5; font-family: sans-serif; }"
-        "img { max-width: 300px; max-height: 240px; }"
         "pre { white-space: pre-wrap; }"
         "</style>"
         "</head>"
@@ -75,12 +73,16 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"--------"
         $""
+        $"<style type='text/css'>"
+        $"img {{ width: 640px; max-width: 100vw; height: 480px; object-fit: contain }}"
+        $"</style>"
+        $""
         $"## {post.title}"
         $""
         if post.sensitivity = Sensitivity.General then
             for attachment in post.attachments do
                 match attachment with Image image ->
-                    $"![]({image.url})"
+                    $"[![]({image.url})]({image.url})"
             $""
             post.content
         $""
@@ -109,11 +111,19 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"--------"
         $""
+        $"<style type='text/css'>"
+        $"img {{ width: 250px; height: 250px; object-fit: scale-down; }}"
+        $"</style>"
+        $""
         $"## Gallery"
         $""
         for post in galleryPage.gallery_posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
-            $"* [{post.title}](/api/submissions/{post.submitid}) ({date})"
+            $"### [{post.title}](/api/submissions/{post.submitid}) ({date})"
+            $""
+            for t in post.thumbnails do
+                $"[![]({t.url})](/api/submissions/{post.submitid})"
+            $""
         $""
         match galleryPage.Extrema with
         | Some extrema ->

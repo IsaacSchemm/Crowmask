@@ -59,7 +59,7 @@ namespace Crowmask.Data
         {
             get
             {
-                if (!Thumbnails.Any() && CacheRefreshSucceededAt < new DateTime(2023, 12, 28))
+                if (!Thumbnails.Any() && CacheRefreshSucceededAt < DateTimeOffset.FromUnixTimeMilliseconds(1703806072207L))
                     return true;
 
                 var now = DateTimeOffset.UtcNow;

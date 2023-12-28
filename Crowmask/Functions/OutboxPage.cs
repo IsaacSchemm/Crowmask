@@ -21,7 +21,8 @@ namespace Crowmask.Functions
             var whoami = await weasylClient.WhoamiAsync();
 
             var gallery = await weasylClient.GetUserGalleryAsync(
-                whoami.login,
+                username: whoami.login,
+                count: 20,
                 nextid: int.TryParse(req.Query["nextid"], out int n) ? n : null,
                 backid: int.TryParse(req.Query["backid"], out int b) ? b : null);
 
