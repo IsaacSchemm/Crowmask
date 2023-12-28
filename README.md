@@ -23,7 +23,6 @@ ActivityPub HTTP endpoints:
     - [x] `Create`: if it's for a reply to a `Submission`, sends a transient message to the admin, with a link to the reply
 - [x] `/api/actor/outbox`: contains `Create` activities for the 20 most recent cached Weasyl posts
 - [x] `/api/submissions/{submitid}`: attempts cache refresh for the post, then returns the resulting `Note` object
-- [x] `/api/creations/{submitid}`: returns the `Create` activity included in the outbox (thus ensuring that these `Create` IDs map to valid URLs)
 
 Timed functions:
 

@@ -87,7 +87,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
     member this.ObjectToCreate (note: Post) = dict [
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/api/creations/{note.submitid}"
+        pair "id" $"https://{host.Hostname}/transient/create/{note.submitid}"
         pair "actor" actor
         pair "published" note.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
