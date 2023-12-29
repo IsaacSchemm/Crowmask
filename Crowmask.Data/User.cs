@@ -49,10 +49,10 @@ namespace Crowmask.Data
                 bool refreshed_within_1_hour =
                     now - CacheRefreshSucceededAt < TimeSpan.FromHours(1);
 
-                bool refresh_attempted_within_5_minutes =
-                    now - CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5);
+                bool refresh_attempted_within_4_minutes =
+                    now - CacheRefreshAttemptedAt < TimeSpan.FromMinutes(4);
 
-                if (refresh_attempted_within_5_minutes)
+                if (refresh_attempted_within_4_minutes)
                     return false;
 
                 if (refreshed_within_1_hour)

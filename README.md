@@ -145,14 +145,14 @@ Other functions:
 
 Note that a cached submission will not be refreshed if:
 
-* the last attempted cache refresh was within the past 5 minutes
+* the last attempted cache refresh was within the past 4 minutes
 * the last successful cache refresh was within the past hour, and the post is more than an hour old
 * the last successful cache refresh was within the past 7 days, and the post is more than 7 days old
 * the last successful cache refresh was within the past 28 days, and the post is more than 28 days old
 
 A cached user (name, icon, etc.) will not be refreshed if:
 
-* the last attempted cache refresh was within the past 5 minutes
+* the last attempted cache refresh was within the past 4 minutes
 * the last successful cache refresh was within the past hour
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
