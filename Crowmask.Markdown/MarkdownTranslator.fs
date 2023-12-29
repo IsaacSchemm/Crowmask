@@ -95,6 +95,23 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (post: Note) = this.ToMarkdown post |> toHtml post.title
 
+    member _.ToMarkdown (article: Article) = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"## {enc article.title}"
+        $""
+        if article.sensitivity = Sensitivity.General then
+            article.content
+        $""
+        for link in article.links do
+            $"[{enc link.text}]({link.href})"
+            $""
+    ]
+
+    member this.ToHtml (article: Article) = this.ToMarkdown article |> toHtml article.title
+
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         sharedHeader
         $""
