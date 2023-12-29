@@ -127,7 +127,12 @@ namespace Crowmask.Cache
 
                 var newSubmission = Domain.AsNote(cachedSubmission);
 
-                if (!oldSubmission.Equals(newSubmission))
+                TimeSpan age = DateTimeOffset.UtcNow - newSubmission.first_upstream;
+
+                bool changed = !oldSubmission.Equals(newSubmission);
+                bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
+
+                if (changed && !backfill)
                 {
                     var followers = await Context.Followers.ToListAsync();
                     var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
