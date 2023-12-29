@@ -52,6 +52,38 @@ oesn't indicate any particular media type.
 
 ## Implementation details
 
+Layers:
+
+* **Crowmask.Data**: contains the data storage types and and data context,
+  which map to documents in Cosmos DB using the Cosmos DB backend of EF Core.
+* **Crowmask.Weasyl**: used to connect to the Weasyl API and retrieve user and
+  submission information.
+* **Crowmask.DomainModeling**: converts data objects like `Submission`, many
+  of which are Weasyl-specific, to more general F# records like `Post`, with
+  only the properties needed to expose the information via ActivityPub or the
+  web UI.
+* **Crowmask.ActivityPub**: converts domain model objects to ActivityPub
+  objects (represented as `IDictionary<string, object>`); serializes these
+  objects to LD-JSON (by manually adding the `@context`), and creates
+  private messages to the admin actor.
+* **Crowmask.Cache**: Retrieves new user or submission information from Weasyl
+  when necessary, and creates ActivityPub `Update` activities when the
+  ActivityPub representation of a user or submission changes.
+* **Crowmask.Remote**: Talks to other ActivityPub servers.
+* **Crowmask.Markdown**: Implements the web UI by creating Markdown and HTML
+  representations of data available through ActivityPub `GET` endpoints.
+* **Crowmask**: The main Azure Functions project, responsible for handling
+  HTTP requests and running timed functions.
+
+Configuration values are passed using custom singleton dependencies:
+
+* `DomainModeling.IAdminActor`: provides the admin actor's ActivityPub ID. Implemented in `Program.cs` from the configuration value `AdminActor`.
+* `DomainModeling.ICrowmaskHost`: provides the domain name that Crowmask is expected to run on. Implemented in `Program.cs` from the configuration value `CrowmaskHost`.
+* `DomainModeling.IHandleHost`: provides the domain name used in the Crowmask actor's handle. (Can be the same as the Crowmask domain.) Implemented in `Program.cs` from the configuration value `HandleHost`.
+* `Remote.ISigner`: signs HTTP requests. Implemented by `KeyProvider`, which uses the key from Azure Key Vault specified in `KeyVaultHost`.
+* `Cache.IPublicKeyProvider`: provides the actor's public key in PEM format. Implemented by `KeyProvider`, which uses the key from Azure Key Vault specified in `KeyVaultHost`.
+* `Weasyl.IWeasylApiKeyProvider`: provides the Weasyl API key. Implemented in `Program.cs` from the configuration value `WeasylApiKey`.
+
 Internal objects:
 
 - [x] `User`: a cached user from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
@@ -64,6 +96,7 @@ Internal objects:
 
 ActivityPub HTTP endpoints:
 
+- [x] `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the admin actor's domain
 - [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
 - [x] `/api/actor/inbox`: processes the following activities:
     - [x] `Follow`: adds a new follower (or updates the `Follow` ID of an existing follower)
