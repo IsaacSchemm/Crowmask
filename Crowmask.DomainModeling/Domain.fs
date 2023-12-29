@@ -27,7 +27,7 @@ type Attachment = Image of Image
 
 type Sensitivity = General | Sensitive of warning: string
 
-type Post = {
+type Note = {
     submitid: int
     title: string
     content: string
@@ -40,11 +40,11 @@ type Post = {
 }
 
 type Create = {
-    note: Post
+    note: Note
 }
 
 type Update = {
-    note: Post
+    note: Note
     time: DateTimeOffset
 }
 
@@ -60,7 +60,7 @@ type Gallery = {
 }
 
 type GalleryPage = {
-    gallery_posts: Post list
+    gallery_posts: Note list
 } with
     member this.Extrema =
         let ids = [for p in this.gallery_posts do p.submitid]
@@ -190,7 +190,7 @@ module Domain =
         gallery_count = count
     }
 
-    let AsGalleryPage (posts: Post seq) = {
+    let AsGalleryPage (posts: Note seq) = {
         gallery_posts = Seq.toList posts
     }
 

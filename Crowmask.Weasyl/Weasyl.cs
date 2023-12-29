@@ -8,13 +8,13 @@ namespace Crowmask.Weasyl
         string ApiKey { get; }
     }
 
+    public record WeasylWhoami(
+        string login,
+        int userid);
+
     public record WeasylMediaFile(
         int? mediaid,
         string url);
-
-    public record WeasylUserBase(
-        string login,
-        int userid);
 
     public record WeasylUserMedia(
         FSharpList<WeasylMediaFile> avatar);
@@ -64,21 +64,12 @@ namespace Crowmask.Weasyl
         int? backid,
         int? nextid);
 
-    public class WeasylClient
+    public class WeasylBaseClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IWeasylApiKeyProvider _apiKeyProvider;
-
-        public WeasylClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
-        {
-            _httpClientFactory = httpClientFactory;
-            _apiKeyProvider = apiKeyProvider;
-        }
-
         private async Task<T> GetJsonAsync<T>(string uri)
         {
-            using var httpClient = _httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", _apiKeyProvider.ApiKey);
+            using var httpClient = httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
 
             using HttpResponseMessage resp = await httpClient.GetAsync(uri);
             resp.EnsureSuccessStatusCode();
@@ -111,18 +102,18 @@ namespace Crowmask.Weasyl
                 $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view");
         }
 
-        internal async Task<WeasylUserBase> WhoamiAsync()
+        internal async Task<WeasylWhoami> WhoamiAsync()
         {
-            return await GetJsonAsync<WeasylUserBase>(
+            return await GetJsonAsync<WeasylWhoami>(
                 $"https://www.weasyl.com/api/whoami");
         }
     }
 
-    public class AbstractedWeasylClient(WeasylClient weasylClient)
+    public class WeasylUserClient(WeasylBaseClient weasylClient)
     {
-        private WeasylUserBase _userBase = null;
+        private WeasylWhoami _userBase = null;
 
-        private async Task<WeasylUserBase> WhoamiAsync()
+        private async Task<WeasylWhoami> WhoamiAsync()
         {
             return _userBase ??= await weasylClient.WhoamiAsync();
         }

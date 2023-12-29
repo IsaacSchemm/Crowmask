@@ -12,13 +12,13 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class OutboxPage(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator, AbstractedWeasylClient abstractedWeasylClient)
+    public class OutboxPage(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator, WeasylUserClient weasylUserClient)
     {
         [Function("OutboxPage")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)
         {
-            var gallery = await abstractedWeasylClient.GetMyGalleryAsync(
+            var gallery = await weasylUserClient.GetMyGalleryAsync(
                 count: 20,
                 nextid: int.TryParse(req.Query["nextid"], out int n) ? n : null,
                 backid: int.TryParse(req.Query["backid"], out int b) ? b : null);

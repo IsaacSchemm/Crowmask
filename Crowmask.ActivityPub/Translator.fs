@@ -54,7 +54,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" (this.PersonToObject person key)
     ]
 
-    member _.AsObject (note: Post) = dict [
+    member _.AsObject (note: Note) = dict [
         let backdate =
             note.first_cached - note.first_upstream > TimeSpan.FromHours(24)
         let effective_date =
@@ -86,7 +86,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         ]
     ]
 
-    member this.ObjectToCreate (note: Post) = dict [
+    member this.ObjectToCreate (note: Note) = dict [
         pair "type" "Create"
         pair "id" $"https://{host.Hostname}/transient/create/{note.submitid}"
         pair "actor" actor
@@ -96,7 +96,7 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "object" (this.AsObject note)
     ]
 
-    member this.ObjectToUpdate (note: Post) = dict [
+    member this.ObjectToUpdate (note: Note) = dict [
         pair "type" "Update"
         pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
         pair "actor" actor

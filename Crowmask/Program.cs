@@ -48,7 +48,6 @@ var host = new HostBuilder()
 
         services.AddHttpClient();
 
-        services.AddScoped<AbstractedWeasylClient>();
         services.AddScoped<CrowmaskCache>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<Notifier>();
@@ -56,7 +55,8 @@ var host = new HostBuilder()
         services.AddScoped<Requester>();
         services.AddScoped<Translator>();
         services.AddScoped<Synchronizer>();
-        services.AddScoped<WeasylClient>();
+        services.AddScoped<WeasylBaseClient>();
+        services.AddScoped<WeasylUserClient>();
     })
     .Build();
 

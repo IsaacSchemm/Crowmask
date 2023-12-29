@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(Translator translator, MarkdownTranslator markdownTranslator, AbstractedWeasylClient abstractedWeasylClient)
+    public class Outbox(Translator translator, MarkdownTranslator markdownTranslator, WeasylUserClient weasylUserClient)
     {
         [Function("Outbox")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
-            var user = await abstractedWeasylClient.GetMyUserAsync();
+            var user = await weasylUserClient.GetMyUserAsync();
 
             var gallery = Domain.AsGallery(count: user.statistics.submissions);
 

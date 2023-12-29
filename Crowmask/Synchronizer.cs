@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Crowmask
 {
-    public class Synchronizer(CrowmaskCache crowmaskCache, CrowmaskDbContext context, AbstractedWeasylClient abstractedWeasylClient)
+    public class Synchronizer(CrowmaskCache crowmaskCache, CrowmaskDbContext context, WeasylUserClient weasylUserClient)
     {
         public async Task SynchronizeAsync(DateTimeOffset cutoff)
         {
-            await foreach (var submission in abstractedWeasylClient.GetMyGallerySubmissionsAsync())
+            await foreach (var submission in weasylUserClient.GetMyGallerySubmissionsAsync())
             {
                 if (submission.posted_at < cutoff)
                 {

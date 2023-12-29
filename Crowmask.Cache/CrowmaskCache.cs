@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, AbstractedWeasylClient abstractedWeasylClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient abstractedWeasylClient)
     {
         private async Task<string> GetContentTypeAsync(string url)
         {
@@ -20,7 +20,7 @@ namespace Crowmask.Cache
             return val?.MediaType ?? "application/octet-stream";
         }
 
-        public async Task<Post?> GetSubmission(int submitid)
+        public async Task<Note?> GetSubmission(int submitid)
         {
             var cachedSubmission = await Context.Submissions
                 .Include(s => s.Media)

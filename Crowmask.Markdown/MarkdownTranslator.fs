@@ -68,7 +68,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
 
-    member _.ToMarkdown (post: Post) = String.concat "\n" [
+    member _.ToMarkdown (post: Note) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -89,7 +89,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $"[View on Weasyl]({post.url})"
     ]
 
-    member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
+    member this.ToHtml (post: Note) = this.ToMarkdown post |> toHtml post.title
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         sharedHeader
