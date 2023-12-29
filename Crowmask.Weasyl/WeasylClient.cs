@@ -3,6 +3,11 @@ using System.Net.Http.Json;
 
 namespace Crowmask.Weasyl
 {
+    public interface IWeasylApiKeyProvider
+    {
+        string ApiKey { get; }
+    }
+
     public record WeasylMediaFile(
         int? mediaid,
         string url);
@@ -81,7 +86,7 @@ namespace Crowmask.Weasyl
                 ?? throw new Exception("Null response from API");
         }
 
-        public async Task<WeasylGallery> GetUserGalleryAsync(string username, int? count = null, int? nextid = null, int? backid = null)
+        internal async Task<WeasylGallery> GetUserGalleryAsync(string username, int? count = null, int? nextid = null, int? backid = null)
         {
             IEnumerable<string> query()
             {
@@ -94,9 +99,63 @@ namespace Crowmask.Weasyl
                 $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery?{string.Join("&", query())}");
         }
 
-        public async IAsyncEnumerable<WeasylGallerySubmission> GetUserGallerySubmissionsAsync(string username)
+        internal async Task<WeasylSubmissionDetail> GetSubmissionAsync(int submitid)
         {
-            var gallery = await GetUserGalleryAsync(username);
+            return await GetJsonAsync<WeasylSubmissionDetail>(
+                $"https://www.weasyl.com/api/submissions/{submitid}/view");
+        }
+
+        internal async Task<WeasylUserProfile> GetUserAsync(string user)
+        {
+            return await GetJsonAsync<WeasylUserProfile>(
+                $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view");
+        }
+
+        internal async Task<WeasylUserBase> WhoamiAsync()
+        {
+            return await GetJsonAsync<WeasylUserBase>(
+                $"https://www.weasyl.com/api/whoami");
+        }
+    }
+
+    public class AbstractedWeasylClient(WeasylClient weasylClient)
+    {
+        private WeasylUserBase _userBase = null;
+
+        private async Task<WeasylUserBase> WhoamiAsync()
+        {
+            return _userBase ??= await weasylClient.WhoamiAsync();
+        }
+
+        public async Task<WeasylSubmissionDetail> GetMyPublicSubmissionAsync(int submitid)
+        {
+            try
+            {
+                var whoami = await WhoamiAsync();
+                var submission = await weasylClient.GetSubmissionAsync(submitid);
+                return submission.owner == whoami.login && !submission.friends_only
+                    ? submission
+                    : null;
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+        }
+
+        public async Task<WeasylGallery> GetMyGalleryAsync(int? count = null, int? nextid = null, int? backid = null)
+        {
+            var whoami = await WhoamiAsync();
+            return await weasylClient.GetUserGalleryAsync(
+                username: whoami.login,
+                count: count,
+                nextid: nextid,
+                backid: backid);
+        }
+
+        public async IAsyncEnumerable<WeasylGallerySubmission> GetMyGallerySubmissionsAsync()
+        {
+            var gallery = await GetMyGalleryAsync();
 
             while (true)
             {
@@ -107,7 +166,7 @@ namespace Crowmask.Weasyl
 
                 if (gallery.nextid is int nextid)
                 {
-                    gallery = await GetUserGalleryAsync(username, nextid: nextid);
+                    gallery = await GetMyGalleryAsync(nextid: nextid);
                 }
                 else
                 {
@@ -116,22 +175,10 @@ namespace Crowmask.Weasyl
             }
         }
 
-        public async Task<WeasylSubmissionDetail> GetSubmissionAsync(int submitid)
+        public async Task<WeasylUserProfile> GetMyUserAsync()
         {
-            return await GetJsonAsync<WeasylSubmissionDetail>(
-                $"https://www.weasyl.com/api/submissions/{submitid}/view");
-        }
-
-        public async Task<WeasylUserProfile> GetUserAsync(string user)
-        {
-            return await GetJsonAsync<WeasylUserProfile>(
-                $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view");
-        }
-
-        public async Task<WeasylUserBase> WhoamiAsync()
-        {
-            return await GetJsonAsync<WeasylUserBase>(
-                $"https://www.weasyl.com/api/whoami");
+            var whoami = await WhoamiAsync();
+            return await weasylClient.GetUserAsync(whoami.login);
         }
     }
 }

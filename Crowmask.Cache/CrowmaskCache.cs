@@ -7,27 +7,8 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, AbstractedWeasylClient abstractedWeasylClient)
     {
-        private class SubmissionGoneException : Exception { }
-
-        private async Task<WeasylSubmissionDetail> GetSubmissionAsync(int submitid)
-        {
-            try
-            {
-                var weasylSubmission = await WeasylClient.GetSubmissionAsync(submitid);
-
-                if (weasylSubmission.friends_only)
-                    throw new SubmissionGoneException();
-
-                return weasylSubmission;
-            }
-            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                throw new SubmissionGoneException();
-            }
-        }
-
         private async Task<string> GetContentTypeAsync(string url)
         {
             using var httpClient = httpClientFactory.CreateClient();
@@ -58,129 +39,127 @@ namespace Crowmask.Cache
 
             try
             {
-                WeasylSubmissionDetail weasylSubmission = await GetSubmissionAsync(submitid);
-
-                bool newlyCreated = false;
-
-                if (cachedSubmission == null)
+                WeasylSubmissionDetail weasylSubmission = await abstractedWeasylClient.GetMyPublicSubmissionAsync(submitid);
+                if (weasylSubmission != null)
                 {
-                    var whoami = await WeasylClient.WhoamiAsync();
-                    if (whoami.login != weasylSubmission.owner)
-                        return null;
+                    bool newlyCreated = false;
 
-                    newlyCreated = true;
-                    cachedSubmission = new Submission
+                    if (cachedSubmission == null)
                     {
-                        SubmitId = submitid,
-                        FirstCachedAt = DateTimeOffset.UtcNow
+                        newlyCreated = true;
+                        cachedSubmission = new Submission
+                        {
+                            SubmitId = submitid,
+                            FirstCachedAt = DateTimeOffset.UtcNow
+                        };
+                        Context.Submissions.Add(cachedSubmission);
+                    }
+
+                    var oldSubmission = Domain.AsNote(cachedSubmission);
+
+                    cachedSubmission.Description = weasylSubmission.description;
+                    cachedSubmission.FriendsOnly = weasylSubmission.friends_only;
+                    cachedSubmission.Media = await weasylSubmission.media.submission
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async s => new SubmissionMedia
+                        {
+                            Id = Guid.NewGuid(),
+                            Url = s.url,
+                            ContentType = await GetContentTypeAsync(s.url)
+                        })
+                        .ToListAsync();
+                    cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async s => new SubmissionThumbnail
+                        {
+                            Id = Guid.NewGuid(),
+                            Url = s.url,
+                            ContentType = await GetContentTypeAsync(s.url)
+                        })
+                        .ToListAsync();
+                    cachedSubmission.PostedAt = weasylSubmission.posted_at;
+                    cachedSubmission.RatingId = weasylSubmission.rating switch
+                    {
+                        "general" => Submission.Rating.General,
+                        "moderate" => Submission.Rating.Moderate,
+                        "mature" => Submission.Rating.Mature,
+                        "explicit" => Submission.Rating.Explicit,
+                        _ => 0
                     };
-                    Context.Submissions.Add(cachedSubmission);
-                }
-
-                var oldSubmission = Domain.AsNote(cachedSubmission);
-
-                cachedSubmission.Description = weasylSubmission.description;
-                cachedSubmission.FriendsOnly = weasylSubmission.friends_only;
-                cachedSubmission.Media = await weasylSubmission.media.submission
-                    .ToAsyncEnumerable()
-                    .SelectAwait(async s => new SubmissionMedia
+                    cachedSubmission.SubtypeId = weasylSubmission.subtype switch
                     {
-                        Id = Guid.NewGuid(),
-                        Url = s.url,
-                        ContentType = await GetContentTypeAsync(s.url)
-                    })
-                    .ToListAsync();
-                cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
-                    .ToAsyncEnumerable()
-                    .SelectAwait(async s => new SubmissionThumbnail
-                    {
-                        Id = Guid.NewGuid(),
-                        Url = s.url,
-                        ContentType = await GetContentTypeAsync(s.url)
-                    })
-                    .ToListAsync();
-                cachedSubmission.PostedAt = weasylSubmission.posted_at;
-                cachedSubmission.RatingId = weasylSubmission.rating switch
-                {
-                    "general" => Submission.Rating.General,
-                    "moderate" => Submission.Rating.Moderate,
-                    "mature" => Submission.Rating.Mature,
-                    "explicit" => Submission.Rating.Explicit,
-                    _ => 0
-                };
-                cachedSubmission.SubtypeId = weasylSubmission.subtype switch
-                {
-                    "visual" => Submission.Subtype.Visual,
-                    "literary" => Submission.Subtype.Literary,
-                    "multimedia" => Submission.Subtype.Multimedia,
-                    _ => 0
-                };
-                cachedSubmission.Tags = weasylSubmission.tags
-                    .Select(t => new SubmissionTag
-                    {
-                        Id = Guid.NewGuid(),
-                        Tag = t
-                    })
-                    .ToList();
-                cachedSubmission.Title = weasylSubmission.title;
-                cachedSubmission.Link = weasylSubmission.link;
-
-                var newSubmission = Domain.AsNote(cachedSubmission);
-
-                TimeSpan age = DateTimeOffset.UtcNow - newSubmission.first_upstream;
-
-                bool changed = !oldSubmission.Equals(newSubmission);
-                bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
-
-                if (changed && !backfill)
-                {
-                    var followers = await Context.Followers.ToListAsync();
-                    var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
-
-                    foreach (var inbox in inboxes)
-                    {
-                        Context.OutboundActivities.Add(new OutboundActivity
+                        "visual" => Submission.Subtype.Visual,
+                        "literary" => Submission.Subtype.Literary,
+                        "multimedia" => Submission.Subtype.Multimedia,
+                        _ => 0
+                    };
+                    cachedSubmission.Tags = weasylSubmission.tags
+                        .Select(t => new SubmissionTag
                         {
                             Id = Guid.NewGuid(),
-                            Inbox = inbox.Key,
-                            JsonBody = AP.SerializeWithContext(
-                                newlyCreated
-                                ? Translator.ObjectToCreate(newSubmission)
-                                : Translator.ObjectToUpdate(newSubmission)),
-                            StoredAt = DateTimeOffset.UtcNow
-                        });
-                    }
-                }
+                            Tag = t
+                        })
+                        .ToList();
+                    cachedSubmission.Title = weasylSubmission.title;
+                    cachedSubmission.Link = weasylSubmission.link;
 
-                cachedSubmission.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
-                await Context.SaveChangesAsync();
+                    var newSubmission = Domain.AsNote(cachedSubmission);
 
-                return newSubmission;
-            }
-            catch (SubmissionGoneException)
-            {
-                if (cachedSubmission != null)
-                {
-                    Context.Submissions.Remove(cachedSubmission);
+                    TimeSpan age = DateTimeOffset.UtcNow - newSubmission.first_upstream;
 
-                    var followers = await Context.Followers.ToListAsync();
-                    var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
+                    bool changed = !oldSubmission.Equals(newSubmission);
+                    bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
 
-                    foreach (var inbox in inboxes)
+                    if (changed && !backfill)
                     {
-                        Context.OutboundActivities.Add(new OutboundActivity
+                        var followers = await Context.Followers.ToListAsync();
+                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
+
+                        foreach (var inbox in inboxes)
                         {
-                            Id = Guid.NewGuid(),
-                            Inbox = inbox.Key,
-                            JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(cachedSubmission.SubmitId)),
-                            StoredAt = DateTimeOffset.UtcNow
-                        });
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = inbox.Key,
+                                JsonBody = AP.SerializeWithContext(
+                                    newlyCreated
+                                    ? Translator.ObjectToCreate(newSubmission)
+                                    : Translator.ObjectToUpdate(newSubmission)),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
                     }
 
+                    cachedSubmission.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
                     await Context.SaveChangesAsync();
-                }
 
-                return null;
+                    return newSubmission;
+                }
+                else
+                {
+                    if (cachedSubmission != null)
+                    {
+                        Context.Submissions.Remove(cachedSubmission);
+
+                        var followers = await Context.Followers.ToListAsync();
+                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
+
+                        foreach (var inbox in inboxes)
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = inbox.Key,
+                                JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(cachedSubmission.SubmitId)),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
+
+                        await Context.SaveChangesAsync();
+                    }
+
+                    return null;
+                }
             }
             catch (HttpRequestException)
             {
@@ -203,9 +182,7 @@ namespace Crowmask.Cache
             cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
             await Context.SaveChangesAsync();
 
-            var whoami = await WeasylClient.WhoamiAsync();
-
-            var weasylUser = await WeasylClient.GetUserAsync(whoami.login);
+            var weasylUser = await abstractedWeasylClient.GetMyUserAsync();
 
             var oldUser = Domain.AsPerson(cachedUser);
 

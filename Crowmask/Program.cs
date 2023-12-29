@@ -48,6 +48,7 @@ var host = new HostBuilder()
 
         services.AddHttpClient();
 
+        services.AddScoped<AbstractedWeasylClient>();
         services.AddScoped<CrowmaskCache>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<Notifier>();
