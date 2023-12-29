@@ -9,6 +9,25 @@ namespace Crowmask.Cache
 {
     public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylClient WeasylClient)
     {
+        private class SubmissionGoneException : Exception { }
+
+        private async Task<WeasylSubmissionDetail> GetSubmissionAsync(int submitid)
+        {
+            try
+            {
+                var weasylSubmission = await WeasylClient.GetSubmissionAsync(submitid);
+
+                if (weasylSubmission.friends_only)
+                    throw new SubmissionGoneException();
+
+                return weasylSubmission;
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                throw new SubmissionGoneException();
+            }
+        }
+
         private async Task<string> GetContentTypeAsync(string url)
         {
             using var httpClient = httpClientFactory.CreateClient();
@@ -39,7 +58,7 @@ namespace Crowmask.Cache
 
             try
             {
-                var weasylSubmission = await WeasylClient.GetSubmissionAsync(submitid);
+                WeasylSubmissionDetail weasylSubmission = await GetSubmissionAsync(submitid);
 
                 bool newlyCreated = false;
 
@@ -133,7 +152,7 @@ namespace Crowmask.Cache
 
                 return newSubmission;
             }
-            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            catch (SubmissionGoneException)
             {
                 if (cachedSubmission != null)
                 {
