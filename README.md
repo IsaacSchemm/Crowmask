@@ -14,9 +14,11 @@ Crowmask is written mostly in C# with some parts in F#.
 The Crowmask server is configured with a Weasyl API key and generates a single
 automated user account, using the name, info, avatar, and submissions of the
 Weasyl user who created the API key. This user account can be followed by
-users on Mastodon, Pixelfed, and microblog.pub, among others. (Submissions are
-exposed as `Note` objects - this was used instead of `Article` for a better
-experience in Mastodon and to keep compatibility with Pixelfed.)
+users on Mastodon, Pixelfed, and microblog.pub, among others.
+
+Submissions (retrieved from the Weasyl API) are mapped to `Note` objects, and
+journals (scraped from the website using the Weasyl API key as authentication)
+are mapped to `Article` objects.
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 Crowmask will send a private message to the "admin actor" defined in its
@@ -47,6 +49,8 @@ oesn't indicate any particular media type.
   then discarded.)
 * Crowmask does not keep track of interaction with posts (beyond notifying the
   admin actor).
+* Weasyl tags are ignored in Crowmask, instead of being translated into
+  Mastodon-style hashtags.
 
 ## Implementation details
 
@@ -56,10 +60,10 @@ Layers:
   which map to documents in Cosmos DB using the Cosmos DB backend of EF Core.
 * **Crowmask.Weasyl**: used to connect to the Weasyl API and retrieve user and
   submission information.
-* **Crowmask.DomainModeling**: converts data objects like `Submission`, many
-  of which are Weasyl-specific, to more general F# records like `Post`, with
-  only the properties needed to expose the information via ActivityPub or the
-  web UI.
+* **Crowmask.DomainModeling**: converts data objects like `Submission` (which
+  are specific to Weasyl and the database schema), to more general F# records
+  with only the properties needed to expose the information via ActivityPub or
+  Markdown.
 * **Crowmask.ActivityPub**: converts domain model objects to ActivityPub
   objects (represented as `IDictionary<string, object>`); serializes these
   objects to LD-JSON (by manually adding the `@context`), and creates
@@ -107,6 +111,7 @@ ActivityPub HTTP endpoints:
 - [x] `/api/actor/followers`: contains the IDs of all followers (20 per page)
 - [x] `/api/actor/following`: an empty list
 - [x] `/api/submissions/{submitid}`: attempts cache refresh for the post, then returns the resulting `Note` object
+- [x] `/api/journals/{journalid}`: attempts cache refresh for the journal, then returns the resulting `Article` object
 
 Timed functions:
 

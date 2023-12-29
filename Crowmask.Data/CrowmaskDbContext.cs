@@ -8,6 +8,8 @@ namespace Crowmask.Data
     {
         public DbSet<Follower> Followers { get; set; }
 
+        public DbSet<Journal> Journals { get; set; }
+
         public DbSet<OutboundActivity> OutboundActivities { get; set; }
 
         public DbSet<Submission> Submissions { get; set; }

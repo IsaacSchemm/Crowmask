@@ -4,7 +4,7 @@ open System
 open System.Net
 open Crowmask.DomainModeling
 
-type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
+type Translator(host: ICrowmaskHost) =
     let actor = $"https://{host.Hostname}/api/actor"
 
     let pair key value = (key, value :> obj)
@@ -62,13 +62,12 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
 
         pair "id" $"https://{host.Hostname}/api/submissions/{note.submitid}"
         pair "type" "Note"
-        pair "name" note.title
         pair "attributedTo" actor
         pair "content" note.content
         pair "published" effective_date
         pair "url" $"https://{host.Hostname}/api/submissions/{note.submitid}"
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"; adminActor.Id]
+        pair "cc" [$"{actor}/followers"]
         match note.sensitivity with
         | General -> ()
         | Sensitive warning ->
@@ -79,21 +78,52 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
                 match attachment with
                 | Image image -> dict [
                     pair "type" "Document"
-                    pair "name" $"{note.title} (from weasyl.com; no additional description available)"
                     pair "mediaType" image.mediaType
                     pair "url" image.url
                 ]
         ]
     ]
 
+    member _.AsObject (article: Article) = dict [
+        let backdate =
+            article.first_cached - article.first_upstream > TimeSpan.FromHours(24)
+        let effective_date =
+            if backdate then article.first_upstream else article.first_cached
+
+        pair "id" $"https://{host.Hostname}/api/journals/{article.journalid}"
+        pair "type" "Article"
+        pair "name" article.title
+        pair "attributedTo" actor
+        pair "content" article.content
+        pair "published" effective_date
+        pair "url" $"https://{host.Hostname}/api/journals/{article.journalid}"
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"]
+        match article.sensitivity with
+        | General -> ()
+        | Sensitive warning ->
+            pair "summary" warning
+            pair "sensitive" true
+    ]
+
     member this.ObjectToCreate (note: Note) = dict [
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/transient/create/{note.submitid}"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" note.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"; adminActor.Id]
+        pair "cc" [$"{actor}/followers"]
         pair "object" (this.AsObject note)
+    ]
+
+    member this.ObjectToCreate (article: Article) = dict [
+        pair "type" "Create"
+        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "actor" actor
+        pair "published" article.first_cached
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"]
+        pair "object" (this.AsObject article)
     ]
 
     member this.ObjectToUpdate (note: Note) = dict [
@@ -102,18 +132,38 @@ type Translator(adminActor: IAdminActor, host: ICrowmaskHost) =
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"; adminActor.Id]
+        pair "cc" [$"{actor}/followers"]
         pair "object" (this.AsObject note)
     ]
 
-    member _.ObjectToDelete (submitid: int) = dict [
+    member this.ObjectToUpdate (article: Article) = dict [
+        pair "type" "Update"
+        pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
+        pair "actor" actor
+        pair "published" DateTimeOffset.UtcNow
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"]
+        pair "object" (this.AsObject article)
+    ]
+
+    member _.ObjectToDelete (note: Note) = dict [
         pair "type" "Delete"
         pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"; adminActor.Id]
-        pair "object" $"https://{host.Hostname}/api/submissions/{submitid}"
+        pair "cc" [$"{actor}/followers"]
+        pair "object" $"https://{host.Hostname}/api/submissions/{note.submitid}"
+    ]
+
+    member _.ObjectToDelete (article: Article) = dict [
+        pair "type" "Delete"
+        pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
+        pair "actor" actor
+        pair "published" DateTimeOffset.UtcNow
+        pair "to" "https://www.w3.org/ns/activitystreams#Public"
+        pair "cc" [$"{actor}/followers"]
+        pair "object" $"https://{host.Hostname}/api/journals/{article.journalid}"
     ]
 
     member _.AcceptFollow (followId: string) = dict [

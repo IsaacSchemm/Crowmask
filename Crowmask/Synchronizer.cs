@@ -15,9 +15,7 @@ namespace Crowmask
             await foreach (var submission in weasylUserClient.GetMyGallerySubmissionsAsync())
             {
                 if (submission.posted_at < cutoff)
-                {
                     break;
-                }
 
                 await crowmaskCache.GetSubmission(submission.submitid);
             }
@@ -29,9 +27,25 @@ namespace Crowmask
             foreach (var submission in cachedSubmissions)
             {
                 if (submission.Stale)
-                {
                     await crowmaskCache.GetSubmission(submission.SubmitId);
-                }
+            }
+
+            await foreach (int journalId in weasylUserClient.GetMyJournalIdsAsync())
+            {
+                var journal = await crowmaskCache.GetJournal(journalId);
+
+                if (journal.first_upstream < cutoff)
+                    break;
+            }
+
+            var cachedJournals = await context.Journals
+                .Where(j => j.PostedAt >= cutoff)
+                .ToListAsync();
+
+            foreach (var journal in cachedJournals)
+            {
+                if (journal.Stale)
+                    await crowmaskCache.GetJournal(journal.JournalId);
             }
         }
     }

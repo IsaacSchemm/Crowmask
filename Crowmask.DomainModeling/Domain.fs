@@ -44,6 +44,16 @@ type Note = {
     sensitivity: Sensitivity
 }
 
+type Article = {
+    journalid: int
+    title: string
+    content: string
+    links: Link list
+    first_upstream: DateTimeOffset
+    first_cached: DateTimeOffset
+    sensitivity: Sensitivity
+}
+
 type Create = {
     note: Note
 }
@@ -178,6 +188,26 @@ module Domain =
                 | Submission.Rating.Mature -> Sensitive "Mature (18+)"
                 | Submission.Rating.Explicit -> Sensitive "Explicit (18+)"
                 | _ -> Sensitive "Potentially sensitive (nature unknown)"
+        }
+
+    let AsArticle (journal: Journal) =
+        {
+            journalid = journal.JournalId
+            title = journal.Title
+            content = journal.Content
+            links = [
+                if not (String.IsNullOrEmpty journal.Link)
+                then {
+                    text = "View on Weasyl"
+                    href = journal.Link
+                }
+            ]
+            first_upstream = journal.PostedAt
+            first_cached = journal.FirstCachedAt
+            sensitivity =
+                match journal.Rating with
+                | "General" -> General
+                | str -> Sensitive str
         }
 
     let AsCreate (submission: Submission) =

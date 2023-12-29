@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient abstractedWeasylClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
     {
         private async Task<string> GetContentTypeAsync(string url)
         {
@@ -39,7 +39,7 @@ namespace Crowmask.Cache
 
             try
             {
-                WeasylSubmissionDetail weasylSubmission = await abstractedWeasylClient.GetMyPublicSubmissionAsync(submitid);
+                WeasylSubmissionDetail weasylSubmission = await weasylUserClient.GetMyPublicSubmissionAsync(submitid);
                 if (weasylSubmission != null)
                 {
                     bool newlyCreated = false;
@@ -150,7 +150,7 @@ namespace Crowmask.Cache
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox.Key,
-                                JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(cachedSubmission.SubmitId)),
+                                JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(Domain.AsNote(cachedSubmission))),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -169,6 +169,115 @@ namespace Crowmask.Cache
             }
         }
 
+        public async Task<Article?> GetJournal(int journalid)
+        {
+            var cachedJournal = await Context.Journals
+                .Where(s => s.JournalId == journalid)
+                .SingleOrDefaultAsync();
+
+            if (cachedJournal != null)
+            {
+                if (!cachedJournal.Stale)
+                    return Domain.AsArticle(cachedJournal);
+
+                cachedJournal.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
+                await Context.SaveChangesAsync();
+            }
+
+            try
+            {
+                var whoami = await weasylUserClient.GetMyUserAsync();
+
+                var weasylJournal = await weasylUserClient.GetMyJournalAsync(journalid);
+                if (weasylJournal != null)
+                {
+                    bool newlyCreated = false;
+
+                    if (cachedJournal == null)
+                    {
+                        newlyCreated = true;
+                        cachedJournal = new Journal
+                        {
+                            JournalId = weasylJournal.JournalId,
+                            FirstCachedAt = DateTimeOffset.UtcNow
+                        };
+                        Context.Journals.Add(cachedJournal);
+                    }
+
+                    var oldJournal = Domain.AsArticle(cachedJournal);
+
+                    cachedJournal.Content = weasylJournal.Content;
+                    cachedJournal.PostedAt = weasylJournal.PostedAt;
+                    cachedJournal.Rating = weasylJournal.Rating;
+                    cachedJournal.Title = weasylJournal.Title;
+                    cachedJournal.VisibilityRestricted = weasylJournal.VisibilityRestricted;
+
+                    var newJournal = Domain.AsArticle(cachedJournal);
+
+                    TimeSpan age = DateTimeOffset.UtcNow - newJournal.first_upstream;
+
+                    bool changed = !oldJournal.Equals(newJournal);
+                    bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
+
+                    if (changed && !backfill)
+                    {
+                        var followers = await Context.Followers.ToListAsync();
+                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
+
+                        foreach (var inbox in inboxes)
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = inbox.Key,
+                                JsonBody = AP.SerializeWithContext(
+                                    newlyCreated
+                                    ? Translator.ObjectToCreate(newJournal)
+                                    : Translator.ObjectToUpdate(newJournal)),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
+                    }
+
+                    cachedJournal.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
+                    await Context.SaveChangesAsync();
+
+                    return newJournal;
+                }
+                else
+                {
+                    if (cachedJournal != null)
+                    {
+                        Context.Journals.Remove(cachedJournal);
+
+                        var followers = await Context.Followers.ToListAsync();
+                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
+
+                        foreach (var inbox in inboxes)
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = inbox.Key,
+                                JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(Domain.AsArticle(cachedJournal))),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
+
+                        await Context.SaveChangesAsync();
+                    }
+
+                    return null;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                return cachedJournal == null
+                    ? null
+                    : Domain.AsArticle(cachedJournal);
+            }
+        }
+
         public async Task<Person> GetUser()
         {
             var cachedUser = await Context.GetUserAsync();
@@ -182,7 +291,7 @@ namespace Crowmask.Cache
             cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
             await Context.SaveChangesAsync();
 
-            var weasylUser = await abstractedWeasylClient.GetMyUserAsync();
+            var weasylUser = await weasylUserClient.GetMyUserAsync();
 
             var oldUser = Domain.AsPerson(cachedUser);
 
