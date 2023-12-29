@@ -121,8 +121,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
             $"### [{post.title}](/api/submissions/{post.submitid}) ({date})"
             $""
-            for t in post.thumbnails do
-                $"[![]({t.url})](/api/submissions/{post.submitid})"
+            if post.sensitivity = Sensitivity.General then
+                for t in post.thumbnails do
+                    $"[![]({t.url})](/api/submissions/{post.submitid})"
             $""
         $""
         match galleryPage.Extrema with
