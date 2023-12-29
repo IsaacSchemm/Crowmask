@@ -47,8 +47,6 @@ oesn't indicate any particular media type.
   then discarded.)
 * Crowmask does not keep track of interaction with posts (beyond notifying the
   admin actor).
-* The Crowmask outbox only contains the 20 most recent posts. (Note that
-  Mastodon does not use the outbox.)
 
 ## Implementation details
 
@@ -151,27 +149,6 @@ A cached user (name, icon, etc.) will not be refreshed if:
 
 * the last attempted cache refresh was within the past 5 minutes
 * the last successful cache refresh was within the past hour
-
-Other tasks:
-
-- [x] Sign HTTP requets using Azure Key Vault
-- [x] Create an application that can send Create, Update, and Delete activities and host Actor and Note URLs,
-      using [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) as a guide,
-      consumable by microblog.pub (posts should be visible in the Inbox tab)
-- [x] Figure out local and Azure configuration storage for the database connection, the Weasyl API key, and the "admin actor URL"
-- [x] Implement shared inbox support
-- [x] Only insert JSON-LD @context at top level
-- [x] Use an actual JSON-LD implementation for parsing
-- [x] Allow the hostname to be configurable
-- [x] Webfinger implementation
-- [x] Make sure that a submission belongs to the logged-in user before adding and returning it
-- [x] Dedupe follow requests by actor (only honor most recent Follow)
-- [x] Forward unknown webfinger requests to the admin actor's server, if any
-- [x] Make the domain in the handle configurable
-- [x] Create a private post to the admin actor (if any) describing each incoming like, boost, or reply
-- [x] Linkify the external links from Weasyl in the same way Weasyl does
-- [x] Add handlers to GET endpoints for `text/html`
-- [x] Experiment with other post types besides `Note`
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
