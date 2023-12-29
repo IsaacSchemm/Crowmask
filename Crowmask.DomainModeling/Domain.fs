@@ -27,11 +27,16 @@ type Attachment = Image of Image
 
 type Sensitivity = General | Sensitive of warning: string
 
+type Link = {
+    text: string
+    href: string
+}
+
 type Note = {
     submitid: int
     title: string
     content: string
-    url: string
+    links: Link list
     first_upstream: DateTimeOffset
     first_cached: DateTimeOffset
     attachments: Attachment list
@@ -142,7 +147,13 @@ module Domain =
             submitid = submission.SubmitId
             title = submission.Title
             content = submission.Content
-            url = submission.Url
+            links = [
+                if not (String.IsNullOrEmpty submission.Link)
+                then {
+                    text = "View on Weasyl"
+                    href = submission.Link
+                }
+            ]
             first_upstream = submission.PostedAt
             first_cached = submission.FirstCachedAt
             attachments = [

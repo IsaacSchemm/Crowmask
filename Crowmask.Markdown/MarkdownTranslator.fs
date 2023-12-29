@@ -4,12 +4,14 @@ open System.Net
 open Crowmask.DomainModeling
 
 type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
+    let enc = WebUtility.HtmlEncode
+
     let toHtml (title: string) (str: string) = String.concat "\n" [
         "<!DOCTYPE html>"
         "<html>"
         "<head>"
         "<title>"
-        WebUtility.HtmlEncode($"{title} - Crowmask")
+        WebUtility.HtmlEncode($"{enc title} - Crowmask")
         "</title>"
         "<meta name='viewport' content='width=device-width, initial-scale=1' />"
         "<style type='text/css'>"
@@ -26,7 +28,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
     let sharedHeader = String.concat "\n" [
         $"# Crowmask"
         $""
-        $"This is an ActivityPub mirror powered by [Crowmask](https://github.com/IsaacSchemm/Crowmask). The ActivityPub user at [{adminActor.Id}]({adminActor.Id}) will be notified of any likes, shares, or replies."
+        $"This is an ActivityPub mirror powered by [Crowmask](https://github.com/IsaacSchemm/Crowmask). The ActivityPub user at [{enc adminActor.Id}]({adminActor.Id}) will be notified of any likes, shares, or replies."
         $""
         $"[Return to the user profile page](/api/actor)"
     ]
@@ -36,7 +38,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"--------"
         $""
-        $"## {person.name}"
+        $"## {enc person.name}"
         $""
         for iconUrl in person.iconUrls do
             $"![]({iconUrl})"
@@ -46,9 +48,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         for metadata in person.attachments do
             match metadata.uri with
             | Some uri ->
-                $"* {metadata.name}: [{metadata.value}]({uri.AbsoluteUri})"
+                $"* {enc metadata.name}: [{enc metadata.value}]({uri.AbsoluteUri})"
             | None ->
-                $"* {metadata.name}: {metadata.value}"
+                $"* {enc metadata.name}: {enc metadata.value}"
         $""
         $"[View original profile]({person.url})"
         $""
@@ -57,7 +59,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $"## ActivityPub"
         $""
         for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
-            $"    @{person.preferredUsername}@{hostname}"
+            $"    @{enc person.preferredUsername}@{hostname}"
         $""
         $"[View followers](/api/actor/followers)"
         $""
@@ -77,7 +79,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $"img {{ width: 640px; max-width: 100vw; height: 480px; object-fit: contain }}"
         $"</style>"
         $""
-        $"## {post.title}"
+        $"## {enc post.title}"
         $""
         if post.sensitivity = Sensitivity.General then
             for attachment in post.attachments do
@@ -86,7 +88,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             $""
             post.content
         $""
-        $"[View on Weasyl]({post.url})"
+        for link in post.links do
+            $"[{enc link.text}]({link.href})"
+            $""
     ]
 
     member this.ToHtml (post: Note) = this.ToMarkdown post |> toHtml post.title
@@ -119,7 +123,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         for post in galleryPage.gallery_posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
-            $"### [{post.title}](/api/submissions/{post.submitid}) ({date})"
+            $"### [{enc post.title}](/api/submissions/{post.submitid}) ({enc date})"
             $""
             if post.sensitivity = Sensitivity.General then
                 for t in post.thumbnails do
@@ -135,16 +139,19 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         match galleryPage.gallery_posts with
         | [] -> ()
         | post::_ ->
-            $"----------"
-            $""
-            $"To interact with a specific post, add the numeric ID from the Weasyl submission URL to the `/api/submissions/` endpoint. For example, the submission at:"
-            $""
-            $"    {post.url}"
-            $""
-            $"can be accessed at:"
-            $""
-            $"    https://{crowmaskHost.Hostname}/api/submissions/{post.submitid}"
-            $""
+            match post.links with
+            | [] -> ()
+            | link::_ ->
+                $"----------"
+                $""
+                $"To interact with a specific post, add the numeric ID from the Weasyl submission URL to the `/api/submissions/` endpoint. For example, the submission at:"
+                $""
+                $"    {enc link.href}"
+                $""
+                $"can be accessed at:"
+                $""
+                $"    https://{enc crowmaskHost.Hostname}/api/submissions/{post.submitid}"
+                $""
     ]
 
     member this.ToHtml (galleryPage: GalleryPage) = this.ToMarkdown galleryPage |> toHtml "Gallery"
@@ -172,7 +179,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $"## Followers"
         $""
         for f in followerCollectionPage.followers do
-            $"* [{f.actorId}]({f.actorId})"
+            $"* [{enc f.actorId}]({f.actorId})"
         $""
         match followerCollectionPage.MaxId with
         | None -> ()

@@ -53,8 +53,6 @@ namespace Crowmask.Data
 
         public string Content => Description ?? "";
 
-        public string Url => Link ?? $"https://www.weasyl.com/~lizardsocks/submissions/{SubmitId}";
-
         public bool Stale
         {
             get
