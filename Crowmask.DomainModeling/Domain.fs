@@ -32,8 +32,12 @@ type Link = {
     href: string
 }
 
-type Note = {
-    submitid: int
+type UpstreamType =
+| UpstreamSubmission of submitid: int
+| UpstreamJournal of journalid: int
+
+type Post = {
+    upstream_type: UpstreamType
     title: string
     content: string
     links: Link list
@@ -44,48 +48,15 @@ type Note = {
     sensitivity: Sensitivity
 }
 
-type Article = {
-    journalid: int
-    title: string
-    content: string
-    links: Link list
-    first_upstream: DateTimeOffset
-    first_cached: DateTimeOffset
-    sensitivity: Sensitivity
-}
-
-type Create = {
-    note: Note
-}
-
-type Update = {
-    note: Note
-    time: DateTimeOffset
-}
-
-type Delete = {
-    submitid: int
-    time: DateTimeOffset
-}
-
-type Activity = Create of Create | Update of Update | Delete of Delete
-
 type Gallery = {
     gallery_count: int
 }
 
 type GalleryPage = {
-    gallery_posts: Note list
-} with
-    member this.Extrema =
-        let ids = [for p in this.gallery_posts do p.submitid]
-
-        if ids = []
-        then None
-        else Some {|
-            backid = Seq.max ids
-            nextid = Seq.min ids
-        |}
+    gallery_posts: Post list
+    nextid: Nullable<int>
+    backid: Nullable<int>
+}
 
 type FollowerActor = {
     followerId: Guid
@@ -154,7 +125,7 @@ module Domain =
 
     let AsNote (submission: Submission) =
         {
-            submitid = submission.SubmitId
+            upstream_type = UpstreamSubmission submission.SubmitId
             title = submission.Title
             content = submission.Content
             links = [
@@ -192,7 +163,7 @@ module Domain =
 
     let AsArticle (journal: Journal) =
         {
-            journalid = journal.JournalId
+            upstream_type = UpstreamJournal journal.JournalId
             title = journal.Title
             content = journal.Content
             links = [
@@ -204,35 +175,22 @@ module Domain =
             ]
             first_upstream = journal.PostedAt
             first_cached = journal.FirstCachedAt
+            attachments = []
+            thumbnails = []
             sensitivity =
                 match journal.Rating with
                 | "General" -> General
                 | str -> Sensitive str
         }
 
-    let AsCreate (submission: Submission) =
-        Create {
-            note = AsNote submission
-        }
-
-    let AsUpdate (submission: Submission) =
-        Update {
-            note = AsNote submission
-            time = DateTimeOffset.UtcNow
-        }
-
-    let AsDelete (submitid: int) =
-        Delete {
-            submitid = submitid
-            time = DateTimeOffset.UtcNow
-        }
-
     let AsGallery (count: int) = {
         gallery_count = count
     }
 
-    let AsGalleryPage (posts: Note seq) = {
+    let AsGalleryPage (posts: Post seq, nextid: Nullable<int>, backid: Nullable<int>) = {
         gallery_posts = Seq.toList posts
+        nextid = nextid
+        backid = backid
     }
 
     let AsFollowerActor (follower: Follower) = {

@@ -70,7 +70,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
 
-    member _.ToMarkdown (post: Note) = String.concat "\n" [
+    member _.ToMarkdown (post: Post) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -93,24 +93,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             $""
     ]
 
-    member this.ToHtml (post: Note) = this.ToMarkdown post |> toHtml post.title
-
-    member _.ToMarkdown (article: Article) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
-        $"## {enc article.title}"
-        $""
-        if article.sensitivity = Sensitivity.General then
-            article.content
-        $""
-        for link in article.links do
-            $"[{enc link.text}]({link.href})"
-            $""
-    ]
-
-    member this.ToHtml (article: Article) = this.ToMarkdown article |> toHtml article.title
+    member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         sharedHeader
@@ -140,35 +123,28 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         for post in galleryPage.gallery_posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
-            $"### [{enc post.title}](/api/submissions/{post.submitid}) ({enc date})"
+            let post_url =
+                match post.upstream_type with
+                | UpstreamSubmission submitid -> $"/api/submissions/{submitid}"
+                | UpstreamJournal journalid -> $"/api/journals/{journalid}"
+
+            $"### [{enc post.title}]({post_url}) ({enc date})"
             $""
             if post.sensitivity = Sensitivity.General then
-                for t in post.thumbnails do
-                    $"[![]({t.url})](/api/submissions/{post.submitid})"
+                for thumbnail in post.thumbnails do
+                    $"[![]({thumbnail.url})]({post_url})"
             $""
         $""
-        match galleryPage.Extrema with
-        | Some extrema ->
-            $"[View newer posts](/api/actor/outbox/page?backid={extrema.backid}) ·[View older posts](/api/actor/outbox/page?nextid={extrema.nextid})"
-        | None ->
-            $"[Restart from first page](/api/actor/outbox/page) · [Restart from last page](/api/actor/outbox/page?backid=1)"
+        if galleryPage.backid.HasValue then
+            $"[View newer posts](/api/actor/outbox/page?backid={galleryPage.backid})"
+        else
+            $"[Restart from first page](/api/actor/outbox/page)"
+        $"·"
+        if galleryPage.nextid.HasValue then
+            $"[View older posts](/api/actor/outbox/page?nextid={galleryPage.nextid})"
+        else
+            $"[Restart from last page](/api/actor/outbox/page?backid=1)"
         $""
-        match galleryPage.gallery_posts with
-        | [] -> ()
-        | post::_ ->
-            match post.links with
-            | [] -> ()
-            | link::_ ->
-                $"----------"
-                $""
-                $"To interact with a specific post, add the numeric ID from the Weasyl submission URL to the `/api/submissions/` endpoint. For example, the submission at:"
-                $""
-                $"    {enc link.href}"
-                $""
-                $"can be accessed at:"
-                $""
-                $"    https://{enc crowmaskHost.Hostname}/api/submissions/{post.submitid}"
-                $""
     ]
 
     member this.ToHtml (galleryPage: GalleryPage) = this.ToMarkdown galleryPage |> toHtml "Gallery"

@@ -15,7 +15,7 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequestData req,
             int submitid)
         {
-            var submission = await crowmaskCache.GetSubmission(submitid);
+            var submission = await crowmaskCache.GetSubmissionAsync(submitid);
 
             if (submission == null)
                 return req.CreateResponse(HttpStatusCode.NotFound);

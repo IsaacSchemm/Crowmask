@@ -54,27 +54,35 @@ type Translator(host: ICrowmaskHost) =
         pair "object" (this.PersonToObject person key)
     ]
 
-    member _.AsObject (note: Note) = dict [
+    member _.AsObject (post: Post) = dict [
         let backdate =
-            note.first_cached - note.first_upstream > TimeSpan.FromHours(24)
+            post.first_cached - post.first_upstream > TimeSpan.FromHours(24)
         let effective_date =
-            if backdate then note.first_upstream else note.first_cached
+            if backdate then post.first_upstream else post.first_cached
 
-        pair "id" $"https://{host.Hostname}/api/submissions/{note.submitid}"
-        pair "type" "Note"
+        match post.upstream_type with
+        | UpstreamSubmission submitid ->
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}"
+            pair "url" $"https://{host.Hostname}/api/submissions/{submitid}"
+            pair "type" "Note"
+        | UpstreamJournal journalid ->
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}"
+            pair "url" $"https://{host.Hostname}/api/journals/{journalid}"
+            pair "type" "Article"
+            pair "name" post.title
+
         pair "attributedTo" actor
-        pair "content" note.content
+        pair "content" post.content
         pair "published" effective_date
-        pair "url" $"https://{host.Hostname}/api/submissions/{note.submitid}"
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        match note.sensitivity with
+        match post.sensitivity with
         | General -> ()
         | Sensitive warning ->
             pair "summary" warning
             pair "sensitive" true
         pair "attachment" [
-            for attachment in note.attachments do
+            for attachment in post.attachments do
                 match attachment with
                 | Image image -> dict [
                     pair "type" "Document"
@@ -84,86 +92,39 @@ type Translator(host: ICrowmaskHost) =
         ]
     ]
 
-    member _.AsObject (article: Article) = dict [
-        let backdate =
-            article.first_cached - article.first_upstream > TimeSpan.FromHours(24)
-        let effective_date =
-            if backdate then article.first_upstream else article.first_cached
-
-        pair "id" $"https://{host.Hostname}/api/journals/{article.journalid}"
-        pair "type" "Article"
-        pair "name" article.title
-        pair "attributedTo" actor
-        pair "content" article.content
-        pair "published" effective_date
-        pair "url" $"https://{host.Hostname}/api/journals/{article.journalid}"
-        pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"]
-        match article.sensitivity with
-        | General -> ()
-        | Sensitive warning ->
-            pair "summary" warning
-            pair "sensitive" true
-    ]
-
-    member this.ObjectToCreate (note: Note) = dict [
+    member this.ObjectToCreate (post: Post) = dict [
         pair "type" "Create"
         pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
         pair "actor" actor
-        pair "published" note.first_cached
+        pair "published" post.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        pair "object" (this.AsObject note)
+        pair "object" (this.AsObject post)
     ]
 
-    member this.ObjectToCreate (article: Article) = dict [
-        pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
-        pair "actor" actor
-        pair "published" article.first_cached
-        pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"]
-        pair "object" (this.AsObject article)
-    ]
-
-    member this.ObjectToUpdate (note: Note) = dict [
+    member this.ObjectToUpdate (post: Post) = dict [
         pair "type" "Update"
         pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        pair "object" (this.AsObject note)
+        pair "object" (this.AsObject post)
     ]
 
-    member this.ObjectToUpdate (article: Article) = dict [
-        pair "type" "Update"
-        pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
-        pair "actor" actor
-        pair "published" DateTimeOffset.UtcNow
-        pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"]
-        pair "object" (this.AsObject article)
-    ]
-
-    member _.ObjectToDelete (note: Note) = dict [
+    member _.ObjectToDelete (post: Post) = dict [
         pair "type" "Delete"
         pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        pair "object" $"https://{host.Hostname}/api/submissions/{note.submitid}"
-    ]
 
-    member _.ObjectToDelete (article: Article) = dict [
-        pair "type" "Delete"
-        pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
-        pair "actor" actor
-        pair "published" DateTimeOffset.UtcNow
-        pair "to" "https://www.w3.org/ns/activitystreams#Public"
-        pair "cc" [$"{actor}/followers"]
-        pair "object" $"https://{host.Hostname}/api/journals/{article.journalid}"
+        let url =
+            match post.upstream_type with
+            | UpstreamSubmission submitid -> $"https://{host.Hostname}/api/submissions/{submitid}"
+            | UpstreamJournal journalid -> $"https://{host.Hostname}/api/journals/{journalid}"
+        pair "object" url
     ]
 
     member _.AcceptFollow (followId: string) = dict [
@@ -185,11 +146,10 @@ type Translator(host: ICrowmaskHost) =
         pair "id" id
         pair "type" "OrderedCollectionPage"
 
-        match page.Extrema with
-        | None -> ()
-        | Some extrema ->
-            pair "next" $"{actor}/outbox/page?nextid={extrema.nextid}"
-            pair "prev" $"{actor}/outbox/page?backid={extrema.backid}"
+        if page.nextid.HasValue then
+            pair "next" $"{actor}/outbox/page?nextid={page.nextid}"
+        if page.backid.HasValue then
+            pair "prev" $"{actor}/outbox/page?backid={page.backid}"
 
         pair "partOf" $"{actor}/outbox"
         pair "orderedItems" [for p in page.gallery_posts do this.AsObject p]

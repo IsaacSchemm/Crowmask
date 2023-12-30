@@ -25,10 +25,10 @@ namespace Crowmask.Functions
 
             var submissions = await gallery.submissions
                 .ToAsyncEnumerable()
-                .SelectAwait(async s => await crowmaskCache.GetSubmission(s.submitid))
+                .SelectAwait(async s => await crowmaskCache.GetSubmissionAsync(s.submitid))
                 .ToListAsync();
 
-            var galleryPage = Domain.AsGalleryPage(submissions);
+            var galleryPage = Domain.AsGalleryPage(submissions, nextid: gallery.nextid, backid: gallery.backid);
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {

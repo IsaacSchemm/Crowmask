@@ -20,7 +20,7 @@ namespace Crowmask.Cache
             return val?.MediaType ?? "application/octet-stream";
         }
 
-        public async Task<Note?> GetSubmission(int submitid)
+        public async Task<Post?> GetSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
                 .Include(s => s.Media)
@@ -169,7 +169,7 @@ namespace Crowmask.Cache
             }
         }
 
-        public async Task<Article?> GetJournal(int journalid)
+        public async Task<Post?> GetJournalAsync(int journalid)
         {
             var cachedJournal = await Context.Journals
                 .Where(s => s.JournalId == journalid)
@@ -278,7 +278,7 @@ namespace Crowmask.Cache
             }
         }
 
-        public async Task<Person> GetUser()
+        public async Task<Person> GetUserAsync()
         {
             var cachedUser = await Context.GetUserAsync();
 

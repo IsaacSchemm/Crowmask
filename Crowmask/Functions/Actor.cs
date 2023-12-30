@@ -14,7 +14,7 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor")] HttpRequestData req)
         {
-            var person = await crowmaskCache.GetUser();
+            var person = await crowmaskCache.GetUserAsync();
 
             var key = await keyProvider.GetPublicKeyAsync();
 

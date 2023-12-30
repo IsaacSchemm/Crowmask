@@ -21,7 +21,7 @@ namespace Crowmask.Functions
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            var person = await crowmaskCache.GetUser();
+            var person = await crowmaskCache.GetUserAsync();
 
             string actor = $"https://{host.Hostname}/api/actor";
 
