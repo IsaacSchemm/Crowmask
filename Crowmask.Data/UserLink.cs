@@ -16,7 +16,7 @@ namespace Crowmask.Data
         public string UsernameOrUrl { get; set; }
 
         [NotMapped]
-        public Uri Uri
+        public string Url
         {
             get
             {
@@ -24,7 +24,7 @@ namespace Crowmask.Data
                 {
                     return direct.Scheme switch
                     {
-                        "http" or "https" or "mailto" => direct,
+                        "http" or "https" or "mailto" => direct.AbsoluteUri,
                         _ => null,
                     };
                 }
@@ -33,18 +33,18 @@ namespace Crowmask.Data
                     string enc = Uri.EscapeDataString(UsernameOrUrl);
                     return Site switch
                     {
-                        "DeviantArt" => new Uri($"https://www.deviantart.com/{enc}"),
-                        "Facebook" => new Uri($"https://www.facebook.com/{enc}"),
-                        "Flickr" => new Uri($"https://www.flickr.com/photos/{enc}"),
-                        "Fur Affinity" => new Uri($"https://www.furaffinity.net/user/{enc}"),
-                        "Inkbunny" => new Uri($"https://inkbunny.net/{enc}"),
-                        "reddit" => new Uri($"https://www.reddit.com/user/{enc}"),
-                        "SoFurry" => new Uri($"https://{enc}.sofurry.com/"),
-                        "Steam" => new Uri($"https://steamcommunity.com/id/{enc}"),
-                        "Tumblr" => new Uri($"https://{enc}.tumblr.com/"),
-                        "Twitter" => new Uri($"https://twitter.com/{enc}"),
-                        "YouTube" => new Uri($"https://www.youtube.com/user/{enc}"),
-                        "Patreon" => new Uri($"https://www.patreon.com/{enc}"),
+                        "DeviantArt" => $"https://www.deviantart.com/{enc}",
+                        "Facebook" => $"https://www.facebook.com/{enc}",
+                        "Flickr" => $"https://www.flickr.com/photos/{enc}",
+                        "Fur Affinity" => $"https://www.furaffinity.net/user/{enc}",
+                        "Inkbunny" => $"https://inkbunny.net/{enc}",
+                        "reddit" => $"https://www.reddit.com/user/{enc}",
+                        "SoFurry" => $"https://{enc}.sofurry.com/",
+                        "Steam" => $"https://steamcommunity.com/id/{enc}",
+                        "Tumblr" => $"https://{enc}.tumblr.com/",
+                        "Twitter" => $"https://twitter.com/{enc}",
+                        "YouTube" => $"https://www.youtube.com/user/{enc}",
+                        "Patreon" => $"https://www.patreon.com/{enc}",
                         _ => null,
                     };
                 }

@@ -40,7 +40,7 @@ type Translator(host: ICrowmaskHost) =
                     name = metadata.name
                     value =
                         match metadata.uri with
-                        | Some uri -> $"<a href='{uri.AbsoluteUri}'>{WebUtility.HtmlEncode(metadata.value)}</a>"
+                        | Some uri -> $"<a href='{uri}'>{WebUtility.HtmlEncode(metadata.value)}</a>"
                         | None -> WebUtility.HtmlEncode(metadata.value)
                 |}
         ]

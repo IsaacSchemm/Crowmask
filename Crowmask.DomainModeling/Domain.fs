@@ -6,7 +6,7 @@ open Crowmask.Data
 type PersonMetadata = {
     name: string
     value: string
-    uri: Uri option
+    uri: string option
 }
 
 type Person = {
@@ -111,14 +111,7 @@ module Domain =
                     {
                         name = link.Site
                         value = link.UsernameOrUrl
-                        uri = Option.ofObj link.Uri
-                    }
-
-                if not (isNull user.Url) then
-                    {
-                        name = "Weasyl"
-                        value = user.Username
-                        uri = Some (new Uri(user.Url))
+                        uri = Option.ofObj link.Url
                     }
             ]
         }

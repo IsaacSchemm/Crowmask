@@ -48,11 +48,11 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         for metadata in person.attachments do
             match metadata.uri with
             | Some uri ->
-                $"* {enc metadata.name}: [{enc metadata.value}]({uri.AbsoluteUri})"
+                $"* {enc metadata.name}: [{enc metadata.value}]({uri})"
             | None ->
                 $"* {enc metadata.name}: {enc metadata.value}"
         $""
-        $"[View original profile]({person.url})"
+        $"[View on Weasyl]({person.url})"
         $""
         $"----------"
         $""
