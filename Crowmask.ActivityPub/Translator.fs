@@ -142,17 +142,19 @@ type Translator(host: ICrowmaskHost) =
         pair "last" $"{actor}/outbox/page?backid=1"
     ]
 
-    member this.AsOutboxPage (id: string) (page: GalleryPage) = dict [
+    member this.AsOutboxPage (id: string) (page: PostList) = dict [
         pair "id" id
         pair "type" "OrderedCollectionPage"
 
-        if page.nextid.HasValue then
-            pair "next" $"{actor}/outbox/page?nextid={page.nextid}"
-        if page.backid.HasValue then
-            pair "prev" $"{actor}/outbox/page?backid={page.backid}"
+        match page.gallery_nextid with
+        | Some nextid -> pair "next" $"{actor}/outbox/page?nextid={nextid}"
+        | None -> ()
+        match page.gallery_backid with
+        | Some backid -> pair "prev" $"{actor}/outbox/page?backid={backid}"
+        | None -> ()
 
         pair "partOf" $"{actor}/outbox"
-        pair "orderedItems" [for p in page.gallery_posts do this.AsObject p]
+        pair "orderedItems" [for p in page.posts do this.AsObject p]
     ]
 
     member _.AsFollowers (followerCollection: FollowerCollection) = dict [

@@ -61,9 +61,11 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
             $"    @{enc person.preferredUsername}@{hostname}"
         $""
-        $"[View followers](/api/actor/followers)"
-        $""
         $"[View gallery](/api/actor/outbox)"
+        $""
+        $"[View journals](/api/actor/journals)"
+        $""
+        $"[View followers](/api/actor/followers)"
         $""
         $"🐦‍⬛🎭"
     ]
@@ -110,7 +112,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Gallery"
 
-    member _.ToMarkdown (galleryPage: GalleryPage) = String.concat "\n" [
+    member _.ToMarkdown (postList: PostList) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -119,9 +121,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $"img {{ width: 250px; height: 250px; object-fit: scale-down; }}"
         $"</style>"
         $""
-        $"## Gallery"
+        $"## Posts"
         $""
-        for post in galleryPage.gallery_posts do
+        for post in postList.posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
             let post_url =
                 match post.upstream_type with
@@ -135,15 +137,15 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
                     $"[![]({thumbnail.url})]({post_url})"
             $""
         $""
-        if galleryPage.backid.HasValue then
-            $"[View newer posts](/api/actor/outbox/page?backid={galleryPage.backid})"
-        else
-            $"[Restart from first page](/api/actor/outbox/page)"
-        $"·"
-        if galleryPage.nextid.HasValue then
-            $"[View older posts](/api/actor/outbox/page?nextid={galleryPage.nextid})"
-        else
-            $"[Restart from last page](/api/actor/outbox/page?backid=1)"
+        String.concat " · " [
+            match postList.gallery_backid with
+            | Some backid -> $"[View newer posts](/api/actor/outbox/page?backid={backid})"
+            | None -> ()
+
+            match postList.gallery_nextid with
+            | Some nextid -> $"[View older posts](/api/actor/outbox/page?nextid={nextid})"
+            | None -> ()
+        ]
         $""
         $"----------"
         $""
@@ -153,7 +155,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
     ]
 
-    member this.ToHtml (galleryPage: GalleryPage) = this.ToMarkdown galleryPage |> toHtml "Gallery"
+    member this.ToHtml (postList: PostList) = this.ToMarkdown postList |> toHtml "Posts"
 
     member _.ToMarkdown (followerCollection: FollowerCollection) = String.concat "\n" [
         sharedHeader

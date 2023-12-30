@@ -52,10 +52,10 @@ type Gallery = {
     gallery_count: int
 }
 
-type GalleryPage = {
-    gallery_posts: Post list
-    nextid: Nullable<int>
-    backid: Nullable<int>
+type PostList = {
+    posts: Post list
+    gallery_nextid: int option
+    gallery_backid: int option
 }
 
 type FollowerActor = {
@@ -180,10 +180,10 @@ module Domain =
         gallery_count = count
     }
 
-    let AsGalleryPage (posts: Post seq, nextid: Nullable<int>, backid: Nullable<int>) = {
-        gallery_posts = Seq.toList posts
-        nextid = nextid
-        backid = backid
+    let AsPostList (posts: Post seq, nextid: Nullable<int>, backid: Nullable<int>) = {
+        posts = Seq.toList posts
+        gallery_nextid = Option.ofNullable nextid
+        gallery_backid = Option.ofNullable backid
     }
 
     let AsFollowerActor (follower: Follower) = {
