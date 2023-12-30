@@ -59,7 +59,7 @@ namespace Crowmask.Remote
             await PostAsync(url, activity.JsonBody);
         }
 
-        private IEnumerable<string> GetHeadersToSign(HttpRequestMessage req)
+        private static IEnumerable<string> GetHeadersToSign(HttpRequestMessage req)
         {
             yield return $"(request-target): {req.Method.Method.ToLowerInvariant()} {req.RequestUri!.AbsolutePath}";
             yield return $"host: {req.Headers.Host}";
@@ -86,7 +86,7 @@ namespace Crowmask.Remote
         private async Task PostAsync(Uri url, string json)
         {
             byte[]? body = Encoding.UTF8.GetBytes(json);
-            string? digest = Convert.ToBase64String(SHA256.Create().ComputeHash(body));
+            string? digest = Convert.ToBase64String(SHA256.HashData(body));
 
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Host = url.Host;

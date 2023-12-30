@@ -12,14 +12,7 @@ namespace Crowmask
     {
         public async Task SynchronizeAsync(DateTimeOffset cutoff)
         {
-            await foreach (var submission in weasylUserClient.GetMyGallerySubmissionsAsync())
-            {
-                if (submission.posted_at < cutoff)
-                    break;
-
-                await crowmaskCache.GetSubmissionAsync(submission.submitid);
-            }
-
+            // Update existing submissions
             var cachedSubmissions = await context.Submissions
                 .Where(s => s.PostedAt >= cutoff)
                 .ToListAsync();
@@ -30,14 +23,28 @@ namespace Crowmask
                     await crowmaskCache.GetSubmissionAsync(submission.SubmitId);
             }
 
-            await foreach (int journalId in weasylUserClient.GetMyJournalIdsAsync())
-            {
-                var journal = await crowmaskCache.GetJournalAsync(journalId);
+            // Find ID of newest known submission
+            var newestKnownSubmission =
+                cachedSubmissions
+                    .OrderByDescending(s => s.SubmitId)
+                    .Select(s => new { s.SubmitId })
+                    .FirstOrDefault()
+                ?? await context.Submissions
+                    .OrderByDescending(s => s.SubmitId)
+                    .Select(s => new { s.SubmitId })
+                    .FirstOrDefaultAsync()
+                ?? new { SubmitId = 0 };
 
-                if (journal.first_upstream < cutoff)
+            // Add new submissions
+            await foreach (var upstreamItem in weasylUserClient.GetMyGallerySubmissionsAsync())
+            {
+                if (upstreamItem.submitid > newestKnownSubmission.SubmitId)
+                    await crowmaskCache.GetSubmissionAsync(upstreamItem.submitid);
+                else
                     break;
             }
 
+            // Update existing journals
             var cachedJournals = await context.Journals
                 .Where(j => j.PostedAt >= cutoff)
                 .ToListAsync();
@@ -46,6 +53,27 @@ namespace Crowmask
             {
                 if (journal.Stale)
                     await crowmaskCache.GetJournalAsync(journal.JournalId);
+            }
+
+            // Find ID of newest known journal
+            var newestKnownJournal =
+                cachedJournals
+                    .OrderByDescending(j => j.JournalId)
+                    .Select(j => new { j.JournalId })
+                    .FirstOrDefault()
+                ?? await context.Journals
+                    .OrderByDescending(j => j.JournalId)
+                    .Select(j => new { j.JournalId })
+                    .FirstOrDefaultAsync()
+                ?? new { JournalId = 0 };
+
+            // Add new journals
+            await foreach (int journalId in weasylUserClient.GetMyJournalIdsAsync())
+            {
+                if (journalId > newestKnownJournal.JournalId)
+                    await crowmaskCache.GetJournalAsync(journalId);
+                else
+                    break;
             }
         }
     }
