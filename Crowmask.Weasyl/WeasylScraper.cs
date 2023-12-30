@@ -61,7 +61,8 @@ namespace Crowmask.Weasyl
                     .Single()),
                 Title: document.GetElementById("detail-bar-title").TextContent,
                 Content: document.GetElementById("detail-journal").InnerHtml.Trim(),
-                Username: document.GetElementsByClassName("username")
+                Username: document.GetElementById("detail-bar")
+                    .GetElementsByClassName("username")
                     .Select(e => e.TextContent)
                     .Distinct()
                     .Single(),

@@ -145,6 +145,12 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         else
             $"[Restart from last page](/api/actor/outbox/page?backid=1)"
         $""
+        $"----------"
+        $""
+        $"To interact with a **submission** via ActivityPub, use the URI format `https://{enc crowmaskHost.Hostname}/api/submissions/0000000`, where `0000000` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/~user/submissions/0000000/post-title`)."
+        $""
+        $"To interact with a **journal** via ActivityPub, use the URI format `https://{enc crowmaskHost.Hostname}/api/journals/0000000`, where `0000000` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/journal/0000000`)."
+        $""
     ]
 
     member this.ToHtml (galleryPage: GalleryPage) = this.ToMarkdown galleryPage |> toHtml "Gallery"
