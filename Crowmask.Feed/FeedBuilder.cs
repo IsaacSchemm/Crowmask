@@ -1,5 +1,4 @@
 ﻿using Crowmask.DomainModeling;
-using System;
 using System.Net;
 using System.ServiceModel.Syndication;
 using System.Text;
@@ -57,8 +56,8 @@ namespace Crowmask.Feed
             var feed = new SyndicationFeed
             {
                 Id = uri,
-                Title = new TextSyndicationContent($"@{person.preferredUsername}@{handleHost.Hostname} (Crowmask)", TextSyndicationContentKind.Plaintext),
-                Description = new TextSyndicationContent($"A mirror of submissions and journals posted to Weasyl by {person.preferredUsername}", TextSyndicationContentKind.Plaintext),
+                Title = new TextSyndicationContent($"@{person.preferredUsername}@{handleHost.Hostname}", TextSyndicationContentKind.Plaintext),
+                Description = new TextSyndicationContent($"Submissions and journals posted to Weasyl by {person.preferredUsername}", TextSyndicationContentKind.Plaintext),
                 Copyright = new TextSyndicationContent($"{person.preferredUsername}", TextSyndicationContentKind.Plaintext),
                 LastUpdatedTime = posts.Select(x => x.first_upstream).Max(),
                 ImageUrl = person.iconUrls.Select(str => new Uri(str)).FirstOrDefault(),

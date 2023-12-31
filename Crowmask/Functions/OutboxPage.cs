@@ -1,6 +1,7 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.DomainModeling;
+using Crowmask.Feed;
 using Crowmask.Markdown;
 using Crowmask.Merging;
 using Microsoft.Azure.Functions.Worker;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class OutboxPage(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
+    public class OutboxPage(CrowmaskCache crowmaskCache, FeedBuilder feedBuilder, Translator translator, MarkdownTranslator markdownTranslator)
     {
         [Function("OutboxPage")]
         public async Task<HttpResponseData> Run(
@@ -32,7 +33,14 @@ namespace Crowmask.Functions
 
             var galleryPage = Domain.AsPage(posts, offset);
 
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            var person = await crowmaskCache.UpdateUserAsync();
+
+            var acceptableFormats =
+                req.Query["format"] == "rss" ? [CrowmaskFormat.RSS]
+                : req.Query["format"] == "atom" ? [CrowmaskFormat.Atom]
+                : req.GetAcceptableCrowmaskFormats();
+
+            foreach (var format in acceptableFormats)
             {
                 if (format.IsActivityJson)
                 {
@@ -49,6 +57,14 @@ namespace Crowmask.Functions
                 else if (format.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(galleryPage));
+                }
+                else if (format.IsRSS)
+                {
+                    return await req.WriteCrowmaskResponseAsync(format, feedBuilder.ToRssFeed(person, galleryPage.posts));
+                }
+                else if (format.IsAtom)
+                {
+                    return await req.WriteCrowmaskResponseAsync(format, feedBuilder.ToAtomFeed(person, galleryPage.posts));
                 }
             }
 

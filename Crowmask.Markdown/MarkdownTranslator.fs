@@ -71,7 +71,11 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"## Atom/RSS"
         $""
-        $"Coming soon"
+        $"[Atom](/api/actor/outbox/page?format=atom)"
+        $""
+        $"[RSS](/api/actor/outbox/page?format=rss)"
+        $""
+        $"--------"
         $""
         $"🐦‍⬛🎭"
     ]
