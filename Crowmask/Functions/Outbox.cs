@@ -1,8 +1,9 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Markdown;
-using Crowmask.Weasyl;
+using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -10,15 +11,16 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(Translator translator, MarkdownTranslator markdownTranslator, WeasylUserClient weasylUserClient)
+    public class Outbox(CrowmaskDbContext context, Translator translator, MarkdownTranslator markdownTranslator)
     {
         [Function("Outbox")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
-            var user = await weasylUserClient.GetMyUserAsync();
+            var submissions = await context.Submissions.CountAsync();
+            var journals = await context.Journals.CountAsync();
 
-            var gallery = Domain.AsGallery(count: user.statistics.submissions);
+            var gallery = Domain.AsGallery(count: submissions + journals);
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {

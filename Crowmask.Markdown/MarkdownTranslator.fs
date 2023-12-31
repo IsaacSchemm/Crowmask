@@ -61,13 +61,9 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
             $"    @{enc person.preferredUsername}@{hostname}"
         $""
-        $"[View gallery](/api/actor/outbox)"
+        $"[View outbox](/api/actor/outbox)"
         $""
-        $"The gallery is also the ActivityPub outbox and contains all posts from the Weasyl gallery."
-        $""
-        $"[View journals](/api/actor/journals)"
-        $""
-        $"New journals are sent to followers as `Article` objects."
+        $"The outbox and contains all submissions and journals posted by {enc person.preferredUsername}."
         $""
         $"[View followers](/api/actor/followers)"
         $""
@@ -122,7 +118,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
 
     member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Gallery"
 
-    member _.ToMarkdown (postList: PostList) = String.concat "\n" [
+    member _.ToMarkdown (page: Page) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -133,7 +129,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"## Posts"
         $""
-        for post in postList.posts do
+        for post in page.posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
             let post_url =
                 match post.upstream_type with
@@ -145,17 +141,14 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             if post.sensitivity = Sensitivity.General then
                 for thumbnail in post.thumbnails do
                     $"[![]({thumbnail.url})]({post_url})"
+                if post.thumbnails = [] then
+                    $"No thumbnail available"
             $""
         $""
-        String.concat " · " [
-            match postList.gallery_backid with
-            | Some backid -> $"[View newer posts](/api/actor/outbox/page?backid={backid})"
-            | None -> ()
-
-            match postList.gallery_nextid with
-            | Some nextid -> $"[View older posts](/api/actor/outbox/page?nextid={nextid})"
-            | None -> ()
-        ]
+        if page.posts <> [] then
+            $"[View more posts](/api/actor/outbox/page?offset={page.offset + page.posts.Length})"
+        else
+            "No more posts are available."
         $""
         $"----------"
         $""
@@ -165,7 +158,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
     ]
 
-    member this.ToHtml (postList: PostList) = this.ToMarkdown postList |> toHtml "Posts"
+    member this.ToHtml (page: Page) = this.ToMarkdown page |> toHtml "Posts"
 
     member _.ToMarkdown (followerCollection: FollowerCollection) = String.concat "\n" [
         sharedHeader

@@ -52,10 +52,9 @@ type Gallery = {
     gallery_count: int
 }
 
-type PostList = {
+type Page = {
     posts: Post list
-    gallery_nextid: int option
-    gallery_backid: int option
+    offset: int
 }
 
 type FollowerActor = {
@@ -180,10 +179,9 @@ module Domain =
         gallery_count = count
     }
 
-    let AsPostList (posts: Post seq, nextid: Nullable<int>, backid: Nullable<int>) = {
+    let AsPage (posts: Post seq, offset: int) = {
         posts = Seq.toList posts
-        gallery_nextid = Option.ofNullable nextid
-        gallery_backid = Option.ofNullable backid
+        offset = offset
     }
 
     let AsFollowerActor (follower: Follower) = {

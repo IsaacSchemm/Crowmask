@@ -15,7 +15,7 @@ using System.Xml;
 
 namespace Crowmask.Functions
 {
-    public class Feed(CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, WeasylUserClient weasylUserClient)
+    public class Feed(CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost)
     {
         private SyndicationItem ToSyndicationItem(Post post)
         {

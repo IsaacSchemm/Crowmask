@@ -2,7 +2,7 @@ using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.DomainModeling;
 using Crowmask.Markdown;
-using Crowmask.Weasyl;
+using Crowmask.Merging;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
@@ -12,27 +12,25 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class OutboxPage(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator, WeasylUserClient weasylUserClient)
+    public class OutboxPage(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
     {
         [Function("OutboxPage")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)
         {
-            var gallery = await weasylUserClient.GetMyGalleryAsync(
-                count: 20,
-                nextid: int.TryParse(req.Query["nextid"], out int n) ? n : null,
-                backid: int.TryParse(req.Query["backid"], out int b) ? b : null);
+            int offset = int.TryParse(req.Query["offset"], out int n) ? n : 0;
 
-            var submissions = await gallery.submissions
-                .ToAsyncEnumerable()
-                .SelectAwait(async s => await crowmaskCache.UpdateSubmissionAsync(s.submitid))
-                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
+            var posts =
+                await new[] {
+                    crowmaskCache.GetCachedSubmissionsAsync(),
+                    crowmaskCache.GetCachedJournalsAsync()
+                }
+                .MergeNewest(post => post.first_upstream)
+                .Skip(offset)
+                .Take(20)
                 .ToListAsync();
 
-            var galleryPage = Domain.AsPostList(
-                submissions,
-                nextid: gallery.nextid,
-                backid: gallery.backid);
+            var galleryPage = Domain.AsPage(posts, offset);
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
