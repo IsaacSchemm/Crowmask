@@ -31,7 +31,10 @@ namespace Crowmask.Feed
                 yield return $"<p>{WebUtility.HtmlEncode(s.warning)}</p>";
             }
 
-            yield return $"<a href='{GetUri(post)}'>View on Weasyl</a>";
+            foreach (var link in post.links)
+            {
+                yield return $"<a href='{link.href}'>{WebUtility.HtmlEncode(link.text)}</a>";
+            }
         }
 
         private SyndicationItem ToSyndicationItem(Post post)
