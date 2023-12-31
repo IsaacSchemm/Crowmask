@@ -2,12 +2,14 @@
 
 open Microsoft.Net.Http.Headers
 
-type CrowmaskFormat = HTML | ActivityJson | Markdown
+type CrowmaskFormat = HTML | ActivityJson | Markdown | RSS | Atom
 with
     static member All = [
-        Markdown
         HTML
         ActivityJson
+        Markdown
+        RSS
+        Atom
     ]
 
     member this.MimeTypes = [
@@ -23,6 +25,12 @@ with
             "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""
             "application/json"
             "text/json"
+        | RSS ->
+            "application/rss+xml"
+            "application/xml"
+            "text/xml"
+        | Atom ->
+            "application/atom+xml"
     ]
 
     member this.MediaTypes = [
@@ -32,6 +40,3 @@ with
 
     member this.MediaType =
         List.head this.MediaTypes
-
-    member this.ContentType =
-        $"{this.MediaType}; charset=utf-8"

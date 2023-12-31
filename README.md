@@ -56,6 +56,9 @@ oesn't indicate any particular media type.
 
 Layers:
 
+* **Crowmask.Merging**: used to merge the results of multiple asynchronous
+  sequences into a single sequence by taking the newest items first. Used to
+  combine submissions and journals into a single feed.
 * **Crowmask.Data**: contains the data storage types and and data context,
   which map to documents in Cosmos DB using the Cosmos DB backend of EF Core.
 * **Crowmask.Weasyl**: used to connect to the Weasyl API and retrieve user and
@@ -72,8 +75,10 @@ Layers:
   when necessary, and creates ActivityPub `Update` activities when the
   ActivityPub representation of a user or submission changes.
 * **Crowmask.Remote**: Talks to other ActivityPub servers.
+* **Crowmask.Feed**: Implements RSS and Atom feeds.
 * **Crowmask.Markdown**: Implements the web UI by creating Markdown and HTML
-  representations of data available through ActivityPub `GET` endpoints.
+  representations of data available through ActivityPub `GET` endpoints, and
+  helps perform content negotiation with the `Accept` header.
 * **Crowmask**: The main Azure Functions project, responsible for handling
   HTTP requests and running timed functions.
 

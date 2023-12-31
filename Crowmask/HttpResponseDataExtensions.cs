@@ -4,6 +4,7 @@ using Microsoft.Net.Http.Headers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Crowmask
@@ -16,8 +17,8 @@ namespace Crowmask
             string content)
         {
             var resp = req.CreateResponse(HttpStatusCode.OK);
-            resp.Headers.Add("Content-Type", format.ContentType);
-            await resp.WriteStringAsync(content);
+            resp.Headers.Add("Content-Type", $"{format.MediaType}; charset=utf-8");
+            await resp.WriteStringAsync(content, Encoding.UTF8);
             return resp;
         }
 

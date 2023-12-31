@@ -4,6 +4,7 @@ using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Feed;
 using Crowmask.Markdown;
 using Crowmask.Remote;
 using Crowmask.Weasyl;
@@ -49,6 +50,7 @@ var host = new HostBuilder()
         services.AddHttpClient();
 
         services.AddScoped<CrowmaskCache>();
+        services.AddScoped<FeedBuilder>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<Notifier>();
         services.AddScoped<OutboundActivityProcessor>();
