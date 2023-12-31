@@ -56,7 +56,7 @@ oesn't indicate any particular media type.
 
 Layers:
 
-* **Crowmask.Merging**: used to merge the results of multiple asynchronous
+* **Crowmask.Merging**: code to merge the results of multiple asynchronous
   sequences into a single sequence by taking the newest items first. Used to
   combine submissions and journals into a single feed.
 * **Crowmask.Data**: contains the data storage types and and data context,
@@ -111,8 +111,8 @@ ActivityPub HTTP endpoints:
     - [x] `Like`: if it matches a `Submission`, sends a transient message to the admin actor, with a link to the actor who sent the `Like`
     - [x] `Announce`: if it matches a `Submission`, sends a transient message to the admin actor, with a link to the actor who sent the `Announce`
     - [x] `Create`: if it's for a reply to a `Submission`, sends a transient message to the admin, with a link to the reply
-- [x] `/api/actor/outbox`: contains links to the first and last gallery page
-- [x] `/api/actor/outbox/page`: contains `Create` activities for known Weasyl posts (20 per page)
+- [x] `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
+- [x] `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
 - [x] `/api/actor/followers`: contains the IDs of all followers (20 per page)
 - [x] `/api/actor/following`: an empty list
 - [x] `/api/submissions/{submitid}`: attempts cache refresh for the post, then returns the resulting `Note` object
