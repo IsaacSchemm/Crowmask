@@ -17,7 +17,7 @@ namespace Crowmask.Functions
         {
             var journals = await weasylUserClient.GetMyJournalIdsAsync()
                 .SelectAwait(async journalid => await crowmaskCache.GetJournalAsync(journalid))
-                .Where(obj => obj != null)
+                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .ToListAsync();
 
             var page = DomainModeling.Domain.AsPostList(

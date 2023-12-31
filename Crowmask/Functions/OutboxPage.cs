@@ -26,7 +26,7 @@ namespace Crowmask.Functions
             var submissions = await gallery.submissions
                 .ToAsyncEnumerable()
                 .SelectAwait(async s => await crowmaskCache.GetSubmissionAsync(s.submitid))
-                .Where(obj => obj != null)
+                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .ToListAsync();
 
             var galleryPage = Domain.AsPostList(

@@ -20,7 +20,7 @@ namespace Crowmask.Cache
             return val?.MediaType ?? "application/octet-stream";
         }
 
-        public async Task<Post?> GetSubmissionAsync(int submitid)
+        public async Task<CacheResult> GetSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
                 .Include(s => s.Media)
@@ -31,7 +31,7 @@ namespace Crowmask.Cache
             if (cachedSubmission != null)
             {
                 if (!cachedSubmission.Stale)
-                    return Domain.AsNote(cachedSubmission);
+                    return CacheResult.NewFound(Domain.AsNote(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -133,7 +133,7 @@ namespace Crowmask.Cache
                     cachedSubmission.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
                     await Context.SaveChangesAsync();
 
-                    return newSubmission;
+                    return CacheResult.NewUpdated(newSubmission);
                 }
                 else
                 {
@@ -156,20 +156,24 @@ namespace Crowmask.Cache
                         }
 
                         await Context.SaveChangesAsync();
-                    }
 
-                    return null;
+                        return CacheResult.Deleted;
+                    }
+                    else
+                    {
+                        return CacheResult.NotFound;
+                    }
                 }
             }
             catch (HttpRequestException)
             {
                 return cachedSubmission == null
-                    ? null
-                    : Domain.AsNote(cachedSubmission);
+                    ? CacheResult.NotFound
+                    : CacheResult.NewFound(Domain.AsNote(cachedSubmission));
             }
         }
 
-        public async Task<Post?> GetJournalAsync(int journalid)
+        public async Task<CacheResult> GetJournalAsync(int journalid)
         {
             var cachedJournal = await Context.Journals
                 .Where(s => s.JournalId == journalid)
@@ -178,7 +182,7 @@ namespace Crowmask.Cache
             if (cachedJournal != null)
             {
                 if (!cachedJournal.Stale)
-                    return Domain.AsArticle(cachedJournal);
+                    return CacheResult.NewFound(Domain.AsArticle(cachedJournal));
 
                 cachedJournal.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -242,7 +246,7 @@ namespace Crowmask.Cache
                     cachedJournal.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
                     await Context.SaveChangesAsync();
 
-                    return newJournal;
+                    return CacheResult.NewUpdated(newJournal);
                 }
                 else
                 {
@@ -265,16 +269,20 @@ namespace Crowmask.Cache
                         }
 
                         await Context.SaveChangesAsync();
-                    }
 
-                    return null;
+                        return CacheResult.Deleted;
+                    }
+                    else
+                    {
+                        return CacheResult.NotFound;
+                    }
                 }
             }
             catch (HttpRequestException)
             {
                 return cachedJournal == null
-                    ? null
-                    : Domain.AsArticle(cachedJournal);
+                    ? CacheResult.NotFound
+                    : CacheResult.NewFound(Domain.AsArticle(cachedJournal));
             }
         }
 

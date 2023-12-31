@@ -54,12 +54,12 @@ namespace Crowmask.Functions
 
             var submissions = await weasylUserClient.GetMyGallerySubmissionsAsync()
                 .SelectAwait(async s => await crowmaskCache.GetSubmissionAsync(s.submitid))
-                .Where(obj => obj != null)
+                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .Take(maxFeedSize)
                 .ToListAsync();
             var journals = await weasylUserClient.GetMyJournalIdsAsync()
                 .SelectAwait(async j => await crowmaskCache.GetJournalAsync(j))
-                .Where(obj => obj != null)
+                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .Take(maxFeedSize)
                 .ToListAsync();
 
