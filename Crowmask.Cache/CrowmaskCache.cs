@@ -20,6 +20,18 @@ namespace Crowmask.Cache
             return val?.MediaType ?? "application/octet-stream";
         }
 
+        public async Task<CacheResult> GetSubmissionAsync(int submitid)
+        {
+            var cachedSubmission = await Context.Submissions
+                .Include(s => s.Media)
+                .Include(s => s.Tags)
+                .Where(s => s.SubmitId == submitid)
+                .SingleOrDefaultAsync();
+            return cachedSubmission != null
+                ? CacheResult.NewFound(Domain.AsNote(cachedSubmission))
+                : await UpdateSubmissionAsync(submitid);
+        }
+
         public async Task<CacheResult> UpdateSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
@@ -194,6 +206,16 @@ namespace Crowmask.Cache
             }
         }
 
+        public async Task<CacheResult> GetJournalAsync(int journalid)
+        {
+            var cachedJournal = await Context.Journals
+                .Where(s => s.JournalId == journalid)
+                .SingleOrDefaultAsync();
+            return cachedJournal != null
+                ? CacheResult.NewFound(Domain.AsArticle(cachedJournal))
+                : await UpdateJournalAsync(journalid);
+        }
+
         public async Task<CacheResult> UpdateJournalAsync(int journalid)
         {
             var cachedJournal = await Context.Journals
@@ -326,6 +348,14 @@ namespace Crowmask.Cache
 
                 last = journals.Select(j => j.JournalId).Min();
             }
+        }
+
+        public async Task<Person> GetUserAsync()
+        {
+            var cachedUser = await Context.GetUserAsync();
+            return cachedUser == null
+                ? await UpdateUserAsync()
+                : Domain.AsPerson(cachedUser);
         }
 
         public async Task<Person> UpdateUserAsync()

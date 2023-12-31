@@ -33,7 +33,7 @@ namespace Crowmask.Functions
 
             var galleryPage = Domain.AsPage(posts, offset);
 
-            var person = await crowmaskCache.UpdateUserAsync();
+            var person = await crowmaskCache.GetUserAsync();
 
             var acceptableFormats =
                 req.Query["format"] == "rss" ? [CrowmaskFormat.RSS]

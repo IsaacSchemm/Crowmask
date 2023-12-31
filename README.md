@@ -121,32 +121,8 @@ ActivityPub HTTP endpoints:
 Timed functions:
 
 - [x] `RefreshUpstream`: Checks Weasyl for recent posts (stopping when a post is more than a day old), updating cache as needed, then sends outbound activities (every five minutes)
-- [x] `LongUpdate`: Attempts cache refresh for all stale cached posts and the actor's name/avatar/etc (every day at 23:56)
+- [x] `RefreshCached`: Attempts cache refresh for all stale cached posts and the actor's name/avatar/etc (every day at 23:56)
 - [x] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
-
-Other functions:
-
-- [x] Add Outbound Activities
-    * Group followers by inbox
-    * For each inbox, add the appropriate `OutboundActivity`
-- [x] Process Outbound Activities
-    * For each `OutboundActivity`:
-        * Send the activity to the inbox
-        * Mark as sent (no longer pending)
-    * For each `PrivateAnnouncement`:
-        * Send the activity to the inbox
-        * Mark as sent (no longer pending)
-    * If a send fails, don't try sending it again for 4 hours
-- [x] Cache Refresh
-    * If the post is stale:
-        * Pull the post from Weasyl
-        * Update or delete our copy
-        * Add outbound activities
-- [x] User Cache Refresh
-    * If the user info is stale:
-        * Pull the user from Weasyl
-        * Update or delete our copy
-        * Add outbound activities
 
 Note that a cached submission will not be refreshed if:
 
@@ -159,6 +135,9 @@ A cached user (name, icon, etc.) will not be refreshed if:
 
 * the last attempted cache refresh was within the past 4 minutes
 * the last successful cache refresh was within the past hour
+
+Cache refresh occurs as part of `RefreshUpstream` (for recent items), `RefreshCached`,
+or when a specific item is requested that is not yet in the cache.
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but

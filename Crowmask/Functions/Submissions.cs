@@ -3,7 +3,6 @@ using Crowmask.Cache;
 using Crowmask.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -16,11 +15,12 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequestData req,
             int submitid)
         {
-            var cacheResult = await crowmaskCache.UpdateSubmissionAsync(submitid);
-            var submission = cacheResult.AsList.DefaultIfEmpty(null).Single();
+            var cacheResult = await crowmaskCache.GetSubmissionAsync(submitid);
 
-            if (submission == null)
+            if (cacheResult.AsList.IsEmpty)
                 return req.CreateResponse(HttpStatusCode.NotFound);
+
+            var submission = cacheResult.AsList.Head;
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
