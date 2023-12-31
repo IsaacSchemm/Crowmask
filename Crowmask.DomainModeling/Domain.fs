@@ -46,6 +46,7 @@ type Post = {
     attachments: Attachment list
     thumbnails: Image list
     sensitivity: Sensitivity
+    stale: bool
 }
 
 type Gallery = {
@@ -151,6 +152,7 @@ module Domain =
                 | Submission.Rating.Mature -> Sensitive "Mature (18+)"
                 | Submission.Rating.Explicit -> Sensitive "Explicit (18+)"
                 | _ -> Sensitive "Potentially sensitive (nature unknown)"
+            stale = submission.Stale
         }
 
     let AsArticle (journal: Journal) =
@@ -173,6 +175,7 @@ module Domain =
                 match journal.Rating with
                 | "General" -> General
                 | str -> Sensitive str
+            stale = journal.Stale
         }
 
     let AsGallery (count: int) = {
