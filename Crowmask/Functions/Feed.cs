@@ -1,5 +1,6 @@
 using Crowmask.Cache;
 using Crowmask.DomainModeling;
+using Crowmask.Merging;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -50,24 +51,14 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/feed")] HttpRequestData req)
         {
-            int maxFeedSize = 20;
-
-            var submissions = await weasylUserClient.GetMyGallerySubmissionsAsync()
-                .SelectAwait(async s => await crowmaskCache.UpdateSubmissionAsync(s.submitid))
-                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
-                .Take(maxFeedSize)
+            var posts =
+                await new[] {
+                    crowmaskCache.GetCachedSubmissionsAsync(),
+                    crowmaskCache.GetCachedJournalsAsync()
+                }
+                .MergeNewest(post => post.first_upstream)
+                .Take(20)
                 .ToListAsync();
-            var journals = await weasylUserClient.GetMyJournalIdsAsync()
-                .SelectAwait(async j => await crowmaskCache.UpdateJournalAsync(j))
-                .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
-                .Take(maxFeedSize)
-                .ToListAsync();
-
-            var posts = new[] { submissions, journals }
-                .SelectMany(x => x)
-                .OrderByDescending(x => x.first_upstream)
-                .Take(maxFeedSize)
-                .ToList();
 
             var person = await crowmaskCache.UpdateUserAsync();
 

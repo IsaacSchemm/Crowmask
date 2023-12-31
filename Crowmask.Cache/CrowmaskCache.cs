@@ -173,6 +173,27 @@ namespace Crowmask.Cache
             }
         }
 
+        public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync()
+        {
+            int last = int.MaxValue;
+            while (true)
+            {
+                var submissions = await Context.Submissions
+                    .Where(s => s.SubmitId < last)
+                    .OrderByDescending(s => s.SubmitId)
+                    .Take(20)
+                    .ToListAsync();
+
+                foreach (var submission in submissions)
+                    yield return Domain.AsNote(submission);
+
+                if (submissions.Count == 0)
+                    break;
+
+                last = submissions.Select(s => s.SubmitId).Min();
+            }
+        }
+
         public async Task<CacheResult> UpdateJournalAsync(int journalid)
         {
             var cachedJournal = await Context.Journals
@@ -283,6 +304,27 @@ namespace Crowmask.Cache
                 return cachedJournal == null
                     ? CacheResult.NotFound
                     : CacheResult.NewFound(Domain.AsArticle(cachedJournal));
+            }
+        }
+
+        public async IAsyncEnumerable<Post> GetCachedJournalsAsync()
+        {
+            int last = int.MaxValue;
+            while (true)
+            {
+                var journals = await Context.Journals
+                    .Where(j => j.JournalId < last)
+                    .OrderByDescending(j => j.JournalId)
+                    .Take(20)
+                    .ToListAsync();
+
+                foreach (var journal in journals)
+                    yield return Domain.AsArticle(journal);
+
+                if (journals.Count == 0)
+                    break;
+
+                last = journals.Select(j => j.JournalId).Min();
             }
         }
 

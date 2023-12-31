@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
 		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
@@ -27,6 +27,7 @@
 		<ProjectReference Include="..\Crowmask.Cache\Crowmask.Cache.csproj" />
 		<ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
 		<ProjectReference Include="..\Crowmask.Markdown\Crowmask.Markdown.fsproj" />
+		<ProjectReference Include="..\Crowmask.Merging\Crowmask.Merging.csproj" />
 		<ProjectReference Include="..\Crowmask.Remote\Crowmask.Remote.csproj" />
 		<ProjectReference Include="..\Crowmask.Weasyl\Crowmask.Weasyl.csproj" />
 	</ItemGroup>
