@@ -16,7 +16,7 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/journals")] HttpRequestData req)
         {
             var journals = await weasylUserClient.GetMyJournalIdsAsync()
-                .SelectAwait(async journalid => await crowmaskCache.GetJournalAsync(journalid))
+                .SelectAwait(async journalid => await crowmaskCache.UpdateJournalAsync(journalid))
                 .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .ToListAsync();
 

@@ -25,7 +25,7 @@ namespace Crowmask.Functions
 
             var submissions = await gallery.submissions
                 .ToAsyncEnumerable()
-                .SelectAwait(async s => await crowmaskCache.GetSubmissionAsync(s.submitid))
+                .SelectAwait(async s => await crowmaskCache.UpdateSubmissionAsync(s.submitid))
                 .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .ToListAsync();
 

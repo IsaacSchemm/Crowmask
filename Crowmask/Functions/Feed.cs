@@ -53,12 +53,12 @@ namespace Crowmask.Functions
             int maxFeedSize = 20;
 
             var submissions = await weasylUserClient.GetMyGallerySubmissionsAsync()
-                .SelectAwait(async s => await crowmaskCache.GetSubmissionAsync(s.submitid))
+                .SelectAwait(async s => await crowmaskCache.UpdateSubmissionAsync(s.submitid))
                 .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .Take(maxFeedSize)
                 .ToListAsync();
             var journals = await weasylUserClient.GetMyJournalIdsAsync()
-                .SelectAwait(async j => await crowmaskCache.GetJournalAsync(j))
+                .SelectAwait(async j => await crowmaskCache.UpdateJournalAsync(j))
                 .SelectMany(obj => obj.AsList.ToAsyncEnumerable())
                 .Take(maxFeedSize)
                 .ToListAsync();
@@ -69,7 +69,7 @@ namespace Crowmask.Functions
                 .Take(maxFeedSize)
                 .ToList();
 
-            var person = await crowmaskCache.GetUserAsync();
+            var person = await crowmaskCache.UpdateUserAsync();
 
             var feed = new SyndicationFeed
             {

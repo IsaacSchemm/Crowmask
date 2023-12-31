@@ -17,7 +17,7 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/journals/{journalid}")] HttpRequestData req,
             int journalid)
         {
-            var cacheResult = await crowmaskCache.GetJournalAsync(journalid);
+            var cacheResult = await crowmaskCache.UpdateJournalAsync(journalid);
             var journal = cacheResult.AsList.DefaultIfEmpty(null).Single();
 
             if (journal == null)

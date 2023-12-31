@@ -10,7 +10,7 @@ namespace Crowmask.Functions
         [Function("LongUpdate")]
         public async Task Run([TimerTrigger("0 56 23 * * *")] TimerInfo myTimer)
         {
-            await crowmaskCache.GetUserAsync();
+            await crowmaskCache.UpdateUserAsync();
 
             await synchronizer.SynchronizeAsync(cutoff: DateTimeOffset.MinValue);
         }

@@ -20,7 +20,7 @@ namespace Crowmask
             foreach (var submission in cachedSubmissions)
             {
                 if (submission.Stale)
-                    await crowmaskCache.GetSubmissionAsync(submission.SubmitId);
+                    await crowmaskCache.UpdateSubmissionAsync(submission.SubmitId);
             }
 
             // Find ID of newest known submission
@@ -39,7 +39,7 @@ namespace Crowmask
             await foreach (var upstreamItem in weasylUserClient.GetMyGallerySubmissionsAsync())
             {
                 if (upstreamItem.submitid > newestKnownSubmission.SubmitId)
-                    await crowmaskCache.GetSubmissionAsync(upstreamItem.submitid);
+                    await crowmaskCache.UpdateSubmissionAsync(upstreamItem.submitid);
                 else
                     break;
             }
@@ -52,7 +52,7 @@ namespace Crowmask
             foreach (var journal in cachedJournals)
             {
                 if (journal.Stale)
-                    await crowmaskCache.GetJournalAsync(journal.JournalId);
+                    await crowmaskCache.UpdateJournalAsync(journal.JournalId);
             }
 
             // Find ID of newest known journal
@@ -71,7 +71,7 @@ namespace Crowmask
             await foreach (int journalId in weasylUserClient.GetMyJournalIdsAsync())
             {
                 if (journalId > newestKnownJournal.JournalId)
-                    await crowmaskCache.GetJournalAsync(journalId);
+                    await crowmaskCache.UpdateJournalAsync(journalId);
                 else
                     break;
             }
