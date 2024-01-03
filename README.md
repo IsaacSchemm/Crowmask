@@ -41,12 +41,6 @@ oesn't indicate any particular media type.
 
 ## Missing functionality
 
-* Crowmask does not verify HTTP signatures. (This turns out to be a difficult
-  thing to do, and I wasn't able to find a .NET library that could handle this
-  easily in an ActivityPub context.) This means it's possible to forge
-  "follow", "unfollow", "like", "share", and "create reply" activites
-  (although the last three simply send a message to the admin actor and are
-  then discarded.)
 * Crowmask does not keep track of interaction with posts (beyond notifying the
   admin actor).
 * Weasyl tags are ignored in Crowmask, instead of being translated into
@@ -74,6 +68,8 @@ Layers:
 * **Crowmask.Cache**: Retrieves new user or submission information from Weasyl
   when necessary, and creates ActivityPub `Update` activities when the
   ActivityPub representation of a user or submission changes.
+* **Crowmask.Signatures**: HTTP signature validation, adapted from code in
+  [Letterbook](https://github.com/Letterbook/Letterbook), used under AGPL v3.
 * **Crowmask.Remote**: Talks to other ActivityPub servers.
 * **Crowmask.Feed**: Implements RSS and Atom feeds.
 * **Crowmask.Markdown**: Implements the web UI by creating Markdown and HTML
