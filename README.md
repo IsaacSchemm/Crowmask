@@ -45,6 +45,7 @@ oesn't indicate any particular media type.
   admin actor).
 * Weasyl tags are ignored in Crowmask, instead of being translated into
   Mastodon-style hashtags.
+* NodeInfo2 is not yet implemented.
 
 ## Implementation details
 
@@ -68,8 +69,8 @@ Layers:
 * **Crowmask.Cache**: Retrieves new user or submission information from Weasyl
   when necessary, and creates ActivityPub `Update` activities when the
   ActivityPub representation of a user or submission changes.
-* **Crowmask.Signatures**: HTTP signature validation, adapted from code in
-  [Letterbook](https://github.com/Letterbook/Letterbook), used under AGPL v3.
+* **Crowmask.Signatures**: HTTP signature validation, adapted from
+  [Letterbook](https://github.com/Letterbook/Letterbook).
 * **Crowmask.Remote**: Talks to other ActivityPub servers.
 * **Crowmask.Feed**: Implements RSS and Atom feeds.
 * **Crowmask.Markdown**: Implements the web UI by creating Markdown and HTML

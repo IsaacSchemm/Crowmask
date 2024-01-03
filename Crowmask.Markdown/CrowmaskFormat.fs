@@ -5,9 +5,9 @@ open Microsoft.Net.Http.Headers
 type CrowmaskFormat = HTML | ActivityJson | Markdown | RSS | Atom
 with
     static member All = [
+        Markdown
         HTML
         ActivityJson
-        Markdown
         RSS
         Atom
     ]
