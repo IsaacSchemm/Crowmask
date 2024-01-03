@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.ActivityPub\Crowmask.ActivityPub.fsproj" />
+    <ProjectReference Include="..\Crowmask.Signatures\Crowmask.Signatures.csproj" />
   </ItemGroup>
 
 </Project>
