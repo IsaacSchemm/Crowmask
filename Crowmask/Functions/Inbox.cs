@@ -65,7 +65,7 @@ namespace Crowmask.Functions
             var actor = await requester.FetchActorAsync(actorId);
 
             var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
-                new SignedRequestToVerify(
+                new IncomingRequest(
                     new HttpMethod(req.Method),
                     req.Url,
                     req.Headers),

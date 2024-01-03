@@ -7,15 +7,12 @@ using NSign.Signatures;
 
 namespace Crowmask.Signatures;
 
-public class MastodonComponentBuilder(SignedRequestToVerify _message) : ISignatureComponentVisitor
+public class MastodonComponentBuilder(IncomingRequest _message) : ISignatureComponentVisitor
 {
-    private readonly List<string> _derivedParams = [];
     private readonly List<string> _derivedParamsValues = [];
-    private readonly List<string> _headerParams = [];
     private readonly List<string> _headerParamsValues = [];
 
-    public string SigningDocument => BuildSigningDocument();
-    public string? SigningDocumentSpec => BuildDocumentSpec();
+    public string SigningDocument => string.Join('\n', _derivedParamsValues.Concat(_headerParamsValues));
 
     void ISignatureComponentVisitor.Visit(SignatureComponent component) { }
 
@@ -25,19 +22,17 @@ public class MastodonComponentBuilder(SignedRequestToVerify _message) : ISignatu
 
         if (_message.Headers.TryGetValues(fieldName, out var values))
         {
-            AddHeader(
+            string mastodonHeader =
                 fieldName.Equals("content-digest", StringComparison.InvariantCultureIgnoreCase)
                     ? "digest"
-                    : fieldName,
-                string.Join(", ", values));
+                    : fieldName;
+            _headerParamsValues.Add($"{mastodonHeader}: {string.Join(", ", values)}");
         }
         else
         {
             if (fieldName == "host")
             {
-                AddHeader(
-                    fieldName,
-                    _message.GetDerivedComponentValue(SignatureComponent.Authority));
+                _headerParamsValues.Add($"host: {_message.GetDerivedComponentValue(SignatureComponent.Authority)}");
             }
         }
     }
@@ -52,11 +47,10 @@ public class MastodonComponentBuilder(SignedRequestToVerify _message) : ISignatu
         switch (derived.ComponentName)
         {
             case DerivedComponents.RequestTarget:
-                AddRequestTarget(
-                    $"{_message.GetDerivedComponentValue(method).ToLowerInvariant()} {_message.GetDerivedComponentValue(derived)}");
+                _derivedParamsValues.Add($"(request-target): {_message.GetDerivedComponentValue(method).ToLowerInvariant()} {_message.GetDerivedComponentValue(derived)}");
                 break;
             case DerivedComponents.Authority:
-                AddHeader("host", _message.GetDerivedComponentValue(derived));
+                _headerParamsValues.Add($"host: {_message.GetDerivedComponentValue(derived)}");
                 break;
         }
     }
@@ -64,6 +58,7 @@ public class MastodonComponentBuilder(SignedRequestToVerify _message) : ISignatu
     public void Visit(SignatureParamsComponent signatureParamsComponent)
     {
         var hasTarget = false;
+
         foreach (SignatureComponent component in signatureParamsComponent.Components)
         {
             component.Accept(this);
@@ -73,30 +68,9 @@ public class MastodonComponentBuilder(SignedRequestToVerify _message) : ISignatu
             }
         }
 
-        if (!hasTarget) new DerivedComponent(DerivedComponents.RequestTarget).Accept(this);
+        if (!hasTarget)
+            new DerivedComponent(DerivedComponents.RequestTarget).Accept(this);
     }
 
     void ISignatureComponentVisitor.Visit(QueryParamComponent queryParam) { }
-
-    private void AddHeader(string header, string value)
-    {
-        _headerParams.Add(header);
-        _headerParamsValues.Add($"{header}: {value}");
-    }
-
-    private void AddRequestTarget(string value)
-    {
-        _derivedParams.Add("(request-target)");
-        _derivedParamsValues.Add($"(request-target): {value}");
-    }
-
-    private string BuildSigningDocument()
-    {
-        return string.Join('\n', _derivedParamsValues.Concat(_headerParamsValues));
-    }
-
-    private string BuildDocumentSpec()
-    {
-        return string.Join(' ', _derivedParams.Concat(_headerParams));
-    }
 }
