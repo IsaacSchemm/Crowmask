@@ -2,7 +2,7 @@
 
 namespace Crowmask.Signatures;
 
-public record SignedRequestToVerify(
+public record IncomingRequest(
     HttpMethod Method,
     Uri RequestUri,
     HttpHeaders Headers);

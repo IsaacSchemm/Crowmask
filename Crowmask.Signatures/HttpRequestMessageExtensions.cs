@@ -10,7 +10,7 @@ namespace Crowmask.Signatures;
 
 internal static class IHttpRequestExtensions
 {
-    public static string GetDerivedComponentValue(this SignedRequestToVerify request, DerivedComponent derivedComponent)
+    public static string GetDerivedComponentValue(this IncomingRequest request, DerivedComponent derivedComponent)
     {
         return derivedComponent.ComponentName switch
         {

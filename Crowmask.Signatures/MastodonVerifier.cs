@@ -5,13 +5,12 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using NSign;
 using NSign.Signatures;
 
 namespace Crowmask.Signatures;
 
-public partial class MastodonVerifier(ILogger<MastodonVerifier> _logger)
+public partial class MastodonVerifier
 {
     private readonly HashSet<string> DerivedComponents = [
         Constants.DerivedComponents.Authority,
@@ -32,11 +31,14 @@ public partial class MastodonVerifier(ILogger<MastodonVerifier> _logger)
     private static readonly char[] SpacesAndQuotes = [' ', '"'];
     private static readonly char[] SpacesAndParentheses = [' ', '(', ')'];
 
-    public VerificationResult VerifyRequestSignature(SignedRequestToVerify message, ISigningKey verificationKey)
+    private static readonly StringSplitOptions RemoveEmpty = StringSplitOptions.RemoveEmptyEntries;
+    private static readonly StringSplitOptions Trim = StringSplitOptions.TrimEntries;
+
+    public VerificationResult VerifyRequestSignature(IncomingRequest message, ISigningKey verificationKey)
     {
         var builder = new MastodonComponentBuilder(message);
         var components = ParseMastodonSignatureComponents(message);
-        var result = VerificationResult.NoMatchingVerifierFound;
+        var defaultResult = VerificationResult.NoMatchingVerifierFound;
 
         foreach (var parsed in components)
         {
@@ -48,38 +50,37 @@ public partial class MastodonVerifier(ILogger<MastodonVerifier> _logger)
             if (VerifySignature(parsed, verificationKey, builder))
                 return VerificationResult.SuccessfullyVerified;
 
-            result = VerificationResult.SignatureMismatch;
+            defaultResult = VerificationResult.SignatureMismatch;
         }
 
-        return result;
+        return defaultResult;
     }
 
-    private IEnumerable<MastodonSignatureComponents> ParseMastodonSignatureComponents(SignedRequestToVerify message)
+    private IEnumerable<MastodonSignatureComponents> ParseMastodonSignatureComponents(IncomingRequest message)
     {
         if (!message.Headers.TryGetValues(Constants.Headers.Signature, out var values))
-            return []; 
+            yield break;
 
         var mastodonSignatures = values
-            .Select(header => header.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            .Select(header => header.Split(',', RemoveEmpty))
             .Where(parts => parts.Length > 1);
 
         if (!mastodonSignatures.Any())
-            return [];
+            yield break;
 
-        return mastodonSignatures.Select(ParseSignatureValue);
+        foreach (string[] parts in mastodonSignatures)
+            yield return ParseSignatureValue(parts);
     }
 
     private MastodonSignatureComponents ParseSignatureValue(IEnumerable<string> parts)
     {
-        var pairs = parts.Select(part =>
-        {
-            var innerParts = part.Split('=', 2, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-            return (innerParts[0], innerParts[1]);
-        });
-
         var components = new MastodonSignatureComponents();
 
-        foreach (var (key, value) in pairs)
+        foreach (var (key, value) in parts.Select(part =>
+        {
+            var innerParts = part.Split('=', 2, Trim | RemoveEmpty);
+            return (innerParts[0], innerParts[1]);
+        }))
         {
             switch (key)
             {
@@ -92,40 +93,25 @@ public partial class MastodonVerifier(ILogger<MastodonVerifier> _logger)
                 case "headers":
                     string headersString = value;
 
-                    _logger.LogDebug("Parsing Mastodon signature headers '{Headers}'", headersString);
-
                     var spec = new SignatureInputSpec("spec");
                     var match = DerivedComponentsRegex().Match(headersString);
                     if (match.Success)
                     {
-                        foreach (var token in match.Value.Split(SpacesAndParentheses, StringSplitOptions.RemoveEmptyEntries))
+                        foreach (var token in match.Value.Split(SpacesAndParentheses, RemoveEmpty))
                         {
                             spec.SignatureParameters.AddComponent(new DerivedComponent("@" + token));
                         }
                     }
 
-                    var comps = headersString[(match.Length + 1)..]
-                        .Split(SpacesAndQuotes, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        .Select<string, SignatureComponent>(s =>
-                            DerivedComponents.Contains(s)
-                                ? new DerivedComponent(s)
-                            : DerivedComponents.Contains("@" + s)
-                                ? new DerivedComponent("@" + s)
-                            : new HttpHeaderComponent(s));
-
-                    foreach (var component in comps)
+                    foreach (string s in headersString[(match!.Length + 1)..].Split(SpacesAndQuotes, RemoveEmpty | Trim))
                     {
-                        spec.SignatureParameters.AddComponent(component);
+                        spec.SignatureParameters.AddComponent(
+                            DerivedComponents.Contains(s) ? new DerivedComponent(s)
+                            : DerivedComponents.Contains("@" + s) ? new DerivedComponent("@" + s)
+                            : new HttpHeaderComponent(s));
                     }
 
-                    _logger.LogDebug("Parsed Mastodon signature headers as {@Spec}", spec);
-
                     components.spec = spec;
-                    break;
-                default:
-                    _logger.LogWarning(
-                        "Unknown component {Component} in apparently Mastodon-compatible HTTP signature {Parts}",
-                        key, parts);
                     break;
             }
         }
