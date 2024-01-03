@@ -45,7 +45,6 @@ oesn't indicate any particular media type.
   admin actor).
 * Weasyl tags are ignored in Crowmask, instead of being translated into
   Mastodon-style hashtags.
-* NodeInfo2 is not yet implemented.
 
 ## Implementation details
 
