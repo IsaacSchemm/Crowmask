@@ -5,6 +5,8 @@ using Crowmask.Markdown;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -16,9 +18,11 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/followers")] HttpRequestData req)
         {
-            var count = await context.Followers.CountAsync();
+            var followers = await context.Followers
+                .OrderBy(f => f.ActorId)
+                .ToListAsync();
 
-            var followerCollection = Domain.AsFollowerCollection(count);
+            var followerCollection = Domain.AsFollowerCollection(followers);
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {

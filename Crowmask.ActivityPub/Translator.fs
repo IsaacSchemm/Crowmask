@@ -156,21 +156,8 @@ type Translator(host: ICrowmaskHost) =
     member _.AsFollowers (followerCollection: FollowerCollection) = dict [
         pair "id" $"{actor}/followers"
         pair "type" "OrderedCollection"
-        pair "totalItems" followerCollection.followers_count
-        pair "first" $"{actor}/followers/page"
-    ]
-
-    member _.AsFollowersPage (id: string) (followerCollectionPage: FollowerCollectionPage) = dict [
-        pair "id" id
-        pair "type" "OrderedCollectionPage"
-
-        match followerCollectionPage.MaxId with
-        | None -> ()
-        | Some maxId ->
-            pair "next" $"{actor}/followers/page?after={maxId}"
-
-        pair "partOf" $"{actor}/outbox"
-        pair "orderedItems" [for f in followerCollectionPage.followers do f.actorId]
+        pair "totalItems" (List.length followerCollection.followers)
+        pair "orderedItems" [for f in followerCollection.followers do f.actorId]
     ]
 
     member _.Following = dict [
