@@ -65,15 +65,15 @@ namespace Crowmask.Functions
             string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
             var actor = await requester.FetchActorAsync(actorId);
 
-            //var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
-            //    new IncomingRequest(
-            //        new HttpMethod(req.Method),
-            //        req.Url,
-            //        req.Headers),
-            //    verificationKey: actor);
+            var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
+                new IncomingRequest(
+                    new HttpMethod(req.Method),
+                    req.Url,
+                    req.Headers),
+                verificationKey: actor);
 
-            //if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
-            //    return req.CreateResponse(HttpStatusCode.Forbidden);
+            if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
+                return req.CreateResponse(HttpStatusCode.Forbidden);
 
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
