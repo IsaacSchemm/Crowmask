@@ -23,6 +23,9 @@ namespace Crowmask.Cache
         public async Task<CacheResult> GetSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
+                .Include(s => s.Boosts)
+                .Include(s => s.Likes)
+                .Include(s => s.Replies)
                 .Include(s => s.Media)
                 .Include(s => s.Tags)
                 .Where(s => s.SubmitId == submitid)
@@ -35,6 +38,9 @@ namespace Crowmask.Cache
         public async Task<CacheResult> UpdateSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
+                .Include(s => s.Boosts)
+                .Include(s => s.Likes)
+                .Include(s => s.Replies)
                 .Include(s => s.Media)
                 .Include(s => s.Tags)
                 .Where(s => s.SubmitId == submitid)

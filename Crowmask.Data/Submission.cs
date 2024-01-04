@@ -16,9 +16,9 @@ namespace Crowmask.Data
 
         public string Link { get; set; }
 
-        public IEnumerable<SubmissionMedia> Media { get; set; } = new List<SubmissionMedia>(0);
+        public List<SubmissionMedia> Media { get; set; } = [];
 
-        public IEnumerable<SubmissionThumbnail> Thumbnails { get; set; } = new List<SubmissionThumbnail>(0);
+        public List<SubmissionThumbnail> Thumbnails { get; set; } = [];
 
         public DateTimeOffset PostedAt { get; set; }
 
@@ -41,7 +41,7 @@ namespace Crowmask.Data
 
         public Subtype SubtypeId { get; set; }
 
-        public IEnumerable<SubmissionTag> Tags { get; set; } = new List<SubmissionTag>(0);
+        public List<SubmissionTag> Tags { get; set; } = [];
 
         public string Title { get; set; }
 
@@ -50,6 +50,12 @@ namespace Crowmask.Data
         public DateTimeOffset CacheRefreshAttemptedAt { get; set; }
 
         public DateTimeOffset CacheRefreshSucceededAt { get; set; }
+
+        public List<SubmissionBoost> Boosts { get; set; } = [];
+
+        public List<SubmissionLike> Likes { get; set; } = [];
+
+        public List<SubmissionReply> Replies { get; set; } = [];
 
         public string Content => Description ?? "";
 

@@ -115,6 +115,15 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         for link in post.links do
             $"[{enc link.text}]({link.href})"
             $""
+        $""
+        $"----------"
+        $""
+        for boost in post.boosts do
+            $"* Boost: {boost.actor_id} ({boost.added_at})"
+        for like in post.likes do
+            $"* Like: {like.actor_id} ({like.added_at})"
+        for reply in post.replies do
+            $"* Reply: {reply.actor_id} ({reply.added_at}): [{reply.object_id}]({reply.object_id})"
     ]
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
