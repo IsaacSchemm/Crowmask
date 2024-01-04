@@ -192,28 +192,11 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"## Followers"
         $""
-        $"{followerCollection.followers_count} item(s)."
-        $""
-        $"[Start from first page](/api/actor/followers/page)"
+        for f in followerCollection.followers do
+            $"* [{enc f.actorId}]({f.actorId})"
+        if List.isEmpty followerCollection.followers then
+            $"No followers."
         $""
     ]
 
     member this.ToHtml (followerCollection: FollowerCollection) = this.ToMarkdown followerCollection |> toHtml "Followers"
-
-    member _.ToMarkdown (followerCollectionPage: FollowerCollectionPage) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
-        $"## Followers"
-        $""
-        for f in followerCollectionPage.followers do
-            $"* [{enc f.actorId}]({f.actorId})"
-        $""
-        match followerCollectionPage.MaxId with
-        | None -> ()
-        | Some maxId ->
-            $"[View more](/api/actor/followers/page?after={maxId})"
-    ]
-
-    member this.ToHtml (followerCollectionPage: FollowerCollectionPage) = this.ToMarkdown followerCollectionPage |> toHtml "Followers"

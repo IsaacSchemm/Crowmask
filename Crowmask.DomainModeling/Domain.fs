@@ -78,18 +78,8 @@ type FollowerActor = {
 }
 
 type FollowerCollection = {
-    followers_count: int
-}
-
-type FollowerCollectionPage = {
     followers: FollowerActor list
-} with
-    member this.MaxId =
-        let ids = [for f in this.followers do f.followerId]
-
-        if ids = []
-        then None
-        else Some (Seq.max ids)
+}
 
 module Domain =
     let AsPerson (user: User) =
@@ -231,10 +221,6 @@ module Domain =
         actorId = follower.ActorId
     }
 
-    let AsFollowerCollection (count: int) = {
-        followers_count = count
-    }
-
-    let AsFollowerCollectionPage (followers: Follower seq) = {
+    let AsFollowerCollection (followers: Follower seq) = {
         followers = [for f in followers do AsFollowerActor f]
     }
