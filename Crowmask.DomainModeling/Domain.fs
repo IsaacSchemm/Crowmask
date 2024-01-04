@@ -32,6 +32,17 @@ type Link = {
     href: string
 }
 
+type Interaction = {
+    actor_id: string
+    added_at: DateTimeOffset
+}
+
+type Reply = {
+    actor_id: string
+    object_id: string
+    added_at: DateTimeOffset
+}
+
 type UpstreamType =
 | UpstreamSubmission of submitid: int
 | UpstreamJournal of journalid: int
@@ -46,6 +57,9 @@ type Post = {
     attachments: Attachment list
     thumbnails: Image list
     sensitivity: Sensitivity
+    boosts: Interaction list
+    likes: Interaction list
+    replies: Reply list
     stale: bool
 }
 
@@ -152,6 +166,28 @@ module Domain =
                 | Submission.Rating.Mature -> Sensitive "Mature (18+)"
                 | Submission.Rating.Explicit -> Sensitive "Explicit (18+)"
                 | _ -> Sensitive "Potentially sensitive (nature unknown)"
+            boosts = [
+                for i in submission.Boosts do
+                    {
+                        actor_id = i.ActorId
+                        added_at = i.AddedAt
+                    }
+            ]
+            likes = [
+                for i in submission.Likes do
+                    {
+                        actor_id = i.ActorId
+                        added_at = i.AddedAt
+                    }
+            ]
+            replies = [
+                for i in submission.Replies do
+                    {
+                        actor_id = i.ActorId
+                        object_id = i.ObjectId
+                        added_at = i.AddedAt
+                    }
+            ]
             stale = submission.Stale
         }
 
@@ -175,6 +211,9 @@ module Domain =
                 match journal.Rating with
                 | "General" -> General
                 | str -> Sensitive str
+            boosts = []
+            likes = []
+            replies = []
             stale = journal.Stale
         }
 

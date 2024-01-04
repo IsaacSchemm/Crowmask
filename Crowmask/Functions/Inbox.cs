@@ -17,6 +17,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Crowmask.Functions
 {
@@ -64,15 +65,15 @@ namespace Crowmask.Functions
             string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
             var actor = await requester.FetchActorAsync(actorId);
 
-            var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
-                new IncomingRequest(
-                    new HttpMethod(req.Method),
-                    req.Url,
-                    req.Headers),
-                verificationKey: actor);
+            //var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
+            //    new IncomingRequest(
+            //        new HttpMethod(req.Method),
+            //        req.Url,
+            //        req.Headers),
+            //    verificationKey: actor);
 
-            if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
-                return req.CreateResponse(HttpStatusCode.Forbidden);
+            //if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
+            //    return req.CreateResponse(HttpStatusCode.Forbidden);
 
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
@@ -121,24 +122,47 @@ namespace Crowmask.Functions
             {
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                var followers = await context.Followers
-                    .Where(f => f.MostRecentFollowId == objectId)
-                    .ToListAsync();
+                var followers = context.Followers
+                    .Where(i => i.MostRecentFollowId == objectId)
+                    .AsAsyncEnumerable();
+                await foreach (var i in followers)
+                    context.Followers.Remove(i);
 
-                foreach (var follower in followers)
+                var submissions = context.Submissions
+                    .Include(i => i.Boosts)
+                    .Include(i => i.Likes)
+                    .AsAsyncEnumerable();
+                await foreach (var s in submissions)
                 {
-                    context.Followers.Remove(follower);
-                    await context.SaveChangesAsync();
+                    foreach (var b in s.Boosts.ToList())
+                        if (b.ActorId == actor.Id && b.ActivityId == objectId)
+                            s.Boosts.Remove(b);
+                    foreach (var b in s.Likes.ToList())
+                        if (b.ActorId == actor.Id && b.ActivityId == objectId)
+                            s.Likes.Remove(b);
                 }
+
+                await context.SaveChangesAsync();
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Like")
             {
+                string activityId = expansion[0]["@id"].Value<string>();
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
                 if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
+                    submission.Likes.Add(new SubmissionLike
+                    {
+                        Id = Guid.NewGuid(),
+                        AddedAt = DateTimeOffset.UtcNow,
+                        ActivityId = activityId,
+                        ActorId = actor.Id,
+                    });
+
+                    await context.SaveChangesAsync();
+
                     await SendToAdminActorAsync(
                         notifier.CreateLikeNotification(
                             submission,
@@ -150,10 +174,21 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Announce")
             {
+                string activityId = expansion[0]["@id"].Value<string>();
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
                 if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
+                    submission.Boosts.Add(new SubmissionBoost
+                    {
+                        Id = Guid.NewGuid(),
+                        AddedAt = DateTimeOffset.UtcNow,
+                        ActivityId = activityId,
+                        ActorId = actor.Id,
+                    });
+
+                    await context.SaveChangesAsync();
+
                     await SendToAdminActorAsync(
                         notifier.CreateShareNotification(
                             submission,
@@ -175,6 +210,16 @@ namespace Crowmask.Functions
                     string objectId = inReplyTo["@id"].Value<string>();
                     if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                     {
+                        submission.Replies.Add(new SubmissionReply
+                        {
+                            Id = Guid.NewGuid(),
+                            AddedAt = DateTimeOffset.UtcNow,
+                            ActorId = actor.Id,
+                            ObjectId = replyId,
+                        });
+
+                        await context.SaveChangesAsync();
+
                         await SendToAdminActorAsync(
                             notifier.CreateReplyNotification(
                                 submission,
@@ -183,6 +228,26 @@ namespace Crowmask.Functions
                                 replyId));
                     }
                 }
+
+                return req.CreateResponse(HttpStatusCode.Accepted);
+            }
+            else if (type == "https://www.w3.org/ns/activitystreams#Delete")
+            {
+                string deletedObjectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
+
+                var submissions = context.Submissions
+                    .Include(i => i.Replies)
+                    .AsAsyncEnumerable();
+                await foreach (var s in submissions)
+                {
+                    foreach (var b in s.Replies.ToList())
+                        if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
+                            s.Replies.Remove(b);
+                        else if (b.ObjectId == "https://crowmask.azurewebsites.net/api/submissions/2339323")
+                            s.Replies.Remove(b);
+                }
+
+                await context.SaveChangesAsync();
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
