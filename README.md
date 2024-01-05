@@ -87,36 +87,45 @@ Configuration values are passed using custom singleton dependencies:
 
 Internal objects:
 
-- [x] `User`: a cached user from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-- [x] `UserLink`: an entry from the Contact and Social Media section of the Weasyl profile
-- [x] `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-- [x] `SubmissionMedia`: an associated image
-- [x] `SubmissionTag`: an associated tag
-- [x] `Follower`: an ActivityPub actor who follows this actor
-- [x] `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+* `User`: a cached user from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
+* `UserLink`: an entry from the Contact and Social Media section of the Weasyl profile
+* `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
+* `SubmissionMedia`: an associated image
+* `SubmissionTag`: an associated tag
+* `Follower`: an ActivityPub actor who follows this actor
+* `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
-ActivityPub HTTP endpoints:
+HTTP endpoints:
 
-- [x] `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the admin actor's domain
-- [x] `/api/actor`: attempts cache refresh for the user, then returns the resulting object
-- [x] `/api/actor/inbox`: processes the following activities:
-    - [x] `Follow`: adds a new follower (or updates the `Follow` ID of an existing follower)
-    - [x] `Undo` with `Follow`: removes the follower with the given `Follow` ID (if any)
-    - [x] `Like`: if it matches a `Submission`, sends a transient message to the admin actor, with a link to the actor who sent the `Like`
-    - [x] `Announce`: if it matches a `Submission`, sends a transient message to the admin actor, with a link to the actor who sent the `Announce`
-    - [x] `Create`: if it's for a reply to a `Submission`, sends a transient message to the admin, with a link to the reply
-- [x] `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
-- [x] `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
-- [x] `/api/actor/followers`: contains the IDs of all followers (20 per page)
-- [x] `/api/actor/following`: an empty list
-- [x] `/api/submissions/{submitid}`: attempts cache refresh for the post, then returns the resulting `Note` object
-- [x] `/api/journals/{journalid}`: attempts cache refresh for the journal, then returns the resulting `Article` object
+* `/.well-known/nodeinfo`: returns the location of the NodeInfo endpoint
+* `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the admin actor's domain
+* `/api/actor`: returns the `Person` object
+* `/api/actor/followers`: contains the IDs of all followers (not paginated)
+* `/api/actor/following`: an empty list
+* `/api/actor/inbox`: processes the following activities:
+    * `Follow`: adds a new follower (or updates the `Follow` ID of an existing follower)
+    * `Undo`: undoes a `Follow`, `Announce`, or `Like`
+    * `Like`: if it matches a `Submission`, records the like, then sends a transient message to the admin actor
+    * `Announce`: if it matches a `Submission`, records the boost, then sends a transient message to the admin actor
+    * `Create`: if it's for a reply to a `Submission`, records the new message, then sends a transient message to the admin
+    * `Delete`: if it's for a reply to a `Submission` that was recorded earlier, deletes that reply
+* `/api/actor/nodeinfo`: returns a NodeInfo 2.2 response
+* `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
+* `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
+* `/api/submissions/{submitid}`: returns the resulting `Note` object
+    * With `?view=comments`: returns a `Collection` with object IDs for all replies (not paginated)
+    * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
+    * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
+* `/api/journals/{journalid}`: returns the resulting `Article` object
+    * With `?view=comments`: returns a `Collection` with object IDs for all replies (not paginated)
+    * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
+    * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
 
 Timed functions:
 
-- [x] `RefreshUpstream`: Checks Weasyl for recent posts (stopping when a post is more than a day old), updating cache as needed, then sends outbound activities (every ten minutes)
-- [x] `RefreshCached`: Attempts cache refresh for all stale cached posts and the actor's name/avatar/etc (every day at 23:56)
-- [x] `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
+* `RefreshUpstream`: Checks Weasyl for recent posts (stopping when a post is more than a day old), updating cache as needed, then sends outbound activities (every ten minutes)
+* `RefreshCached`: Attempts cache refresh for all stale cached posts and the actor's name/avatar/etc (every day at 23:56)
+* `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
 
 Note that a cached submission will not be refreshed if:
 
