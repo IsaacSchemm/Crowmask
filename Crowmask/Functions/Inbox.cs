@@ -139,41 +139,25 @@ namespace Crowmask.Functions
                 await foreach (var i in followers)
                     context.Followers.Remove(i);
 
-                var boostedJournals = context.Journals
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Boosts)} WHERE t.ActivityId = {{0}}", objectId)
-                    .Where(c => c.JournalId > 0)
-                    .AsAsyncEnumerable();
-                await foreach (var j in boostedJournals)
+                await foreach (var j in context.GetRelevantJournalsAsync(objectId))
+                {
                     foreach (var b in j.Boosts.ToList())
                         if (b.ActorId == actor.Id && b.ActivityId == objectId)
                             j.Boosts.Remove(b);
-
-                var likedJournals = context.Journals
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Likes)} WHERE t.ActivityId = {{0}}", objectId)
-                    .Where(c => c.JournalId > 0)
-                    .AsAsyncEnumerable();
-                await foreach (var j in likedJournals)
                     foreach (var l in j.Likes.ToList())
                         if (l.ActorId == actor.Id && l.ActivityId == objectId)
                             j.Likes.Remove(l);
+                }
 
-                var boostedSubmissions = context.Submissions
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Boosts)} WHERE t.ActivityId = {{0}}", objectId)
-                    .Where(c => c.SubmitId > 0)
-                    .AsAsyncEnumerable();
-                await foreach (var s in boostedSubmissions)
+                await foreach (var s in context.GetRelevantSubmissionsAsync(objectId))
+                {
                     foreach (var b in s.Boosts.ToList())
                         if (b.ActorId == actor.Id && b.ActivityId == objectId)
                             s.Boosts.Remove(b);
-
-                var likedSubmissions = context.Submissions
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Likes)} WHERE t.ActivityId = {{0}}", objectId)
-                    .Where(c => c.SubmitId > 0)
-                    .AsAsyncEnumerable();
-                await foreach (var s in likedSubmissions)
                     foreach (var l in s.Likes.ToList())
                         if (l.ActorId == actor.Id && l.ActivityId == objectId)
                             s.Likes.Remove(l);
+                }
 
                 await context.SaveChangesAsync();
 
@@ -333,20 +317,12 @@ namespace Crowmask.Functions
             {
                 string deletedObjectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                var journals = context.Journals
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Replies)} WHERE t.ActivityId = {{0}}", deletedObjectId)
-                    .Where(c => c.JournalId > 0)
-                    .AsAsyncEnumerable();
-                await foreach (var j in journals)
+                await foreach (var j in context.GetRelevantJournalsAsync(deletedObjectId))
                     foreach (var b in j.Replies.ToList())
                         if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
                             j.Replies.Remove(b);
 
-                var submissions = context.Submissions
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Replies)} WHERE t.ActivityId = {{0}}", deletedObjectId)
-                    .Where(c => c.SubmitId > 0)
-                    .AsAsyncEnumerable();
-                await foreach (var s in submissions)
+                await foreach (var s in context.GetRelevantSubmissionsAsync(deletedObjectId))
                     foreach (var b in s.Replies.ToList())
                         if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
                             s.Replies.Remove(b);
