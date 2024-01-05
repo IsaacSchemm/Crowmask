@@ -118,24 +118,21 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"----------"
         $""
-        $"**Boosts:** {post.boosts.Length}  "
-        if post.boosts.Length > 0 then
-            $""
-            for boost in post.boosts do
-                $"* [`{boost.actor_id}`]({boost.actor_id})"
-            $""
-        $"**Likes:** {post.likes.Length}  "
-        if post.likes.Length > 0 then
-            $""
-            for like in post.likes do
-                $"* [`{like.actor_id}`]({like.actor_id})"
-            $""
-        $"**Replies:** {post.replies.Length}  "
-        if post.replies.Length > 0 then
-            $""
-            for reply in post.replies do
-                $"* [`{reply.object_id}`]({reply.object_id})"
-            $""
+
+        let encDate (dt: System.DateTimeOffset) = dt.UtcDateTime.ToString("U") |> enc
+
+        $"* **Boosts:** {post.boosts.Length}"
+        for boost in post.boosts do
+            $"    * [`{enc boost.actor_id}`]({boost.actor_id}) boosted: {encDate boost.added_at}"
+
+        $"* **Likes:** {post.likes.Length}"
+        for like in post.likes do
+            $"    * [`{enc like.actor_id}`]({like.actor_id}) liked: {encDate like.added_at}"
+
+        $"* **Replies:** {post.replies.Length}"
+        for reply in post.replies do
+            $"    * [`{enc reply.actor_id}`]({reply.actor_id}) replied: [{encDate reply.added_at}]({reply.object_id})"
+
         $""
     ]
 
