@@ -118,12 +118,25 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"----------"
         $""
-        for boost in post.boosts do
-            $"* Boost: {boost.actor_id} ({boost.added_at})"
-        for like in post.likes do
-            $"* Like: {like.actor_id} ({like.added_at})"
-        for reply in post.replies do
-            $"* Reply: {reply.actor_id} ({reply.added_at}): [{reply.object_id}]({reply.object_id})"
+        $"**Boosts:** {post.boosts.Length}  "
+        if post.boosts.Length > 0 then
+            $""
+            for boost in post.boosts do
+                $"* [`{boost.actor_id}`]({boost.actor_id})"
+            $""
+        $"**Likes:** {post.likes.Length}  "
+        if post.likes.Length > 0 then
+            $""
+            for like in post.likes do
+                $"* [`{like.actor_id}`]({like.actor_id})"
+            $""
+        $"**Replies:** {post.replies.Length}  "
+        if post.replies.Length > 0 then
+            $""
+            for reply in post.replies do
+                $"* [`{reply.object_id}`]({reply.object_id})"
+            $""
+        $""
     ]
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
