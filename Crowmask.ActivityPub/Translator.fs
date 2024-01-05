@@ -145,7 +145,6 @@ type Translator(host: ICrowmaskHost) =
         pair "type" "OrderedCollection"
         pair "totalItems" gallery.gallery_count
         pair "first" $"{actor}/outbox/page"
-        pair "last" $"{actor}/outbox/page?backid=1"
     ]
 
     member this.AsOutboxPage (id: string) (page: Page) = dict [
