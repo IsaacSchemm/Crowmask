@@ -1,5 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.Data;
 using Crowmask.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -26,7 +27,12 @@ namespace Crowmask.Functions
             {
                 if (format.IsActivityJson)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(translator.AsObject(journal)));
+                    var objectToSerialize =
+                        req.Query["view"] == "comments" ? translator.AsCommentsCollection(journal)
+                        : req.Query["view"] == "likes" ? translator.AsLikesCollection(journal)
+                        : req.Query["view"] == "shares" ? translator.AsSharesCollection(journal)
+                        : translator.AsObject(journal);
+                    return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
                 }
                 else if (format.IsMarkdown)
                 {

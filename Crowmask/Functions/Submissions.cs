@@ -26,7 +26,12 @@ namespace Crowmask.Functions
             {
                 if (format.IsActivityJson)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(translator.AsObject(submission)));
+                    var objectToSerialize =
+                        req.Query["view"] == "comments" ? translator.AsCommentsCollection(submission)
+                        : req.Query["view"] == "likes" ? translator.AsLikesCollection(submission)
+                        : req.Query["view"] == "shares" ? translator.AsSharesCollection(submission)
+                        : translator.AsObject(submission);
+                    return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
                 }
                 else if (format.IsMarkdown)
                 {
