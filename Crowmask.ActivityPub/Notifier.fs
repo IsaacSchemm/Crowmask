@@ -28,9 +28,6 @@ type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
         ])
     ]
 
-    let objectIdFor (submission: Crowmask.Data.Submission) =
-        $"https://{host.Hostname}/api/submissions/{submission.SubmitId}"
-
     let enc str =
         WebUtility.HtmlEncode str
 
@@ -40,25 +37,25 @@ type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
             "followed this account"
         ])
 
-    member _.CreateLikeNotification submission actorId actorName =
+    member _.CreateLikeNotification objectId title actorId actorName =
         createActivity (String.concat " " [
             $"""<a href="{enc actorId}">{enc actorName}</a>"""
             "liked the post"
-            $"""<a href="{objectIdFor submission}">{enc submission.Title}</a>"""
+            $"""<a href="{enc objectId}">{enc title}</a>"""
         ])
 
-    member _.CreateShareNotification submission actorId actorName =
+    member _.CreateShareNotification objectId title actorId actorName =
         createActivity (String.concat " " [
             $"""<a href="{enc actorId}">{enc actorName}</a>"""
             "shared the post"
-            $"""<a href="{objectIdFor submission}">{enc submission.Title}</a>"""
+            $"""<a href="{enc objectId}">{enc title}</a>"""
         ])
 
-    member _.CreateReplyNotification submission actorId actorName replyId =
+    member _.CreateReplyNotification objectId title actorId actorName replyId =
         createActivity (String.concat " " [
             $"""<a href="{enc replyId}">New reply</a>"""
             "posted by"
             $"""<a href="{enc actorId}">{enc actorName}</a>"""
             "on"
-            $"""<a href="{objectIdFor submission}">{enc submission.Title}</a>"""
+            $"""<a href="{enc objectId}">{enc title}</a>"""
         ])

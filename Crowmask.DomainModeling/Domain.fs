@@ -201,9 +201,28 @@ module Domain =
                 match journal.Rating with
                 | "General" -> General
                 | str -> Sensitive str
-            boosts = []
-            likes = []
-            replies = []
+            boosts = [
+                for i in journal.Boosts do
+                    {
+                        actor_id = i.ActorId
+                        added_at = i.AddedAt
+                    }
+            ]
+            likes = [
+                for i in journal.Likes do
+                    {
+                        actor_id = i.ActorId
+                        added_at = i.AddedAt
+                    }
+            ]
+            replies = [
+                for i in journal.Replies do
+                    {
+                        actor_id = i.ActorId
+                        object_id = i.ObjectId
+                        added_at = i.AddedAt
+                    }
+            ]
             stale = journal.Stale
         }
 

@@ -29,6 +29,12 @@ namespace Crowmask.Data
 
         public DateTimeOffset CacheRefreshSucceededAt { get; set; }
 
+        public List<JournalBoost> Boosts { get; set; } = [];
+
+        public List<JournalLike> Likes { get; set; } = [];
+
+        public List<JournalReply> Replies { get; set; } = [];
+
         public string Link => $"https://www.weasyl.com/journal/{JournalId}";
 
         public bool Stale
