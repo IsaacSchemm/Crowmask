@@ -41,8 +41,6 @@ oesn't indicate any particular media type.
 
 ## Missing functionality
 
-* Crowmask does not keep track of interaction with posts (beyond notifying the
-  admin actor).
 * Weasyl tags are ignored in Crowmask, instead of being translated into
   Mastodon-style hashtags.
 

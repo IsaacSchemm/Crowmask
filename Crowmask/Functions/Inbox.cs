@@ -4,7 +4,6 @@ using Crowmask.DomainModeling;
 using Crowmask.Remote;
 using Crowmask.Signatures;
 using JsonLD.Core;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +14,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -34,6 +32,19 @@ namespace Crowmask.Functions
                 return null;
 
             return await context.Submissions.FindAsync(submitid);
+        }
+
+        private async Task<Journal> FindJournalByObjectIdAsync(string objectId)
+        {
+            string prefix = $"https://{host.Hostname}/api/journals/";
+            if (!objectId.StartsWith(prefix))
+                return null;
+
+            string remainder = objectId[prefix.Length..];
+            if (!int.TryParse(remainder, out int journalid))
+                return null;
+
+            return await context.Journals.FindAsync(journalid);
         }
 
         private async Task SendToAdminActorAsync(IDictionary<string, object> activityPubObject)
@@ -128,18 +139,38 @@ namespace Crowmask.Functions
                 await foreach (var i in followers)
                     context.Followers.Remove(i);
 
-                var boosted = context.Submissions
-                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Boosts)} WHERE t.ActivityId = {{0}}", objectId)
+                var boostedJournals = context.Journals
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Boosts)} WHERE t.ActivityId = {{0}}", objectId)
+                    .Where(c => c.JournalId > 0)
                     .AsAsyncEnumerable();
-                await foreach (var s in boosted)
+                await foreach (var j in boostedJournals)
+                    foreach (var b in j.Boosts.ToList())
+                        if (b.ActorId == actor.Id && b.ActivityId == objectId)
+                            j.Boosts.Remove(b);
+
+                var likedJournals = context.Journals
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Likes)} WHERE t.ActivityId = {{0}}", objectId)
+                    .Where(c => c.JournalId > 0)
+                    .AsAsyncEnumerable();
+                await foreach (var j in likedJournals)
+                    foreach (var l in j.Likes.ToList())
+                        if (l.ActorId == actor.Id && l.ActivityId == objectId)
+                            j.Likes.Remove(l);
+
+                var boostedSubmissions = context.Submissions
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Boosts)} WHERE t.ActivityId = {{0}}", objectId)
+                    .Where(c => c.SubmitId > 0)
+                    .AsAsyncEnumerable();
+                await foreach (var s in boostedSubmissions)
                     foreach (var b in s.Boosts.ToList())
                         if (b.ActorId == actor.Id && b.ActivityId == objectId)
                             s.Boosts.Remove(b);
 
-                var liked = context.Submissions
+                var likedSubmissions = context.Submissions
                     .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Likes)} WHERE t.ActivityId = {{0}}", objectId)
+                    .Where(c => c.SubmitId > 0)
                     .AsAsyncEnumerable();
-                await foreach (var s in liked)
+                await foreach (var s in likedSubmissions)
                     foreach (var l in s.Likes.ToList())
                         if (l.ActorId == actor.Id && l.ActivityId == objectId)
                             s.Likes.Remove(l);
@@ -167,7 +198,28 @@ namespace Crowmask.Functions
 
                     await SendToAdminActorAsync(
                         notifier.CreateLikeNotification(
-                            submission,
+                            objectId,
+                            submission.Title,
+                            actor.Id,
+                            actor.Name ?? actor.Id));
+                }
+
+                if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
+                {
+                    journal.Likes.Add(new JournalLike
+                    {
+                        Id = Guid.NewGuid(),
+                        AddedAt = DateTimeOffset.UtcNow,
+                        ActivityId = activityId,
+                        ActorId = actor.Id,
+                    });
+
+                    await context.SaveChangesAsync();
+
+                    await SendToAdminActorAsync(
+                        notifier.CreateLikeNotification(
+                            objectId,
+                            journal.Title,
                             actor.Id,
                             actor.Name ?? actor.Id));
                 }
@@ -193,7 +245,28 @@ namespace Crowmask.Functions
 
                     await SendToAdminActorAsync(
                         notifier.CreateShareNotification(
-                            submission,
+                            objectId,
+                            submission.Title,
+                            actor.Id,
+                            actor.Name ?? actor.Id));
+                }
+
+                if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
+                {
+                    journal.Boosts.Add(new JournalBoost
+                    {
+                        Id = Guid.NewGuid(),
+                        AddedAt = DateTimeOffset.UtcNow,
+                        ActivityId = activityId,
+                        ActorId = actor.Id,
+                    });
+
+                    await context.SaveChangesAsync();
+
+                    await SendToAdminActorAsync(
+                        notifier.CreateShareNotification(
+                            objectId,
+                            journal.Title,
                             actor.Id,
                             actor.Name ?? actor.Id));
                 }
@@ -210,6 +283,7 @@ namespace Crowmask.Functions
                 foreach (var inReplyTo in replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {
                     string objectId = inReplyTo["@id"].Value<string>();
+
                     if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                     {
                         submission.Replies.Add(new SubmissionReply
@@ -224,7 +298,29 @@ namespace Crowmask.Functions
 
                         await SendToAdminActorAsync(
                             notifier.CreateReplyNotification(
-                                submission,
+                                objectId,
+                                submission.Title,
+                                actor.Id,
+                                actor.Name ?? actor.Id,
+                                replyId));
+                    }
+
+                    if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
+                    {
+                        journal.Replies.Add(new JournalReply
+                        {
+                            Id = Guid.NewGuid(),
+                            AddedAt = DateTimeOffset.UtcNow,
+                            ActorId = actor.Id,
+                            ObjectId = replyId,
+                        });
+
+                        await context.SaveChangesAsync();
+
+                        await SendToAdminActorAsync(
+                            notifier.CreateReplyNotification(
+                                objectId,
+                                journal.Title,
                                 actor.Id,
                                 actor.Name ?? actor.Id,
                                 replyId));
@@ -237,8 +333,18 @@ namespace Crowmask.Functions
             {
                 string deletedObjectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
+                var journals = context.Journals
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Replies)} WHERE t.ActivityId = {{0}}", deletedObjectId)
+                    .Where(c => c.JournalId > 0)
+                    .AsAsyncEnumerable();
+                await foreach (var j in journals)
+                    foreach (var b in j.Replies.ToList())
+                        if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
+                            j.Replies.Remove(b);
+
                 var submissions = context.Submissions
                     .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Replies)} WHERE t.ActivityId = {{0}}", deletedObjectId)
+                    .Where(c => c.SubmitId > 0)
                     .AsAsyncEnumerable();
                 await foreach (var s in submissions)
                     foreach (var b in s.Replies.ToList())
