@@ -170,6 +170,10 @@ namespace Crowmask.Functions
 
                 if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
+                    foreach (var like in submission.Likes.ToList())
+                        if (like.ActorId == actor.Id)
+                            submission.Likes.Remove(like);
+
                     submission.Likes.Add(new SubmissionLike
                     {
                         Id = Guid.NewGuid(),
@@ -190,6 +194,10 @@ namespace Crowmask.Functions
 
                 if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
                 {
+                    foreach (var like in journal.Likes.ToList())
+                        if (like.ActorId == actor.Id)
+                            journal.Likes.Remove(like);
+
                     journal.Likes.Add(new JournalLike
                     {
                         Id = Guid.NewGuid(),
