@@ -8,21 +8,10 @@ module AP =
         "https://w3id.org/security/v1"
         "https://www.w3.org/ns/activitystreams"
         {| 
+            // https://docs.joinmastodon.org/spec/activitypub/#as
             sensitive = "as:sensitive"
-
-            // adapted from peertube (not sure how necessary these are)
-            likes = dict [
-                "@id", "as:likes"
-                "@type", "@id"
-            ]
-            shares = dict [
-                "@id", "as:shares"
-                "@type", "@id"
-            ]
-            comments = dict [
-                "@id", "as:comments"
-                "@type", "@id"
-            ]
+            // https://docs.joinpeertube.org/api/activitypub#example-2
+            comments = "as:comments"
         |}
     ]
 
