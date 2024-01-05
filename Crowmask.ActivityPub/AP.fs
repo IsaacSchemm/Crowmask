@@ -9,6 +9,7 @@ module AP =
         "https://www.w3.org/ns/activitystreams"
         {| 
             // https://docs.joinmastodon.org/spec/activitypub/#as
+            Hashtag = "as:Hashtag"
             sensitive = "as:sensitive"
             // https://docs.joinpeertube.org/api/activitypub#example-2
             comments = "as:comments"

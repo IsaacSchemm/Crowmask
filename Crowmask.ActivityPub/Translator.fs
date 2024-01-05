@@ -79,6 +79,21 @@ type Translator(host: ICrowmaskHost) =
 
         pair "attributedTo" actor
         pair "content" post.content
+        pair "tag" [
+            // Ensure the tag's character set matches what we expect from Weasyl, which should be OK for Mastodon too
+            // If not, don't include it
+            let isRestrictedSet c =
+                Char.IsAscii(c)
+                && (Char.IsLetterOrDigit(c) || c = '_')
+                && not (Char.IsUpper(c))
+            for tag in post.tags do
+                if tag |> Seq.forall isRestrictedSet then
+                    dict [
+                        pair "type" "Hashtag"
+                        pair "name" $"#{tag}"
+                        pair "href" $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag)}"
+                    ]
+        ]
         pair "published" effective_date
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
