@@ -161,9 +161,9 @@ type Translator(host: ICrowmaskHost) =
 
     member _.AsFollowersCollection (followerCollection: FollowerCollection) = dict [
         pair "id" $"{actor}/followers"
-        pair "type" "OrderedCollection"
+        pair "type" "Collection"
         pair "totalItems" (List.length followerCollection.followers)
-        pair "orderedItems" [for f in followerCollection.followers do f.actorId]
+        pair "items" [for f in followerCollection.followers do f.actorId]
     ]
 
     member _.FollowingCollection = dict [
@@ -180,9 +180,9 @@ type Translator(host: ICrowmaskHost) =
         | UpstreamJournal journalid ->
             pair "id" $"https://{host.Hostname}/api/journals/{journalid}/likes"
 
-        pair "type" "OrderedCollection"
+        pair "type" "Collection"
         pair "totalItems" (List.length post.likes)
-        pair "orderedItems" [for o in post.likes do o.activity_id]
+        pair "items" [for o in post.likes do o.activity_id]
     ]
 
     member _.AsSharesCollection (post: Post) = dict [
@@ -192,9 +192,9 @@ type Translator(host: ICrowmaskHost) =
         | UpstreamJournal journalid ->
             pair "id" $"https://{host.Hostname}/api/journals/{journalid}/shares"
 
-        pair "type" "OrderedCollection"
+        pair "type" "Collection"
         pair "totalItems" (List.length post.boosts)
-        pair "orderedItems" [for o in post.boosts do o.activity_id]
+        pair "items" [for o in post.boosts do o.activity_id]
     ]
 
     member _.AsCommentsCollection (post: Post) = dict [
@@ -204,7 +204,7 @@ type Translator(host: ICrowmaskHost) =
         | UpstreamJournal journalid ->
             pair "id" $"https://{host.Hostname}/api/journals/{journalid}/comments"
 
-        pair "type" "OrderedCollection"
+        pair "type" "Collection"
         pair "totalItems" (List.length post.replies)
-        pair "orderedItems" [for o in post.replies do o.object_id]
+        pair "items" [for o in post.replies do o.object_id]
     ]
