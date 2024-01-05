@@ -64,10 +64,16 @@ type Translator(host: ICrowmaskHost) =
         | UpstreamSubmission submitid ->
             pair "id" $"https://{host.Hostname}/api/submissions/{submitid}"
             pair "url" $"https://{host.Hostname}/api/submissions/{submitid}"
+            pair "likes" $"https://{host.Hostname}/api/submissions/{submitid}/likes"
+            pair "shares" $"https://{host.Hostname}/api/submissions/{submitid}/shares"
+            pair "comments" $"https://{host.Hostname}/api/submissions/{submitid}/comments"
             pair "type" "Note"
         | UpstreamJournal journalid ->
             pair "id" $"https://{host.Hostname}/api/journals/{journalid}"
             pair "url" $"https://{host.Hostname}/api/journals/{journalid}"
+            pair "likes" $"https://{host.Hostname}/api/journals/{journalid}/likes"
+            pair "shares" $"https://{host.Hostname}/api/journals/{journalid}/shares"
+            pair "comments" $"https://{host.Hostname}/api/journals/{journalid}/comments"
             pair "type" "Article"
             pair "name" post.title
 
@@ -153,16 +159,52 @@ type Translator(host: ICrowmaskHost) =
         pair "orderedItems" [for p in page.posts do this.AsObject p]
     ]
 
-    member _.AsFollowers (followerCollection: FollowerCollection) = dict [
+    member _.AsFollowersCollection (followerCollection: FollowerCollection) = dict [
         pair "id" $"{actor}/followers"
         pair "type" "OrderedCollection"
         pair "totalItems" (List.length followerCollection.followers)
         pair "orderedItems" [for f in followerCollection.followers do f.actorId]
     ]
 
-    member _.Following = dict [
+    member _.FollowingCollection = dict [
         pair "id" $"{actor}/following"
         pair "type" "Collection"
         pair "totalItems" 0
         pair "items" []
+    ]
+
+    member _.AsLikesCollection (post: Post) = dict [
+        match post.upstream_type with
+        | UpstreamSubmission submitid ->
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}/likes"
+        | UpstreamJournal journalid ->
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}/likes"
+
+        pair "type" "OrderedCollection"
+        pair "totalItems" (List.length post.likes)
+        pair "orderedItems" [for o in post.likes do o.activity_id]
+    ]
+
+    member _.AsSharesCollection (post: Post) = dict [
+        match post.upstream_type with
+        | UpstreamSubmission submitid ->
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}/shares"
+        | UpstreamJournal journalid ->
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}/shares"
+
+        pair "type" "OrderedCollection"
+        pair "totalItems" (List.length post.boosts)
+        pair "orderedItems" [for o in post.boosts do o.activity_id]
+    ]
+
+    member _.AsCommentsCollection (post: Post) = dict [
+        match post.upstream_type with
+        | UpstreamSubmission submitid ->
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}/comments"
+        | UpstreamJournal journalid ->
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}/comments"
+
+        pair "type" "OrderedCollection"
+        pair "totalItems" (List.length post.replies)
+        pair "orderedItems" [for o in post.replies do o.object_id]
     ]

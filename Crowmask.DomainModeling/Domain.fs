@@ -34,6 +34,7 @@ type Link = {
 
 type Interaction = {
     actor_id: string
+    activity_id: string
     added_at: DateTimeOffset
 }
 
@@ -157,21 +158,23 @@ module Domain =
                 | Submission.Rating.Explicit -> Sensitive "Explicit (18+)"
                 | _ -> Sensitive "Potentially sensitive (nature unknown)"
             boosts = [
-                for i in submission.Boosts do
+                for i in submission.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
                         actor_id = i.ActorId
+                        activity_id = i.ActivityId
                         added_at = i.AddedAt
                     }
             ]
             likes = [
-                for i in submission.Likes do
+                for i in submission.Likes |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
                         actor_id = i.ActorId
+                        activity_id = i.ActivityId
                         added_at = i.AddedAt
                     }
             ]
             replies = [
-                for i in submission.Replies do
+                for i in submission.Replies |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
                         actor_id = i.ActorId
                         object_id = i.ObjectId
@@ -202,21 +205,23 @@ module Domain =
                 | "General" -> General
                 | str -> Sensitive str
             boosts = [
-                for i in journal.Boosts do
+                for i in journal.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
                         actor_id = i.ActorId
+                        activity_id = i.ActivityId
                         added_at = i.AddedAt
                     }
             ]
             likes = [
-                for i in journal.Likes do
+                for i in journal.Likes |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
                         actor_id = i.ActorId
+                        activity_id = i.ActivityId
                         added_at = i.AddedAt
                     }
             ]
             replies = [
-                for i in journal.Replies do
+                for i in journal.Replies |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
                         actor_id = i.ActorId
                         object_id = i.ObjectId

@@ -28,9 +28,9 @@ namespace Crowmask.Functions
             {
                 if (format.IsActivityJson)
                 {
-                    var outbox = translator.AsFollowers(followerCollection);
+                    var coll = translator.AsFollowersCollection(followerCollection);
 
-                    string json = AP.SerializeWithContext(outbox);
+                    string json = AP.SerializeWithContext(coll);
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }
