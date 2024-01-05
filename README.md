@@ -37,12 +37,7 @@ user agent) at the actor, outbox, and object URIs, respectively. For example,
 the URL `/api/actor` will send ActivityPub info to a program that asks for it
 (in the `Accept` header), but it will send an HTML profile page to a web
 browser, and a Markdown version of that page to something like `curl` that
-oesn't indicate any particular media type.
-
-## Missing functionality
-
-* Weasyl tags are ignored in Crowmask, instead of being translated into
-  Mastodon-style hashtags.
+doesn't indicate any particular media type.
 
 ## Implementation details
 

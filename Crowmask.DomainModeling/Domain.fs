@@ -58,6 +58,7 @@ type Post = {
     attachments: Attachment list
     thumbnails: Image list
     sensitivity: Sensitivity
+    tags: string list
     boosts: Interaction list
     likes: Interaction list
     replies: Reply list
@@ -125,7 +126,13 @@ module Domain =
         {
             upstream_type = UpstreamSubmission submission.SubmitId
             title = submission.Title
-            content = submission.Content
+            content = String.concat "\n" [
+                submission.Content
+                "<p>"
+                for tag in submission.Tags do
+                    $"#{System.Net.WebUtility.HtmlEncode(tag.Tag)}"
+                "</p>"
+            ]
             links = [
                 if not (String.IsNullOrEmpty submission.Link)
                 then {
@@ -151,6 +158,7 @@ module Domain =
                             url = thumbnail.Url
                         }
             ]
+            tags = [for t in submission.Tags do t.Tag]
             sensitivity =
                 match submission.RatingId with
                 | Submission.Rating.General -> General
@@ -200,6 +208,7 @@ module Domain =
             first_cached = journal.FirstCachedAt
             attachments = []
             thumbnails = []
+            tags = []
             sensitivity =
                 match journal.Rating with
                 | "General" -> General
