@@ -128,19 +128,21 @@ namespace Crowmask.Functions
                 await foreach (var i in followers)
                     context.Followers.Remove(i);
 
-                var submissions = context.Submissions
-                    .Include(i => i.Boosts)
-                    .Include(i => i.Likes)
+                var boosted = context.Submissions
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Boosts)} WHERE t.ActivityId = {{0}}", objectId)
                     .AsAsyncEnumerable();
-                await foreach (var s in submissions)
-                {
+                await foreach (var s in boosted)
                     foreach (var b in s.Boosts.ToList())
                         if (b.ActorId == actor.Id && b.ActivityId == objectId)
                             s.Boosts.Remove(b);
-                    foreach (var b in s.Likes.ToList())
-                        if (b.ActorId == actor.Id && b.ActivityId == objectId)
-                            s.Likes.Remove(b);
-                }
+
+                var liked = context.Submissions
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Likes)} WHERE t.ActivityId = {{0}}", objectId)
+                    .AsAsyncEnumerable();
+                await foreach (var s in liked)
+                    foreach (var l in s.Likes.ToList())
+                        if (l.ActorId == actor.Id && l.ActivityId == objectId)
+                            s.Likes.Remove(l);
 
                 await context.SaveChangesAsync();
 
@@ -236,16 +238,12 @@ namespace Crowmask.Functions
                 string deletedObjectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
                 var submissions = context.Submissions
-                    .Include(i => i.Replies)
+                    .FromSqlRaw($"SELECT VALUE c FROM c JOIN t IN c.{nameof(Submission.Replies)} WHERE t.ActivityId = {{0}}", deletedObjectId)
                     .AsAsyncEnumerable();
                 await foreach (var s in submissions)
-                {
                     foreach (var b in s.Replies.ToList())
                         if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
                             s.Replies.Remove(b);
-                        else if (b.ObjectId == "https://crowmask.azurewebsites.net/api/submissions/2339323")
-                            s.Replies.Remove(b);
-                }
 
                 await context.SaveChangesAsync();
 
