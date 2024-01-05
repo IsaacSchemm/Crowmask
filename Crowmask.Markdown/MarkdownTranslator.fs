@@ -79,7 +79,7 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
         $""
         $"[Crowmask](https://github.com/IsaacSchemm/Crowmask) 🐦‍⬛🎭"
         $""
-        $"Copyright © 2023 Isaac Schemm"
+        $"Copyright © 2024 Isaac Schemm"
         $""
         $"This program is free software: you can redistribute it and/or modify"
         $"it under the terms of the GNU Affero General Public License as published"

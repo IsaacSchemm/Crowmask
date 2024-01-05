@@ -1,6 +1,7 @@
 ﻿namespace Crowmask.DomainModeling
 
 open System
+open System.Net
 open Crowmask.Data
 
 type PersonMetadata = {
@@ -128,10 +129,12 @@ module Domain =
             title = submission.Title
             content = String.concat "\n" [
                 submission.Content
-                "<p>"
-                for tag in submission.Tags do
-                    $"#{System.Net.WebUtility.HtmlEncode(tag.Tag)}"
-                "</p>"
+
+                String.concat " " [
+                    for tag in submission.Tags do
+                        let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
+                        $"<a href='{WebUtility.HtmlEncode href}' rel='tag'>#{WebUtility.HtmlEncode tag.Tag}</a>"
+                ]
             ]
             links = [
                 if not (String.IsNullOrEmpty submission.Link)
