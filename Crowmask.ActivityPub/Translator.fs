@@ -64,16 +64,16 @@ type Translator(host: ICrowmaskHost) =
         | UpstreamSubmission submitid ->
             pair "id" $"https://{host.Hostname}/api/submissions/{submitid}"
             pair "url" $"https://{host.Hostname}/api/submissions/{submitid}"
-            pair "likes" $"https://{host.Hostname}/api/submissions/{submitid}/likes"
-            pair "shares" $"https://{host.Hostname}/api/submissions/{submitid}/shares"
-            pair "comments" $"https://{host.Hostname}/api/submissions/{submitid}/comments"
+            pair "likes" $"https://{host.Hostname}/api/submissions/{submitid}?view=likes"
+            pair "shares" $"https://{host.Hostname}/api/submissions/{submitid}?view=shares"
+            pair "comments" $"https://{host.Hostname}/api/submissions/{submitid}?view=comments"
             pair "type" "Note"
         | UpstreamJournal journalid ->
             pair "id" $"https://{host.Hostname}/api/journals/{journalid}"
             pair "url" $"https://{host.Hostname}/api/journals/{journalid}"
-            pair "likes" $"https://{host.Hostname}/api/journals/{journalid}/likes"
-            pair "shares" $"https://{host.Hostname}/api/journals/{journalid}/shares"
-            pair "comments" $"https://{host.Hostname}/api/journals/{journalid}/comments"
+            pair "likes" $"https://{host.Hostname}/api/journals/{journalid}?view=likes"
+            pair "shares" $"https://{host.Hostname}/api/journals/{journalid}/?view=shares"
+            pair "comments" $"https://{host.Hostname}/api/journals/{journalid}?view=comments"
             pair "type" "Article"
             pair "name" post.title
 
@@ -176,9 +176,9 @@ type Translator(host: ICrowmaskHost) =
     member _.AsLikesCollection (post: Post) = dict [
         match post.upstream_type with
         | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}/likes"
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}?view=likes"
         | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}/likes"
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}?view=likes"
 
         pair "type" "Collection"
         pair "totalItems" (List.length post.likes)
@@ -188,9 +188,9 @@ type Translator(host: ICrowmaskHost) =
     member _.AsSharesCollection (post: Post) = dict [
         match post.upstream_type with
         | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}/shares"
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}?view=shares"
         | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}/shares"
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}?view=shares"
 
         pair "type" "Collection"
         pair "totalItems" (List.length post.boosts)
@@ -200,9 +200,9 @@ type Translator(host: ICrowmaskHost) =
     member _.AsCommentsCollection (post: Post) = dict [
         match post.upstream_type with
         | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}/comments"
+            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}?view=comments"
         | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}/comments"
+            pair "id" $"https://{host.Hostname}/api/journals/{journalid}?view=comments"
 
         pair "type" "Collection"
         pair "totalItems" (List.length post.replies)
