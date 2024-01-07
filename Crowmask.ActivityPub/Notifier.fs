@@ -4,8 +4,8 @@ open System
 open System.Net
 open Crowmask.DomainModeling
 
-type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
-    let actor = $"https://{host.Hostname}/api/actor"
+type Notifier(mapper: ActivityStreamsIdMapper, adminActor: IAdminActor) =
+    let actor = mapper.ActorId
 
     let pair key value = (key, value :> obj)
 
@@ -13,13 +13,13 @@ type Notifier(adminActor: IAdminActor, host: ICrowmaskHost) =
         let effective_date = DateTimeOffset.UtcNow
 
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "id" (mapper.GetTransientId())
         pair "to" [adminActor.Id]
         pair "actor" actor
         pair "published" effective_date
 
         pair "object" (dict [
-            pair "id" $"https://{host.Hostname}/transient/note/{Guid.NewGuid()}"
+            pair "id" (mapper.GetTransientId())
             pair "type" "Note"
             pair "attributedTo" actor
             pair "content" html

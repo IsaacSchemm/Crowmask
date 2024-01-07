@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Crowmask.Remote
 {
-    public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, ISigner signer)
+    public class Requester(ActivityStreamsIdMapper mapper, IHttpClientFactory httpClientFactory, ISigner signer)
     {
         public record RemoteActor(
             string Id,
@@ -101,7 +101,7 @@ namespace Crowmask.Remote
             {
                 headerNames += " digest";
             }
-            req.Headers.Add("Signature", $"keyId=\"https://{host.Hostname}/api/actor#main-key\",algorithm=\"rsa-sha256\",headers=\"{headerNames}\",signature=\"{Convert.ToBase64String(signature)}\"");
+            req.Headers.Add("Signature", $"keyId=\"{mapper.ActorId}#main-key\",algorithm=\"rsa-sha256\",headers=\"{headerNames}\",signature=\"{Convert.ToBase64String(signature)}\"");
         }
 
         private async Task PostAsync(Uri url, string json)

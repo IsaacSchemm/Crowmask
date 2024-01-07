@@ -4,8 +4,8 @@ open System
 open System.Net
 open Crowmask.DomainModeling
 
-type Translator(host: ICrowmaskHost) =
-    let actor = $"https://{host.Hostname}/api/actor"
+type Translator(mapper: ActivityStreamsIdMapper) =
+    let actor = mapper.ActorId
 
     let pair key value = (key, value :> obj)
 
@@ -48,7 +48,7 @@ type Translator(host: ICrowmaskHost) =
 
     member this.PersonToUpdate (person: Person) (key: IPublicKey) = dict [
         pair "type" "Update"
-        pair "id" $"https://{host.Hostname}/transient/updates/{System.Guid.NewGuid().ToString()}"
+        pair "id" (mapper.GetTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" (this.PersonToObject person key)
@@ -60,22 +60,14 @@ type Translator(host: ICrowmaskHost) =
         let effective_date =
             if backdate then post.first_upstream else post.first_cached
 
-        match post.upstream_type with
-        | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}"
-            pair "url" $"https://{host.Hostname}/api/submissions/{submitid}"
-            pair "likes" $"https://{host.Hostname}/api/submissions/{submitid}?view=likes"
-            pair "shares" $"https://{host.Hostname}/api/submissions/{submitid}?view=shares"
-            pair "comments" $"https://{host.Hostname}/api/submissions/{submitid}?view=comments"
-            pair "type" "Note"
-        | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}"
-            pair "url" $"https://{host.Hostname}/api/journals/{journalid}"
-            pair "likes" $"https://{host.Hostname}/api/journals/{journalid}?view=likes"
-            pair "shares" $"https://{host.Hostname}/api/journals/{journalid}/?view=shares"
-            pair "comments" $"https://{host.Hostname}/api/journals/{journalid}?view=comments"
-            pair "type" "Article"
-            pair "name" post.title
+        let id = mapper.GetObjectId post.upstream_type
+
+        pair "id" id
+        pair "url" id
+        pair "likes" $"{id}?view=likes"
+        pair "shares" $"{id}?view=shares"
+        pair "comments" $"{id}?view=comments"
+        pair "type" (mapper.GetObjectType post.upstream_type)
 
         pair "attributedTo" actor
         pair "content" post.content
@@ -115,7 +107,7 @@ type Translator(host: ICrowmaskHost) =
 
     member this.ObjectToCreate (post: Post) = dict [
         pair "type" "Create"
-        pair "id" $"https://{host.Hostname}/transient/create/{Guid.NewGuid()}"
+        pair "id" (mapper.GetTransientId())
         pair "actor" actor
         pair "published" post.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -125,7 +117,7 @@ type Translator(host: ICrowmaskHost) =
 
     member this.ObjectToUpdate (post: Post) = dict [
         pair "type" "Update"
-        pair "id" $"https://{host.Hostname}/transient/update/{Guid.NewGuid()}"
+        pair "id" (mapper.GetTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -135,22 +127,17 @@ type Translator(host: ICrowmaskHost) =
 
     member _.ObjectToDelete (post: Post) = dict [
         pair "type" "Delete"
-        pair "id" $"https://{host.Hostname}/transient/delete/{Guid.NewGuid()}"
+        pair "id" (mapper.GetTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-
-        let url =
-            match post.upstream_type with
-            | UpstreamSubmission submitid -> $"https://{host.Hostname}/api/submissions/{submitid}"
-            | UpstreamJournal journalid -> $"https://{host.Hostname}/api/journals/{journalid}"
-        pair "object" url
+        pair "object" (mapper.GetObjectId post.upstream_type)
     ]
 
     member _.AcceptFollow (followId: string) = dict [
         pair "type" "Accept"
-        pair "id" $"https://{host.Hostname}/transient/accept/{Guid.NewGuid()}"
+        pair "id" (mapper.GetTransientId())
         pair "actor" actor
         pair "object" followId
     ]
@@ -188,36 +175,21 @@ type Translator(host: ICrowmaskHost) =
     ]
 
     member _.AsLikesCollection (post: Post) = dict [
-        match post.upstream_type with
-        | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}?view=likes"
-        | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}?view=likes"
-
+        pair "id" $"{mapper.GetObjectId post.upstream_type}?view=likes"
         pair "type" "Collection"
         pair "totalItems" (List.length post.likes)
         pair "items" [for o in post.likes do o.activity_id]
     ]
 
     member _.AsSharesCollection (post: Post) = dict [
-        match post.upstream_type with
-        | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}?view=shares"
-        | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}?view=shares"
-
+        pair "id" $"{mapper.GetObjectId post.upstream_type}?view=shares"
         pair "type" "Collection"
         pair "totalItems" (List.length post.boosts)
         pair "items" [for o in post.boosts do o.activity_id]
     ]
 
     member _.AsCommentsCollection (post: Post) = dict [
-        match post.upstream_type with
-        | UpstreamSubmission submitid ->
-            pair "id" $"https://{host.Hostname}/api/submissions/{submitid}?view=comments"
-        | UpstreamJournal journalid ->
-            pair "id" $"https://{host.Hostname}/api/journals/{journalid}?view=comments"
-
+        pair "id" $"{mapper.GetObjectId post.upstream_type}?view=comments"
         pair "type" "Collection"
         pair "totalItems" (List.length post.replies)
         pair "items" [for o in post.replies do o.object_id]
