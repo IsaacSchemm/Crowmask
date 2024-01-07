@@ -6,19 +6,9 @@ using System.Xml;
 
 namespace Crowmask.Feed
 {
-    public class FeedBuilder(ICrowmaskHost crowmaskHost, IHandleHost handleHost)
+    public class FeedBuilder(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost)
     {
-        private string GetUri(Post post)
-        {
-            string id =
-                post.upstream_type is UpstreamType.UpstreamSubmission s ? $"https://{crowmaskHost.Hostname}/api/submissions/{s.submitid}"
-                : post.upstream_type is UpstreamType.UpstreamJournal j ? $"https://{crowmaskHost.Hostname}/api/journals/{j.journalid}"
-                : throw new NotImplementedException();
-
-            return new(id);
-        }
-
-        private IEnumerable<string> GetHtml(Post post)
+        private static IEnumerable<string> GetHtml(Post post)
         {
             if (post.sensitivity.IsGeneral)
             {
@@ -41,21 +31,21 @@ namespace Crowmask.Feed
         {
             var item = new SyndicationItem
             {
-                Id = GetUri(post),
+                Id = mapper.GetObjectId(post.upstream_type),
                 Title = new TextSyndicationContent(post.title, TextSyndicationContentKind.Plaintext),
                 PublishDate = post.first_upstream,
                 LastUpdatedTime = post.first_upstream,
                 Content = new TextSyndicationContent(string.Join(" ", GetHtml(post)), TextSyndicationContentKind.Html)
             };
 
-            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(GetUri(post)), "text/html"));
+            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.upstream_type)), "text/html"));
 
             return item;
         }
 
         private SyndicationFeed ToSyndicationFeed(Person person, IEnumerable<Post> posts)
         {
-            string uri = $"https://{crowmaskHost.Hostname}/api/actor/feed";
+            string uri = $"{mapper.ActorId}/feed";
             var feed = new SyndicationFeed
             {
                 Id = uri,

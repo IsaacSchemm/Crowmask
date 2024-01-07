@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor, ICrowmaskHost host)
+    public class WebFinger(ActivityStreamsIdMapper mapper, CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor, ICrowmaskHost host)
     {
         [Function("WebFinger")]
         public async Task<HttpResponseData> Run(
@@ -22,18 +22,16 @@ namespace Crowmask.Functions
 
             var person = await crowmaskCache.GetUserAsync();
 
-            string actor = $"https://{host.Hostname}/api/actor";
-
             string handle = $"acct:{person.preferredUsername}@{handleHost.Hostname}";
             string alternate = $"acct:{person.preferredUsername}@{crowmaskHost.Hostname}";
 
-            if (resource == handle || resource == actor || resource == alternate)
+            if (resource == handle || resource == mapper.ActorId || resource == alternate)
             {
                 var resp = req.CreateResponse(HttpStatusCode.OK);
                 await resp.WriteAsJsonAsync(new
                 {
                     subject = handle,
-                    aliases = new[] { alternate, actor }.Except([handle]),
+                    aliases = new[] { alternate, mapper.ActorId }.Except([handle]),
                     links = new[]
                     {
                         new
@@ -46,7 +44,7 @@ namespace Crowmask.Functions
                         {
                             rel = "self",
                             type = "application/activity+json",
-                            href = actor
+                            href = mapper.ActorId
                         }
                     }
                 });
