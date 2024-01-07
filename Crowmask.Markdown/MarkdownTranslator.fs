@@ -122,13 +122,13 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, engagementTranslator: E
         $"**Replies:** {post.replies.Length}  "
         $""
 
-        match PostEngagement.GetAll post with
+        match Engagement.GetAll post with
         | [] -> ()
         | engagements ->
             $"----------"
             $""
             for e in engagements do
-                $"* {engagementTranslator.ToMarkdown e}"
+                $"* {engagementTranslator.ToMarkdown post e}"
 
         $""
     ]

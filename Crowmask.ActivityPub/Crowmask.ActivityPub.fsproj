@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
     <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
+    <ProjectReference Include="..\Crowmask.Markdown\Crowmask.Markdown.fsproj" />
   </ItemGroup>
 
 </Project>

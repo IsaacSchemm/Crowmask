@@ -1,9 +1,11 @@
 using Crowmask.ActivityPub;
+using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Remote;
 using Crowmask.Signatures;
 using JsonLD.Core;
+using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, MastodonVerifier mastodonVerifier, Notifier notifier, Requester requester, Translator translator)
+    public class Inbox(CrowmaskCache cache, CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, MastodonVerifier mastodonVerifier, Notifier notifier, Requester requester, Translator translator)
     {
         private async Task<Submission> FindSubmissionByObjectIdAsync(string objectId)
         {
@@ -58,6 +60,24 @@ namespace Crowmask.Functions
                 StoredAt = DateTimeOffset.UtcNow
             });
             await context.SaveChangesAsync();
+        }
+
+        private async Task CreateSubmissionEngagementNotification(Guid id, int submitid)
+        {
+            var result = await cache.GetSubmissionAsync(submitid);
+            foreach (var post in result.AsList)
+                foreach (var engagement in EngagementModule.GetAll(post))
+                    if (engagement.Id == id)
+                        await SendToAdminActorAsync(notifier.CreatePostEngagementNotification(post, engagement));
+        }
+
+        private async Task CreateJournalEngagementNotification(Guid id, int journalid)
+        {
+            var result = await cache.GetJournalAsync(journalid);
+            foreach (var post in result.AsList)
+                foreach (var engagement in EngagementModule.GetAll(post))
+                    if (engagement.Id == id)
+                        await SendToAdminActorAsync(notifier.CreatePostEngagementNotification(post, engagement));
         }
 
         [Function("Inbox")]
@@ -173,9 +193,11 @@ namespace Crowmask.Functions
                         if (like.ActorId == actor.Id)
                             submission.Likes.Remove(like);
 
+                    var guid = Guid.NewGuid();
+
                     submission.Likes.Add(new SubmissionLike
                     {
-                        Id = Guid.NewGuid(),
+                        Id = guid,
                         AddedAt = DateTimeOffset.UtcNow,
                         ActivityId = activityId,
                         ActorId = actor.Id,
@@ -183,12 +205,9 @@ namespace Crowmask.Functions
 
                     await context.SaveChangesAsync();
 
-                    await SendToAdminActorAsync(
-                        notifier.CreateLikeNotification(
-                            objectId,
-                            submission.Title,
-                            actor.Id,
-                            actor.Name ?? actor.Id));
+                    await CreateSubmissionEngagementNotification(
+                        guid,
+                        submission.SubmitId);
                 }
 
                 if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
@@ -197,9 +216,11 @@ namespace Crowmask.Functions
                         if (like.ActorId == actor.Id)
                             journal.Likes.Remove(like);
 
+                    var guid = Guid.NewGuid();
+
                     journal.Likes.Add(new JournalLike
                     {
-                        Id = Guid.NewGuid(),
+                        Id = guid,
                         AddedAt = DateTimeOffset.UtcNow,
                         ActivityId = activityId,
                         ActorId = actor.Id,
@@ -207,12 +228,9 @@ namespace Crowmask.Functions
 
                     await context.SaveChangesAsync();
 
-                    await SendToAdminActorAsync(
-                        notifier.CreateLikeNotification(
-                            objectId,
-                            journal.Title,
-                            actor.Id,
-                            actor.Name ?? actor.Id));
+                    await CreateJournalEngagementNotification(
+                        guid,
+                        journal.JournalId);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -224,9 +242,11 @@ namespace Crowmask.Functions
 
                 if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
+                    var guid = Guid.NewGuid();
+
                     submission.Boosts.Add(new SubmissionBoost
                     {
-                        Id = Guid.NewGuid(),
+                        Id = guid,
                         AddedAt = DateTimeOffset.UtcNow,
                         ActivityId = activityId,
                         ActorId = actor.Id,
@@ -234,19 +254,18 @@ namespace Crowmask.Functions
 
                     await context.SaveChangesAsync();
 
-                    await SendToAdminActorAsync(
-                        notifier.CreateShareNotification(
-                            objectId,
-                            submission.Title,
-                            actor.Id,
-                            actor.Name ?? actor.Id));
+                    await CreateSubmissionEngagementNotification(
+                        guid,
+                        submission.SubmitId);
                 }
 
                 if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
                 {
+                    var guid = Guid.NewGuid();
+
                     journal.Boosts.Add(new JournalBoost
                     {
-                        Id = Guid.NewGuid(),
+                        Id = guid,
                         AddedAt = DateTimeOffset.UtcNow,
                         ActivityId = activityId,
                         ActorId = actor.Id,
@@ -254,12 +273,9 @@ namespace Crowmask.Functions
 
                     await context.SaveChangesAsync();
 
-                    await SendToAdminActorAsync(
-                        notifier.CreateShareNotification(
-                            objectId,
-                            journal.Title,
-                            actor.Id,
-                            actor.Name ?? actor.Id));
+                    await CreateJournalEngagementNotification(
+                        guid,
+                        journal.JournalId);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -277,9 +293,11 @@ namespace Crowmask.Functions
 
                     if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                     {
+                        var guid = Guid.NewGuid();
+
                         submission.Replies.Add(new SubmissionReply
                         {
-                            Id = Guid.NewGuid(),
+                            Id = guid,
                             AddedAt = DateTimeOffset.UtcNow,
                             ActorId = actor.Id,
                             ObjectId = replyId,
@@ -287,20 +305,18 @@ namespace Crowmask.Functions
 
                         await context.SaveChangesAsync();
 
-                        await SendToAdminActorAsync(
-                            notifier.CreateReplyNotification(
-                                objectId,
-                                submission.Title,
-                                actor.Id,
-                                actor.Name ?? actor.Id,
-                                replyId));
+                        await CreateSubmissionEngagementNotification(
+                            guid,
+                            submission.SubmitId);
                     }
 
                     if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
                     {
+                        var guid = Guid.NewGuid();
+
                         journal.Replies.Add(new JournalReply
                         {
-                            Id = Guid.NewGuid(),
+                            Id = guid,
                             AddedAt = DateTimeOffset.UtcNow,
                             ActorId = actor.Id,
                             ObjectId = replyId,
@@ -308,13 +324,9 @@ namespace Crowmask.Functions
 
                         await context.SaveChangesAsync();
 
-                        await SendToAdminActorAsync(
-                            notifier.CreateReplyNotification(
-                                objectId,
-                                journal.Title,
-                                actor.Id,
-                                actor.Name ?? actor.Id,
-                                replyId));
+                        await CreateJournalEngagementNotification(
+                            guid,
+                            journal.JournalId);
                     }
                 }
 

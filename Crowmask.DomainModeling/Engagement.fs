@@ -13,12 +13,7 @@ with
         | Like l -> l.added_at
         | Reply r -> r.added_at
 
-type PostEngagement = {
-    post: Post
-    engagement: Engagement
-}
-
-module PostEngagement =
+module Engagement =
     let GetAll (post: Post) =
         seq {
             for i in post.boosts do Boost i
@@ -26,5 +21,4 @@ module PostEngagement =
             for r in post.replies do Reply r
         }
         |> Seq.sortBy (fun e -> e.AddedAt)
-        |> Seq.map (fun e -> { post = post; engagement = e })
         |> Seq.toList
