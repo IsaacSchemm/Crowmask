@@ -116,22 +116,19 @@ type MarkdownTranslator(adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, ha
             $"[{enc link.text}]({link.href})"
             $""
         $""
-        $"----------"
+
+        $"**Boosts:** {post.boosts.Length}  "
+        $"**Likes:** {post.likes.Length}  "
+        $"**Replies:** {post.replies.Length}  "
         $""
 
-        let encDate (dt: System.DateTimeOffset) = dt.UtcDateTime.ToString("U") |> enc
-
-        $"* **Boosts:** {post.boosts.Length}"
-        for boost in post.boosts do
-            $"    * [`{enc boost.actor_id}`]({boost.actor_id}) boosted: {encDate boost.added_at}"
-
-        $"* **Likes:** {post.likes.Length}"
-        for like in post.likes do
-            $"    * [`{enc like.actor_id}`]({like.actor_id}) liked: {encDate like.added_at}"
-
-        $"* **Replies:** {post.replies.Length}"
-        for reply in post.replies do
-            $"    * [`{enc reply.actor_id}`]({reply.actor_id}) replied: [{encDate reply.added_at}]({reply.object_id})"
+        match Engagement.getAll post with
+        | [] -> ()
+        | engagements ->
+            $"----------"
+            $""
+            for e in engagements do
+                $"* {Engagement.getMarkdown e}"
 
         $""
     ]
