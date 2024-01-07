@@ -50,7 +50,9 @@ var host = new HostBuilder()
 
         services.AddHttpClient();
 
+        services.AddScoped<ActivityStreamsIdMapper>();
         services.AddScoped<CrowmaskCache>();
+        services.AddScoped<EngagementTranslator>();
         services.AddScoped<FeedBuilder>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();

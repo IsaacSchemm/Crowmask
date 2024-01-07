@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="EngagementTranslator.fs" />
     <Compile Include="MarkdownTranslator.fs" />
     <Compile Include="CrowmaskFormat.fs" />
   </ItemGroup>
