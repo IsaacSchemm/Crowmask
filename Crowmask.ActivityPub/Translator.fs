@@ -178,14 +178,14 @@ type Translator(mapper: ActivityStreamsIdMapper) =
         pair "id" $"{mapper.GetObjectId post.upstream_type}?view=likes"
         pair "type" "Collection"
         pair "totalItems" (List.length post.likes)
-        pair "items" [for o in post.likes do o.activity_id]
+        pair "items" [for o in post.likes do o.like_id]
     ]
 
     member _.AsSharesCollection (post: Post) = dict [
         pair "id" $"{mapper.GetObjectId post.upstream_type}?view=shares"
         pair "type" "Collection"
         pair "totalItems" (List.length post.boosts)
-        pair "items" [for o in post.boosts do o.activity_id]
+        pair "items" [for o in post.boosts do o.announce_id]
     ]
 
     member _.AsCommentsCollection (post: Post) = dict [

@@ -3,7 +3,7 @@
 open System.Net
 open Crowmask.DomainModeling
 
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
+type MarkdownTranslator(mapper: ActivityStreamsIdMapper, engagementTranslator: EngagementTranslator, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
     let enc = WebUtility.HtmlEncode
 
     let toHtml (title: string) (str: string) = String.concat "\n" [
@@ -122,13 +122,13 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, adminActor: IAdminActor
         $"**Replies:** {post.replies.Length}  "
         $""
 
-        match Engagement.getAll post with
+        match PostEngagement.GetAll post with
         | [] -> ()
         | engagements ->
             $"----------"
             $""
             for e in engagements do
-                $"* {Engagement.getMarkdown e}"
+                $"* {engagementTranslator.ToMarkdown e}"
 
         $""
     ]

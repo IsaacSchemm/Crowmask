@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(ActivityStreamsIdMapper mapper, CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor, ICrowmaskHost host)
+    public class WebFinger(ActivityStreamsIdMapper mapper, CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor)
     {
         [Function("WebFinger")]
         public async Task<HttpResponseData> Run(
