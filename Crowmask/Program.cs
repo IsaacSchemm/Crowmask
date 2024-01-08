@@ -5,6 +5,7 @@ using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Feed;
+using Crowmask.InteractionSummaries;
 using Crowmask.Markdown;
 using Crowmask.Remote;
 using Crowmask.Signatures;
@@ -52,8 +53,8 @@ var host = new HostBuilder()
 
         services.AddScoped<ActivityStreamsIdMapper>();
         services.AddScoped<CrowmaskCache>();
-        services.AddScoped<EngagementTranslator>();
         services.AddScoped<FeedBuilder>();
+        services.AddScoped<InteractionSummarizer>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
         services.AddScoped<Notifier>();

@@ -66,18 +66,18 @@ namespace Crowmask.Functions
         {
             var result = await cache.GetSubmissionAsync(submitid);
             foreach (var post in result.AsList)
-                foreach (var engagement in EngagementModule.GetAll(post))
-                    if (engagement.Id == id)
-                        await SendToAdminActorAsync(notifier.CreatePostEngagementNotification(post, engagement));
+                foreach (var interaction in post.Interactions)
+                    if (interaction.Id == id)
+                        await SendToAdminActorAsync(notifier.CreatePostEngagementNotification(post, interaction));
         }
 
         private async Task CreateJournalEngagementNotification(Guid id, int journalid)
         {
             var result = await cache.GetJournalAsync(journalid);
             foreach (var post in result.AsList)
-                foreach (var engagement in EngagementModule.GetAll(post))
-                    if (engagement.Id == id)
-                        await SendToAdminActorAsync(notifier.CreatePostEngagementNotification(post, engagement));
+                foreach (var interaction in post.Interactions)
+                    if (interaction.Id == id)
+                        await SendToAdminActorAsync(notifier.CreatePostEngagementNotification(post, interaction));
         }
 
         [Function("Inbox")]
