@@ -7,17 +7,17 @@ type ActivityStreamsIdMapper(host: ICrowmaskHost) =
         $"https://{host.Hostname}/api/actor"
 
     member _.GetTransientId() =
-        $"https://{host.Hostname}#transient-{Guid.NewGuid()}"
+        $"https://{host.Hostname}/api/actor#transient-{Guid.NewGuid()}"
 
-    member _.GetObjectType(upstream_type) =
-        match upstream_type with
-        | UpstreamSubmission _ -> "Note"
-        | UpstreamJournal _ -> "Article"
+    member _.GetObjectType(identifier: JointIdentifier) =
+        match identifier with
+        | SubmissionIdentifier _ -> "Note"
+        | JournalIdentifier _ -> "Article"
 
-    member _.GetObjectId(upstream_type) =
-        match upstream_type with
-        | UpstreamSubmission submitid -> $"https://{host.Hostname}/api/submissions/{submitid}"
-        | UpstreamJournal journalid -> $"https://{host.Hostname}/api/journals/{journalid}"
+    member _.GetObjectId(identifier: JointIdentifier) =
+        match identifier with
+        | SubmissionIdentifier submitid -> $"https://{host.Hostname}/api/submissions/{submitid}"
+        | JournalIdentifier journalid -> $"https://{host.Hostname}/api/journals/{journalid}"
 
-    member this.GetObjectId(upstream_type: UpstreamType, interaction: Interaction) =
-        $"{this.GetObjectId(upstream_type)}/interactions/{interaction.Id}/notification"
+    member this.GetObjectId(identifier: JointIdentifier, interaction: Interaction) =
+        $"{this.GetObjectId(identifier)}/interactions/{interaction.Id}/notification"

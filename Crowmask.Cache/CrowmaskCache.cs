@@ -367,9 +367,9 @@ namespace Crowmask.Cache
             if (!int.TryParse(segments.Last(), out int id))
                 return CacheResult.NotFound;
 
-            if (mapper.GetObjectId(UpstreamType.NewUpstreamSubmission(id)) == objectId)
+            if (mapper.GetObjectId(JointIdentifier.NewSubmissionIdentifier(id)) == objectId)
                 return await GetSubmissionAsync(id);
-            else if (mapper.GetObjectId(UpstreamType.NewUpstreamJournal(id)) == objectId)
+            else if (mapper.GetObjectId(JointIdentifier.NewJournalIdentifier(id)) == objectId)
                 return await GetJournalAsync(id);
             else
                 return CacheResult.NotFound;

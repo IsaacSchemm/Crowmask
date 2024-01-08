@@ -31,14 +31,14 @@ namespace Crowmask.Feed
         {
             var item = new SyndicationItem
             {
-                Id = mapper.GetObjectId(post.upstream_type),
+                Id = mapper.GetObjectId(post.identifier),
                 Title = new TextSyndicationContent(post.title, TextSyndicationContentKind.Plaintext),
                 PublishDate = post.first_upstream,
                 LastUpdatedTime = post.first_upstream,
                 Content = new TextSyndicationContent(string.Join(" ", GetHtml(post)), TextSyndicationContentKind.Html)
             };
 
-            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.upstream_type)), "text/html"));
+            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.identifier)), "text/html"));
 
             return item;
         }
