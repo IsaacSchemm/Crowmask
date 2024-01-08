@@ -67,12 +67,12 @@ with
         | Like l -> l.added_at
         | Reply r -> r.added_at
 
-type UpstreamType =
-| UpstreamSubmission of submitid: int
-| UpstreamJournal of journalid: int
+type JointIdentifier =
+| SubmissionIdentifier of submitid: int
+| JournalIdentifier of journalid: int
 
 type Post = {
-    upstream_type: UpstreamType
+    identifier: JointIdentifier
     title: string
     content: string
     links: Link list
@@ -155,7 +155,7 @@ module Domain =
 
     let AsNote (submission: Submission) =
         {
-            upstream_type = UpstreamSubmission submission.SubmitId
+            identifier = SubmissionIdentifier submission.SubmitId
             title = submission.Title
             content = String.concat "\n" [
                 submission.Content
@@ -230,7 +230,7 @@ module Domain =
 
     let AsArticle (journal: Journal) =
         {
-            upstream_type = UpstreamJournal journal.JournalId
+            identifier = JournalIdentifier journal.JournalId
             title = journal.Title
             content = journal.Content
             links = [

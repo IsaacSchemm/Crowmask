@@ -12,7 +12,7 @@ type InteractionSummarizer(mapper: ActivityStreamsIdMapper) =
         dt.UtcDateTime.ToString("U") |> enc
 
     member _.ToMarkdown (p: Post) (e: Interaction) =
-        let original_object_id = mapper.GetObjectId p.upstream_type
+        let original_object_id = mapper.GetObjectId p.identifier
 
         match e with
         | Boost i -> $"[`{enc i.actor_id}`]({i.actor_id}) boosted [{enc p.title}]({original_object_id}) ({encDate i.added_at})"

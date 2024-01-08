@@ -18,11 +18,11 @@ namespace Crowmask.Functions
 
             await foreach (var post in posts)
             {
-                if (post.upstream_type is UpstreamType.UpstreamSubmission submission)
+                if (post.identifier is JointIdentifier.SubmissionIdentifier submission)
                 {
                     await crowmaskCache.UpdateSubmissionAsync(submission.submitid);
                 }
-                else if (post.upstream_type is UpstreamType.UpstreamJournal journal)
+                else if (post.identifier is JointIdentifier.JournalIdentifier journal)
                 {
                     await crowmaskCache.UpdateJournalAsync(journal.journalid);
                 }

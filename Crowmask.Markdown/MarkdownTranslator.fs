@@ -160,7 +160,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Interaction
         $""
         for post in page.posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
-            let post_url = mapper.GetObjectId post.upstream_type
+            let post_url = mapper.GetObjectId post.identifier
 
             $"### [{enc post.title}]({post_url}) ({enc date})"
             $""
@@ -178,9 +178,9 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Interaction
         $""
         $"----------"
         $""
-        $"To interact with a **submission** via ActivityPub, use the URI format `{mapper.GetObjectId (UpstreamSubmission 0)}`, where `0` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/~user/submissions/0000000/post-title`)."
+        $"To interact with a **submission** via ActivityPub, use the URI format `{mapper.GetObjectId (SubmissionIdentifier 0)}`, where `0` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/~user/submissions/0000000/post-title`)."
         $""
-        $"To interact with a **journal** via ActivityPub, use the URI format `{mapper.GetObjectId (UpstreamSubmission 0)}`, where `0` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/journal/0000000`)."
+        $"To interact with a **journal** via ActivityPub, use the URI format `{mapper.GetObjectId (JournalIdentifier 0)}`, where `0` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/journal/0000000`)."
         $""
     ]
 

@@ -61,14 +61,14 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
         let effective_date =
             if backdate then post.first_upstream else post.first_cached
 
-        let id = mapper.GetObjectId post.upstream_type
+        let id = mapper.GetObjectId post.identifier
 
         pair "id" id
         pair "url" id
         pair "likes" $"{id}?view=likes"
         pair "shares" $"{id}?view=shares"
         pair "comments" $"{id}?view=comments"
-        pair "type" (mapper.GetObjectType post.upstream_type)
+        pair "type" (mapper.GetObjectType post.identifier)
 
         pair "attributedTo" actor
         pair "content" post.content
@@ -133,12 +133,12 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        pair "object" (mapper.GetObjectId post.upstream_type)
+        pair "object" (mapper.GetObjectId post.identifier)
     ]
 
     member _.AsPrivateNote (post: Post) (interaction: Interaction) = dict [
-        pair "id" (mapper.GetObjectId(post.upstream_type, interaction))
-        pair "url" (mapper.GetObjectId(post.upstream_type, interaction))
+        pair "id" (mapper.GetObjectId(post.identifier, interaction))
+        pair "url" (mapper.GetObjectId(post.identifier, interaction))
         pair "type" "Note"
 
         pair "attributedTo" actor
@@ -162,7 +162,7 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
         pair "actor" actor
         pair "published" interaction.AddedAt
         pair "to" adminActor.Id
-        pair "object" (mapper.GetObjectId(post.upstream_type, interaction))
+        pair "object" (mapper.GetObjectId(post.identifier, interaction))
     ]
 
     member _.AcceptFollow (followId: string) = dict [
@@ -205,21 +205,21 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
     ]
 
     member _.AsLikesCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId post.upstream_type}?view=likes"
+        pair "id" $"{mapper.GetObjectId post.identifier}?view=likes"
         pair "type" "Collection"
         pair "totalItems" (List.length post.likes)
         pair "items" [for o in post.likes do o.like_id]
     ]
 
     member _.AsSharesCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId post.upstream_type}?view=shares"
+        pair "id" $"{mapper.GetObjectId post.identifier}?view=shares"
         pair "type" "Collection"
         pair "totalItems" (List.length post.boosts)
         pair "items" [for o in post.boosts do o.announce_id]
     ]
 
     member _.AsCommentsCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId post.upstream_type}?view=comments"
+        pair "id" $"{mapper.GetObjectId post.identifier}?view=comments"
         pair "type" "Collection"
         pair "totalItems" (List.length post.replies)
         pair "items" [for o in post.replies do o.object_id]
