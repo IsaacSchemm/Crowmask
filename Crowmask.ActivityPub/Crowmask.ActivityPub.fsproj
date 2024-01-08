@@ -9,7 +9,6 @@
     <Compile Include="IPublicKey.fs" />
     <Compile Include="AP.fs" />
     <Compile Include="Translator.fs" />
-    <Compile Include="Notifier.fs" />
   </ItemGroup>
 
   <ItemGroup>

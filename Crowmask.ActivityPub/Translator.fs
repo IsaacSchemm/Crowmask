@@ -3,8 +3,9 @@
 open System
 open System.Net
 open Crowmask.DomainModeling
+open Crowmask.InteractionSummaries
 
-type Translator(mapper: ActivityStreamsIdMapper) =
+type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapper: ActivityStreamsIdMapper) =
     let actor = mapper.ActorId
 
     let pair key value = (key, value :> obj)
@@ -133,6 +134,35 @@ type Translator(mapper: ActivityStreamsIdMapper) =
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
         pair "object" (mapper.GetObjectId post.upstream_type)
+    ]
+
+    member _.AsPrivateNote (post: Post) (interaction: Interaction) = dict [
+        pair "id" (mapper.GetObjectId(post.upstream_type, interaction))
+        pair "url" (mapper.GetObjectId(post.upstream_type, interaction))
+        pair "type" "Note"
+
+        pair "attributedTo" actor
+        pair "content" (summarizer.ToHtml post interaction)
+        pair "published" interaction.AddedAt
+        pair "to" adminActor.Id
+    ]
+
+    member this.PrivateNoteToCreate (post: Post) (interaction: Interaction) = dict [
+        pair "type" "Create"
+        pair "id" (mapper.GetTransientId())
+        pair "actor" actor
+        pair "published" interaction.AddedAt
+        pair "to" adminActor.Id
+        pair "object" (this.AsPrivateNote post interaction)
+    ]
+
+    member _.PrivateNoteToDelete (post: Post) (interaction: Interaction) = dict [
+        pair "type" "Delete"
+        pair "id" (mapper.GetTransientId())
+        pair "actor" actor
+        pair "published" interaction.AddedAt
+        pair "to" adminActor.Id
+        pair "object" (mapper.GetObjectId(post.upstream_type, interaction))
     ]
 
     member _.AcceptFollow (followId: string) = dict [
