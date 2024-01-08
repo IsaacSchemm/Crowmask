@@ -21,12 +21,7 @@ namespace Crowmask.Functions
         {
             int offset = int.TryParse(req.Query["offset"], out int n) ? n : 0;
 
-            var posts =
-                await new[] {
-                    crowmaskCache.GetCachedSubmissionsAsync(),
-                    crowmaskCache.GetCachedJournalsAsync()
-                }
-                .MergeNewest(post => post.first_upstream)
+            var posts = await crowmaskCache.GetAllCachedPostsAsync()
                 .Skip(offset)
                 .Take(20)
                 .ToListAsync();

@@ -13,9 +13,7 @@ namespace Crowmask.Functions
         {
             await crowmaskCache.UpdateUserAsync();
 
-            var posts = AsyncEnumerable.Empty<Post>()
-                .Concat(crowmaskCache.GetCachedSubmissionsAsync())
-                .Concat(crowmaskCache.GetCachedJournalsAsync())
+            var posts = crowmaskCache.GetAllCachedPostsAsync()
                 .Where(post => post.stale);
 
             await foreach (var post in posts)

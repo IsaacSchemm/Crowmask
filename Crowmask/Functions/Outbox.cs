@@ -11,16 +11,15 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(CrowmaskDbContext context, Translator translator, MarkdownTranslator markdownTranslator)
+    public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
     {
         [Function("Outbox")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
-            var submissions = await context.Submissions.CountAsync();
-            var journals = await context.Journals.CountAsync();
+            int count = await crowmaskCache.GetCachedPostCountAsync();
 
-            var gallery = Domain.AsGallery(count: submissions + journals);
+            var gallery = Domain.AsGallery(count: count);
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
