@@ -3,9 +3,9 @@
 open System
 open System.Net
 open Crowmask.DomainModeling
-open Crowmask.Markdown
+open Crowmask.InteractionSummaries
 
-type Notifier(mapper: ActivityStreamsIdMapper, engagementTranslator: EngagementTranslator, adminActor: IAdminActor) =
+type Notifier(mapper: ActivityStreamsIdMapper, summarizer: InteractionSummarizer, adminActor: IAdminActor) =
     let actor = mapper.ActorId
 
     let pair key value = (key, value :> obj)
@@ -38,5 +38,5 @@ type Notifier(mapper: ActivityStreamsIdMapper, engagementTranslator: EngagementT
             "followed this account"
         ])
 
-    member _.CreatePostEngagementNotification p e =
-        createActivity (engagementTranslator.ToHtml p e)
+    member _.CreatePostEngagementNotification p i =
+        createActivity (summarizer.ToHtml p i)

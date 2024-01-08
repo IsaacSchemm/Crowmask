@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="EngagementTranslator.fs" />
     <Compile Include="MarkdownTranslator.fs" />
     <Compile Include="CrowmaskFormat.fs" />
   </ItemGroup>
@@ -18,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
+    <ProjectReference Include="..\Crowmask.InteractionSummaries\Crowmask.InteractionSummaries.fsproj" />
   </ItemGroup>
 
 </Project>

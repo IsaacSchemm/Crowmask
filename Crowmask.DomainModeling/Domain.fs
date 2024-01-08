@@ -54,6 +54,19 @@ type Reply = {
     added_at: DateTimeOffset
 }
 
+type Interaction = Boost of Boost | Like of Like | Reply of Reply
+with
+    member this.Id =
+        match this with
+        | Boost b -> b.id
+        | Like l -> l.id
+        | Reply r -> r.id
+    member this.AddedAt =
+        match this with
+        | Boost b -> b.added_at
+        | Like l -> l.added_at
+        | Reply r -> r.added_at
+
 type UpstreamType =
 | UpstreamSubmission of submitid: int
 | UpstreamJournal of journalid: int
@@ -73,7 +86,15 @@ type Post = {
     likes: Like list
     replies: Reply list
     stale: bool
-}
+} with
+    member this.Interactions =
+        seq {
+            for i in this.boosts do Boost i
+            for i in this.likes do Like i
+            for r in this.replies do Reply r
+        }
+        |> Seq.sortBy (fun e -> e.AddedAt)
+        |> Seq.toList
 
 type Gallery = {
     gallery_count: int

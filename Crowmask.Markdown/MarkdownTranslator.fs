@@ -2,8 +2,9 @@
 
 open System.Net
 open Crowmask.DomainModeling
+open Crowmask.InteractionSummaries
 
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, engagementTranslator: EngagementTranslator, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
+type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: InteractionSummarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
     let enc = WebUtility.HtmlEncode
 
     let toHtml (title: string) (str: string) = String.concat "\n" [
@@ -116,19 +117,15 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, engagementTranslator: E
             $"[{enc link.text}]({link.href})"
             $""
         $""
-
+        $"----------"
+        $""
         $"**Boosts:** {post.boosts.Length}  "
         $"**Likes:** {post.likes.Length}  "
         $"**Replies:** {post.replies.Length}  "
         $""
 
-        match Engagement.GetAll post with
-        | [] -> ()
-        | engagements ->
-            $"----------"
-            $""
-            for e in engagements do
-                $"* {engagementTranslator.ToMarkdown post e}"
+        for i in post.Interactions do
+            $"* {summarizer.ToMarkdown post i}"
 
         $""
     ]

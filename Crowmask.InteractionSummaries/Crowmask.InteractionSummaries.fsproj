@@ -6,16 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="IPublicKey.fs" />
-    <Compile Include="AP.fs" />
-    <Compile Include="Translator.fs" />
-    <Compile Include="Notifier.fs" />
+    <Compile Include="InteractionSummarizer.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
+    <PackageReference Include="Markdig" Version="0.34.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
-    <ProjectReference Include="..\Crowmask.InteractionSummaries\Crowmask.InteractionSummaries.fsproj" />
   </ItemGroup>
 
 </Project>

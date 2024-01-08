@@ -11,7 +11,6 @@
     <Compile Include="IHandleHost.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="ActivityStreamsIdMapper.fs" />
-    <Compile Include="Engagement.fs" />
     <Compile Include="CacheResult.fs" />
   </ItemGroup>
 
