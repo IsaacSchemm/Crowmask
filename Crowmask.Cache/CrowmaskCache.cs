@@ -8,7 +8,7 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(ActivityStreamsIdMapper mapper, CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
     {
         private async Task<string> GetContentTypeAsync(string url)
         {
@@ -357,12 +357,20 @@ namespace Crowmask.Cache
             }
         }
 
-        public async Task<CacheResult> GetCachedPostAsync(UpstreamType upstreamType)
+        public async Task<CacheResult> GetCachedPostAsync(string objectId)
         {
-            if (upstreamType is UpstreamType.UpstreamSubmission s)
-                return await GetSubmissionAsync(s.submitid);
-            else if (upstreamType is UpstreamType.UpstreamJournal j)
-                return await GetJournalAsync(j.journalid);
+            if (!Uri.TryCreate(objectId, UriKind.Absolute, out Uri? uri))
+                return CacheResult.NotFound;
+
+            string[] segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            if (!int.TryParse(segments.Last(), out int id))
+                return CacheResult.NotFound;
+
+            if (mapper.GetObjectId(UpstreamType.NewUpstreamSubmission(id)) == objectId)
+                return await GetSubmissionAsync(id);
+            else if (mapper.GetObjectId(UpstreamType.NewUpstreamJournal(id)) == objectId)
+                return await GetJournalAsync(id);
             else
                 return CacheResult.NotFound;
         }
