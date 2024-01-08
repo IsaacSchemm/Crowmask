@@ -18,6 +18,7 @@ namespace Crowmask.Functions
             {
                 var activities = await context.OutboundActivities
                     .Where(a => a.StoredAt < cutoff)
+                    .OrderBy(a => a.StoredAt)
                     .Take(100)
                     .ToListAsync();
 
