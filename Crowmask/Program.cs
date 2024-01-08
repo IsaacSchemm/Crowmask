@@ -57,7 +57,6 @@ var host = new HostBuilder()
         services.AddScoped<InteractionSummarizer>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
-        services.AddScoped<Notifier>();
         services.AddScoped<OutboundActivityProcessor>();
         services.AddScoped<Requester>();
         services.AddScoped<Translator>();

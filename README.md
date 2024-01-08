@@ -54,6 +54,9 @@ Layers:
   are specific to Weasyl and the database schema), to more general F# records
   with only the properties needed to expose the information via ActivityPub or
   Markdown.
+* **Crowmask.InteractionSummaries**: provides Markdown and HTML summaries of
+  interactions with posts (boosts, likes, and replies) which are shown on the
+  post page and sent in private messages to the admin actor.
 * **Crowmask.ActivityPub**: converts domain model objects to ActivityPub
   objects (represented as `IDictionary<string, object>`); serializes these
   objects to LD-JSON (by manually adding the `@context`), and creates
@@ -80,15 +83,16 @@ Configuration values are passed using custom singleton dependencies:
 * `Cache.IPublicKeyProvider`: provides the actor's public key in PEM format. Implemented by `KeyProvider`, which uses the key from Azure Key Vault specified in `KeyVaultHost`.
 * `Weasyl.IWeasylApiKeyProvider`: provides the Weasyl API key. Implemented in `Program.cs` from the configuration value `WeasylApiKey`.
 
-Internal objects:
+Internal objects include:
 
 * `User`: a cached user from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-* `UserLink`: an entry from the Contact and Social Media section of the Weasyl profile
-* `Submission`: a cached post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-* `SubmissionMedia`: an associated image
-* `SubmissionTag`: an associated tag
+* `Submission`: a cached artwork post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
+* `Journal`: a cached journal entry from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
 * `Follower`: an ActivityPub actor who follows this actor
 * `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
+
+Other objects in Crowmask.Data, like `SubmissionTag` and `UserAvatar`, are
+stored as arrays within the parent document in Cosmos DB.
 
 HTTP endpoints:
 
