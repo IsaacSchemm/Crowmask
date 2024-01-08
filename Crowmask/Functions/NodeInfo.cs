@@ -19,10 +19,7 @@ namespace Crowmask.Functions
         {
             var user = await crowmaskCache.GetUserAsync();
 
-            int postCount = await AsyncEnumerable.Empty<Post>()
-                .Concat(crowmaskCache.GetCachedSubmissionsAsync())
-                .Concat(crowmaskCache.GetCachedJournalsAsync())
-                .CountAsync();
+            int postCount = await crowmaskCache.GetCachedPostCountAsync();
 
             var resp = req.CreateResponse(HttpStatusCode.OK);
             resp.Headers.Add("Content-Type", $"application/json; charset=utf-8");

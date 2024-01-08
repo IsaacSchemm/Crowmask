@@ -1,6 +1,7 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Merging;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
@@ -354,6 +355,32 @@ namespace Crowmask.Cache
 
                 last = journals.Select(j => j.JournalId).Min();
             }
+        }
+
+        public async Task<CacheResult> GetCachedPostAsync(UpstreamType upstreamType)
+        {
+            if (upstreamType is UpstreamType.UpstreamSubmission s)
+                return await GetSubmissionAsync(s.submitid);
+            else if (upstreamType is UpstreamType.UpstreamJournal j)
+                return await GetJournalAsync(j.journalid);
+            else
+                return CacheResult.NotFound;
+        }
+
+        public async Task<int> GetCachedPostCountAsync()
+        {
+            int submissions = await Context.Submissions.CountAsync();
+            int journals = await Context.Journals.CountAsync();
+            return submissions + journals;
+        }
+
+        public IAsyncEnumerable<Post> GetAllCachedPostsAsync()
+        {
+            return new[] {
+                GetCachedSubmissionsAsync(),
+                GetCachedJournalsAsync()
+            }
+            .MergeNewest(post => post.first_upstream);
         }
 
         public async Task<Person> GetUserAsync()
