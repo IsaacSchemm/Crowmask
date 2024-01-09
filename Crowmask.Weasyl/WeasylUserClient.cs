@@ -74,10 +74,17 @@
         public async Task<JournalEntry> GetMyJournalAsync(int journalid)
         {
             var whoami = await WhoamiAsync();
-            var journal = await weasylScraper.GetJournalAsync(journalid);
-            return journal.Username == whoami.login && !journal.VisibilityRestricted
-                ? journal
-                : null;
+            try
+            {
+                var journal = await weasylScraper.GetJournalAsync(journalid);
+                return journal.Username == whoami.login && !journal.VisibilityRestricted
+                    ? journal
+                    : null;
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
         }
     }
 }

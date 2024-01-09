@@ -64,8 +64,8 @@ namespace Crowmask.Cache
 
             if (cachedSubmission != null)
             {
-                //if (!cachedSubmission.Stale)
-                //    return CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
+                if (!cachedSubmission.Stale)
+                    return CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
