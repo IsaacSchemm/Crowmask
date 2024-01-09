@@ -11,15 +11,15 @@ namespace Crowmask.IdMapping
             $"{ActorId}#transient-{Guid.NewGuid()}";
 
         public string GetObjectType(JointIdentifier identifier) =>
-            identifier is JointIdentifier.SubmissionIdentifier ? "Note"
-            : identifier is JointIdentifier.JournalIdentifier ? "Article"
+            identifier.IsSubmissionIdentifier ? "Note"
+            : identifier.IsJournalIdentifier ? "Article"
             : throw new NotImplementedException();
 
         public string GetObjectId(JointIdentifier identifier) =>
-            identifier is JointIdentifier.SubmissionIdentifier s
-                ? $"https://{crowmaskHost.Hostname}/api/submissions/{s.submitid}"
-            : identifier is JointIdentifier.JournalIdentifier j
-                ? $"https://{crowmaskHost.Hostname}/api/journals/{j.journalid}"
+            identifier.IsSubmissionIdentifier
+                ? $"https://{crowmaskHost.Hostname}/api/submissions/{identifier.submitid}"
+            : identifier.IsJournalIdentifier
+                ? $"https://{crowmaskHost.Hostname}/api/journals/{identifier.journalid}"
             : throw new NotImplementedException();
 
         public JointIdentifier? GetJointIdentifier(string objectId)

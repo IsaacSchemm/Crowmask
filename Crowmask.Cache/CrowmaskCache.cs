@@ -360,12 +360,13 @@ namespace Crowmask.Cache
 
         public async Task<CacheResult> GetCachedPostAsync(string objectId)
         {
-            var identifier = mapper.GetJointIdentifier(objectId);
+            if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                return CacheResult.NotFound;
 
-            if (identifier is JointIdentifier.SubmissionIdentifier submission)
-                return await GetSubmissionAsync(submission.submitid);
-            else if (identifier is JointIdentifier.JournalIdentifier journal)
-                return await GetJournalAsync(journal.journalid);
+            if (identifier.IsSubmissionIdentifier)
+                return await GetSubmissionAsync(identifier.submitid);
+            else if (identifier.IsJournalIdentifier)
+                return await GetJournalAsync(identifier.journalid);
             else
                 return CacheResult.NotFound;
         }
