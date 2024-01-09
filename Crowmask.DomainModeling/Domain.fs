@@ -67,6 +67,7 @@ with
         | Like l -> l.added_at
         | Reply r -> r.added_at
 
+[<Struct>]
 type JointIdentifier =
 | SubmissionIdentifier of submitid: int
 | JournalIdentifier of journalid: int

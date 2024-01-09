@@ -18,14 +18,10 @@ namespace Crowmask.Functions
 
             await foreach (var post in posts)
             {
-                if (post.identifier is JointIdentifier.SubmissionIdentifier submission)
-                {
-                    await crowmaskCache.UpdateSubmissionAsync(submission.submitid);
-                }
-                else if (post.identifier is JointIdentifier.JournalIdentifier journal)
-                {
-                    await crowmaskCache.UpdateJournalAsync(journal.journalid);
-                }
+                if (post.identifier.IsSubmissionIdentifier)
+                    await crowmaskCache.UpdateSubmissionAsync(post.identifier.submitid);
+                else if (post.identifier.IsJournalIdentifier)
+                    await crowmaskCache.UpdateJournalAsync(post.identifier.journalid);
             }
         }
     }
