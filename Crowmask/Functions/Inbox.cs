@@ -2,12 +2,12 @@ using Crowmask.ActivityPub;
 using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.IdMapping;
 using Crowmask.Remote;
 using Crowmask.Signatures;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -19,8 +19,9 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskCache cache, CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, MastodonVerifier mastodonVerifier, Requester requester, Translator translator)
+    public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, CrowmaskDbContext context, DatabaseActions databaseActions, IAdminActor adminActor, ICrowmaskHost host, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester, Translator translator)
     {
+        [Obsolete]
         private async Task<Submission> FindSubmissionByObjectIdAsync(string objectId)
         {
             string prefix = $"https://{host.Hostname}/api/submissions/";
@@ -34,6 +35,7 @@ namespace Crowmask.Functions
             return await context.Submissions.FindAsync(submitid);
         }
 
+        [Obsolete]
         private async Task<Journal> FindJournalByObjectIdAsync(string objectId)
         {
             string prefix = $"https://{host.Hostname}/api/journals/";
@@ -47,20 +49,14 @@ namespace Crowmask.Functions
             return await context.Journals.FindAsync(journalid);
         }
 
+        [Obsolete]
         private async Task SendToAdminActorAsync(IDictionary<string, object> activityPubObject)
         {
             var adminActorDetails = await requester.FetchActorAsync(adminActor.Id);
-
-            context.OutboundActivities.Add(new OutboundActivity
-            {
-                Id = Guid.NewGuid(),
-                Inbox = adminActorDetails.Inbox,
-                JsonBody = AP.SerializeWithContext(activityPubObject),
-                StoredAt = DateTimeOffset.UtcNow
-            });
-            await context.SaveChangesAsync();
+            await databaseActions.AddOutboundActivityAsync(activityPubObject, adminActorDetails);
         }
 
+        [Obsolete]
         private async Task CreateEngagementNotificationAsync(Guid id, Submission submission)
         {
             var result = await cache.GetSubmissionAsync(submission.SubmitId);
@@ -70,6 +66,7 @@ namespace Crowmask.Functions
                         await SendToAdminActorAsync(translator.PrivateNoteToCreate(post, interaction));
         }
 
+        [Obsolete]
         private async Task DeleteEngagementNotificationAsync(Guid id, Submission submission)
         {
             var result = await cache.GetSubmissionAsync(submission.SubmitId);
@@ -79,6 +76,7 @@ namespace Crowmask.Functions
                         await SendToAdminActorAsync(translator.PrivateNoteToDelete(post, interaction));
         }
 
+        [Obsolete]
         private async Task CreateEngagementNotificationAsync(Guid id, Journal journal)
         {
             var result = await cache.GetJournalAsync(journal.JournalId);
@@ -88,6 +86,7 @@ namespace Crowmask.Functions
                         await SendToAdminActorAsync(translator.PrivateNoteToCreate(post, interaction));
         }
 
+        [Obsolete]
         private async Task DeleteEngagementNotificationAsync(Guid id, Journal journal)
         {
             var result = await cache.GetJournalAsync(journal.JournalId);
@@ -126,37 +125,8 @@ namespace Crowmask.Functions
             {
                 string objectId = expansion[0]["@id"].Value<string>();
 
-                var existing = await context.Followers
-                    .Where(f => f.ActorId == actor.Id)
-                    .SingleOrDefaultAsync();
-
-                if (existing != null)
-                {
-                    existing.MostRecentFollowId = objectId;
-                }
-                else
-                {
-                    context.Followers.Add(new Follower
-                    {
-                        Id = Guid.NewGuid(),
-                        ActorId = actor.Id,
-                        MostRecentFollowId = objectId,
-                        Inbox = actor.Inbox,
-                        SharedInbox = actor.SharedInbox
-                    });
-                }
-
-                context.OutboundActivities.Add(new OutboundActivity
-                {
-                    Id = Guid.NewGuid(),
-                    Inbox = actor.Inbox,
-                    JsonBody = AP.SerializeWithContext(
-                        translator.AcceptFollow(
-                            objectId)),
-                    StoredAt = DateTimeOffset.UtcNow
-                });
-
-                await context.SaveChangesAsync();
+                await databaseActions.AddFollowAsync(objectId, actor);
+                await remoteActions.AcceptFollowAsync(objectId, actor);
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
@@ -164,53 +134,20 @@ namespace Crowmask.Functions
             {
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                var followers = context.Followers
-                    .Where(i => i.MostRecentFollowId == objectId)
-                    .AsAsyncEnumerable();
-                await foreach (var i in followers)
-                    context.Followers.Remove(i);
+                await databaseActions.RemoveFollowAsync(objectId);
 
-                await foreach (var j in context.GetRelevantJournalsAsync(objectId))
+                await foreach (var post in cache.GetRelevantCachedPostsAsync(objectId))
                 {
-                    foreach (var b in j.Boosts.ToList())
-                    {
-                        if (b.ActorId == actor.Id && b.ActivityId == objectId)
-                        {
-                            await DeleteEngagementNotificationAsync(b.Id, j);
-                            j.Boosts.Remove(b);
-                        }
-                    }
-                    foreach (var l in j.Likes.ToList())
-                    {
-                        if (l.ActorId == actor.Id && l.ActivityId == objectId)
-                        {
-                            await DeleteEngagementNotificationAsync(l.Id, j);
-                            j.Likes.Remove(l);
-                        }
-                    }
-                }
+                    foreach (var boost in post.boosts)
+                        if (boost.actor_id == actor.Id && boost.announce_id == objectId)
+                            await databaseActions.RemoveInteractionAsync(post.identifier, boost.id);
+                    foreach (var like in post.likes)
+                        if (like.actor_id == actor.Id && like.like_id == objectId)
+                            await databaseActions.RemoveInteractionAsync(post.identifier, like.id);
 
-                await foreach (var s in context.GetRelevantSubmissionsAsync(objectId))
-                {
-                    foreach (var b in s.Boosts.ToList())
-                    {
-                        if (b.ActorId == actor.Id && b.ActivityId == objectId)
-                        {
-                            await DeleteEngagementNotificationAsync(b.Id, s);
-                            s.Boosts.Remove(b);
-                        }
-                    }
-                    foreach (var l in s.Likes.ToList())
-                    {
-                        if (l.ActorId == actor.Id && l.ActivityId == objectId)
-                        {
-                            await DeleteEngagementNotificationAsync(l.Id, s);
-                            s.Likes.Remove(l);
-                        }
-                    }
+                    var newPost = await cache.GetCachedPostAsync(post.identifier).SingleAsync();
+                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
                 }
-
-                await context.SaveChangesAsync();
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
@@ -219,46 +156,18 @@ namespace Crowmask.Functions
                 string activityId = expansion[0]["@id"].Value<string>();
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
+                if (mapper.GetJointIdentifier(objectId) is JointIdentifier identifier)
                 {
-                    foreach (var like in submission.Likes.ToList())
-                        if (like.ActorId == actor.Id)
-                            submission.Likes.Remove(like);
+                    var post = await cache.GetCachedPostAsync(identifier).SingleAsync();
 
-                    var guid = Guid.NewGuid();
+                    foreach (var like in post.likes)
+                        if (like.actor_id == actor.Id)
+                            await databaseActions.RemoveInteractionAsync(identifier, like.id);
 
-                    submission.Likes.Add(new SubmissionLike
-                    {
-                        Id = guid,
-                        AddedAt = DateTimeOffset.UtcNow,
-                        ActivityId = activityId,
-                        ActorId = actor.Id,
-                    });
+                    await databaseActions.AddLikeAsync(identifier, activityId, actor);
 
-                    await context.SaveChangesAsync();
-
-                    await CreateEngagementNotificationAsync(guid, submission);
-                }
-
-                if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
-                {
-                    foreach (var like in journal.Likes.ToList())
-                        if (like.ActorId == actor.Id)
-                            journal.Likes.Remove(like);
-
-                    var guid = Guid.NewGuid();
-
-                    journal.Likes.Add(new JournalLike
-                    {
-                        Id = guid,
-                        AddedAt = DateTimeOffset.UtcNow,
-                        ActivityId = activityId,
-                        ActorId = actor.Id,
-                    });
-
-                    await context.SaveChangesAsync();
-
-                    await CreateEngagementNotificationAsync(guid, journal);
+                    var newPost = await cache.GetCachedPostAsync(identifier).SingleAsync();
+                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -268,38 +177,18 @@ namespace Crowmask.Functions
                 string activityId = expansion[0]["@id"].Value<string>();
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
+                if (mapper.GetJointIdentifier(objectId) is JointIdentifier identifier)
                 {
-                    var guid = Guid.NewGuid();
+                    var post = await cache.GetCachedPostAsync(identifier).SingleAsync();
 
-                    submission.Boosts.Add(new SubmissionBoost
-                    {
-                        Id = guid,
-                        AddedAt = DateTimeOffset.UtcNow,
-                        ActivityId = activityId,
-                        ActorId = actor.Id,
-                    });
+                    foreach (var boost in post.boosts)
+                        if (boost.actor_id == actor.Id)
+                            await databaseActions.RemoveInteractionAsync(identifier, boost.id);
 
-                    await context.SaveChangesAsync();
+                    await databaseActions.AddBoostAsync(identifier, activityId, actor);
 
-                    await CreateEngagementNotificationAsync(guid, submission);
-                }
-
-                if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
-                {
-                    var guid = Guid.NewGuid();
-
-                    journal.Boosts.Add(new JournalBoost
-                    {
-                        Id = guid,
-                        AddedAt = DateTimeOffset.UtcNow,
-                        ActivityId = activityId,
-                        ActorId = actor.Id,
-                    });
-
-                    await context.SaveChangesAsync();
-
-                    await CreateEngagementNotificationAsync(guid, journal);
+                    var newPost = await cache.GetCachedPostAsync(identifier).SingleAsync();
+                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -356,31 +245,15 @@ namespace Crowmask.Functions
             {
                 string deletedObjectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                await foreach (var j in context.GetRelevantJournalsAsync(deletedObjectId))
+                await foreach (var post in cache.GetRelevantCachedPostsAsync(deletedObjectId))
                 {
-                    foreach (var b in j.Replies.ToList())
-                    {
-                        if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
-                        {
-                            await DeleteEngagementNotificationAsync(b.Id, j);
-                            j.Replies.Remove(b);
-                        }
-                    }
-                }
+                    foreach (var reply in post.replies)
+                        if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)
+                            await databaseActions.RemoveInteractionAsync(post.identifier, reply.id);
 
-                await foreach (var s in context.GetRelevantSubmissionsAsync(deletedObjectId))
-                {
-                    foreach (var b in s.Replies.ToList())
-                    {
-                        if (b.ActorId == actor.Id && b.ObjectId == deletedObjectId)
-                        {
-                            await DeleteEngagementNotificationAsync(b.Id, s);
-                            s.Replies.Remove(b);
-                        }
-                    }
+                    var newPost = await cache.GetCachedPostAsync(post.identifier).SingleAsync();
+                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
                 }
-
-                await context.SaveChangesAsync();
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
