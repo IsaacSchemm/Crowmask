@@ -119,6 +119,35 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
+        public async Task AddReplyAsync(JointIdentifier identifier, string replyObjectId, Requester.RemoteActor actor)
+        {
+            if (identifier.IsSubmissionIdentifier)
+            {
+                var submission = await context.Submissions.FindAsync(identifier.submitid);
+                submission.Replies.Add(new SubmissionReply
+                {
+                    Id = Guid.NewGuid(),
+                    AddedAt = DateTimeOffset.UtcNow,
+                    ObjectId = replyObjectId,
+                    ActorId = actor.Id,
+                });
+            }
+
+            if (identifier.IsJournalIdentifier)
+            {
+                var journal = await context.Journals.FindAsync(identifier.journalid);
+                journal.Replies.Add(new JournalReply
+                {
+                    Id = Guid.NewGuid(),
+                    AddedAt = DateTimeOffset.UtcNow,
+                    ObjectId = replyObjectId,
+                    ActorId = actor.Id,
+                });
+            }
+
+            await context.SaveChangesAsync();
+        }
+
         public async Task RemoveInteractionAsync(JointIdentifier identifier, Guid id)
         {
             if (identifier.IsSubmissionIdentifier)
