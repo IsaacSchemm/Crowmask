@@ -21,6 +21,21 @@ namespace Crowmask.Cache
             return val?.MediaType ?? "application/octet-stream";
         }
 
+        private async Task<IReadOnlySet<string>> GetDistinctInboxesAsync(bool followersOnly = false)
+        {
+            async IAsyncEnumerable<string> enumerate()
+            {
+                await foreach (var follower in Context.Followers.AsAsyncEnumerable())
+                    yield return follower.SharedInbox ?? follower.Inbox;
+
+                if (!followersOnly)
+                    await foreach (var known in Context.KnownInboxes.AsAsyncEnumerable())
+                        yield return known.Inbox;
+            }
+
+            return await enumerate().ToHashSetAsync();
+        }
+
         public async Task<CacheResult> GetSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
@@ -49,8 +64,8 @@ namespace Crowmask.Cache
 
             if (cachedSubmission != null)
             {
-                if (!cachedSubmission.Stale)
-                    return CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
+                //if (!cachedSubmission.Stale)
+                //    return CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -131,15 +146,12 @@ namespace Crowmask.Cache
 
                     if (changed && !backfill)
                     {
-                        var followers = await Context.Followers.ToListAsync();
-                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
-
-                        foreach (var inbox in inboxes)
+                        foreach (string inbox in await GetDistinctInboxesAsync(followersOnly: newlyCreated))
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
-                                Inbox = inbox.Key,
+                                Inbox = inbox,
                                 JsonBody = AP.SerializeWithContext(
                                     newlyCreated
                                     ? Translator.ObjectToCreate(newSubmission)
@@ -160,15 +172,12 @@ namespace Crowmask.Cache
                     {
                         Context.Submissions.Remove(cachedSubmission);
 
-                        var followers = await Context.Followers.ToListAsync();
-                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
-
-                        foreach (var inbox in inboxes)
+                        foreach (string inbox in await GetDistinctInboxesAsync())
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
-                                Inbox = inbox.Key,
+                                Inbox = inbox,
                                 JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(Domain.AsNote(cachedSubmission))),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
@@ -285,15 +294,12 @@ namespace Crowmask.Cache
 
                     if (changed && !backfill)
                     {
-                        var followers = await Context.Followers.ToListAsync();
-                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
-
-                        foreach (var inbox in inboxes)
+                        foreach (string inbox in await GetDistinctInboxesAsync(followersOnly: newlyCreated))
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
-                                Inbox = inbox.Key,
+                                Inbox = inbox,
                                 JsonBody = AP.SerializeWithContext(
                                     newlyCreated
                                     ? Translator.ObjectToCreate(newJournal)
@@ -314,15 +320,12 @@ namespace Crowmask.Cache
                     {
                         Context.Journals.Remove(cachedJournal);
 
-                        var followers = await Context.Followers.ToListAsync();
-                        var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
-
-                        foreach (var inbox in inboxes)
+                        foreach (string inbox in await GetDistinctInboxesAsync())
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
-                                Inbox = inbox.Key,
+                                Inbox = inbox,
                                 JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(Domain.AsArticle(cachedJournal))),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
@@ -475,15 +478,12 @@ namespace Crowmask.Cache
             {
                 var key = await KeyProvider.GetPublicKeyAsync();
 
-                var followers = await Context.Followers.ToListAsync();
-
-                var inboxes = followers.GroupBy(f => f.SharedInbox ?? f.Inbox);
-                foreach (var inbox in inboxes)
+                foreach (string inbox in await GetDistinctInboxesAsync())
                 {
                     Context.OutboundActivities.Add(new OutboundActivity
                     {
                         Id = Guid.NewGuid(),
-                        Inbox = inbox.Key,
+                        Inbox = inbox,
                         JsonBody = AP.SerializeWithContext(Translator.PersonToUpdate(newUser, key)),
                         StoredAt = DateTimeOffset.UtcNow
                     });

@@ -91,6 +91,7 @@ Internal objects include:
 * `Submission`: a cached artwork post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
 * `Journal`: a cached journal entry from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
 * `Follower`: an ActivityPub actor who follows this actor
+* `KnownInbox`: a list of inboxes for instances that have sent messages to Crowmask's own inbox in the past
 * `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
 
 Other objects in Crowmask.Data, like `SubmissionTag` and `UserAvatar`, are
