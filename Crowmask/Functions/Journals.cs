@@ -1,6 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
-using Crowmask.Data;
+using Crowmask.DomainModeling;
 using Crowmask.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -16,12 +16,8 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/journals/{journalid}")] HttpRequestData req,
             int journalid)
         {
-            var cacheResult = await crowmaskCache.GetJournalAsync(journalid);
-
-            if (cacheResult.AsList.IsEmpty)
+            if (await crowmaskCache.GetJournalAsync(journalid) is not CacheResult.PostResult pr || pr.Post is not Post journal)
                 return req.CreateResponse(HttpStatusCode.NotFound);
-
-            var journal = cacheResult.AsList.Head;
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {

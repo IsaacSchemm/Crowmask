@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask
 {
-    public class RemoteActions(IAdminActor adminActor, CrowmaskCache crowmaskCache, DatabaseActions databaseActions, Requester requester, Translator translator)
+    public class RemoteActions(IAdminActor adminActor, DatabaseActions databaseActions, Requester requester, Translator translator)
     {
         public async Task SendToAdminActorAsync(IDictionary<string, object> activityPubObject)
         {
