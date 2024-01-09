@@ -52,13 +52,18 @@ var host = new HostBuilder()
 
         services.AddHttpClient();
 
+        // Dependency inversion - Cosmos DB specific implementation
+        services.AddSingleton<IInteractionLookup, FastInteractionLookup>();
+
         services.AddScoped<ActivityStreamsIdMapper>();
         services.AddScoped<CrowmaskCache>();
+        services.AddScoped<DatabaseActions>();
         services.AddScoped<FeedBuilder>();
         services.AddScoped<InteractionSummarizer>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
         services.AddScoped<OutboundActivityProcessor>();
+        services.AddScoped<RemoteActions>();
         services.AddScoped<Requester>();
         services.AddScoped<Translator>();
         services.AddScoped<WeasylBaseClient>();

@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(ActivityStreamsIdMapper mapper, CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(ActivityStreamsIdMapper mapper, CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
     {
         private async Task<string> GetContentTypeAsync(string url)
         {
@@ -214,6 +214,16 @@ namespace Crowmask.Cache
             }
         }
 
+        public async IAsyncEnumerable<Post> GetRelevantSubmissionsAsync(string activity_or_reply_id)
+        {
+            var ids = await interactionLookup
+                .GetRelevantSubmitIdsAsync(activity_or_reply_id)
+                .ToListAsync();
+            foreach (int id in ids)
+                foreach (var item in (await GetSubmissionAsync(id)).AsList)
+                    yield return item;
+        }
+
         public async Task<CacheResult> GetJournalAsync(int journalid)
         {
             var cachedJournal = await Context.Journals
@@ -358,11 +368,18 @@ namespace Crowmask.Cache
             }
         }
 
-        public async Task<CacheResult> GetCachedPostAsync(string objectId)
+        public async IAsyncEnumerable<Post> GetRelevantJournalsAsync(string activity_or_reply_id)
         {
-            if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
-                return CacheResult.NotFound;
+            var ids = await interactionLookup
+                .GetRelevantJournalIdsAsync(activity_or_reply_id)
+                .ToListAsync();
+            foreach (int id in ids)
+                foreach (var item in (await GetJournalAsync(id)).AsList)
+                    yield return item;
+        }
 
+        public async Task<CacheResult> GetCachedPostAsync(JointIdentifier identifier)
+        {
             if (identifier.IsSubmissionIdentifier)
                 return await GetSubmissionAsync(identifier.submitid);
             else if (identifier.IsJournalIdentifier)
@@ -385,6 +402,14 @@ namespace Crowmask.Cache
                 GetCachedJournalsAsync()
             }
             .MergeNewest(post => post.first_upstream);
+        }
+
+        public async IAsyncEnumerable<Post> GetRelevantCachedPostsAsync(string activity_or_reply_id)
+        {
+            await foreach (var post in GetRelevantSubmissionsAsync(activity_or_reply_id))
+                yield return post;
+            await foreach (var post in GetRelevantJournalsAsync(activity_or_reply_id))
+                yield return post;
         }
 
         public async Task<Person> GetUserAsync()
