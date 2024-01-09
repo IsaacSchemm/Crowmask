@@ -72,6 +72,7 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
         pair "type" (mapper.GetObjectType post.identifier)
 
         pair "attributedTo" actor
+        pair "name" post.title
         pair "content" post.content
         pair "tag" [
             // Ensure the tag's character set matches what we expect from Weasyl, which should be OK for Mastodon too
