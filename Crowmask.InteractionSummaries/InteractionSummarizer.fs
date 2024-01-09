@@ -3,6 +3,7 @@
 open System
 open System.Net
 open Crowmask.DomainModeling
+open Crowmask.IdMapping
 
 type InteractionSummarizer(mapper: ActivityStreamsIdMapper) =
     let enc (str: string) =

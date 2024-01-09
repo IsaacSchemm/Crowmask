@@ -5,6 +5,7 @@ using Crowmask.Cache;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Feed;
+using Crowmask.IdMapping;
 using Crowmask.InteractionSummaries;
 using Crowmask.Markdown;
 using Crowmask.Remote;

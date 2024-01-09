@@ -3,6 +3,7 @@
 open System
 open System.Net
 open Crowmask.DomainModeling
+open Crowmask.IdMapping
 open Crowmask.InteractionSummaries
 
 type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapper: ActivityStreamsIdMapper) =

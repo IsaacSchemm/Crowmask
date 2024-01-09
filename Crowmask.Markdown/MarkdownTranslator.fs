@@ -2,6 +2,7 @@
 
 open System.Net
 open Crowmask.DomainModeling
+open Crowmask.IdMapping
 open Crowmask.InteractionSummaries
 
 type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: InteractionSummarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
