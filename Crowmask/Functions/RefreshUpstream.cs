@@ -29,6 +29,17 @@ namespace Crowmask.Functions
                     break;
             }
 
+            await foreach (var post in crowmaskCache.GetAllCachedPostsAsync())
+            {
+                if (post.first_upstream < yesterday)
+                    break;
+
+                if (post.identifier.IsSubmissionIdentifier)
+                    await crowmaskCache.UpdateSubmissionAsync(post.identifier.submitid);
+                if (post.identifier.IsJournalIdentifier)
+                    await crowmaskCache.UpdateJournalAsync(post.identifier.journalid);
+            }
+
             await outboundActivityProcessor.ProcessOutboundActivities();
         }
     }

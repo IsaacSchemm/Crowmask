@@ -25,6 +25,7 @@ namespace Crowmask.Weasyl
             httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
 
             using var resp = await httpClient.GetAsync(uri, cancellationToken);
+            resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadAsStringAsync(cancellationToken);
         }
 
