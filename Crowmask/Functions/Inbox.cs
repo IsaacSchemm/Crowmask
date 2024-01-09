@@ -10,7 +10,6 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -19,83 +18,8 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, CrowmaskDbContext context, DatabaseActions databaseActions, IAdminActor adminActor, ICrowmaskHost host, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester, Translator translator)
+    public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, DatabaseActions databaseActions, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester)
     {
-        [Obsolete]
-        private async Task<Submission> FindSubmissionByObjectIdAsync(string objectId)
-        {
-            string prefix = $"https://{host.Hostname}/api/submissions/";
-            if (!objectId.StartsWith(prefix))
-                return null;
-
-            string remainder = objectId[prefix.Length..];
-            if (!int.TryParse(remainder, out int submitid))
-                return null;
-
-            return await context.Submissions.FindAsync(submitid);
-        }
-
-        [Obsolete]
-        private async Task<Journal> FindJournalByObjectIdAsync(string objectId)
-        {
-            string prefix = $"https://{host.Hostname}/api/journals/";
-            if (!objectId.StartsWith(prefix))
-                return null;
-
-            string remainder = objectId[prefix.Length..];
-            if (!int.TryParse(remainder, out int journalid))
-                return null;
-
-            return await context.Journals.FindAsync(journalid);
-        }
-
-        [Obsolete]
-        private async Task SendToAdminActorAsync(IDictionary<string, object> activityPubObject)
-        {
-            var adminActorDetails = await requester.FetchActorAsync(adminActor.Id);
-            await databaseActions.AddOutboundActivityAsync(activityPubObject, adminActorDetails);
-        }
-
-        [Obsolete]
-        private async Task CreateEngagementNotificationAsync(Guid id, Submission submission)
-        {
-            var result = await cache.GetSubmissionAsync(submission.SubmitId);
-            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
-                foreach (var interaction in post.Interactions)
-                    if (interaction.Id == id)
-                        await SendToAdminActorAsync(translator.PrivateNoteToCreate(post, interaction));
-        }
-
-        [Obsolete]
-        private async Task DeleteEngagementNotificationAsync(Guid id, Submission submission)
-        {
-            var result = await cache.GetSubmissionAsync(submission.SubmitId);
-            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
-                foreach (var interaction in post.Interactions)
-                    if (interaction.Id == id)
-                        await SendToAdminActorAsync(translator.PrivateNoteToDelete(post, interaction));
-        }
-
-        [Obsolete]
-        private async Task CreateEngagementNotificationAsync(Guid id, Journal journal)
-        {
-            var result = await cache.GetJournalAsync(journal.JournalId);
-            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
-                foreach (var interaction in post.Interactions)
-                    if (interaction.Id == id)
-                        await SendToAdminActorAsync(translator.PrivateNoteToCreate(post, interaction));
-        }
-
-        [Obsolete]
-        private async Task DeleteEngagementNotificationAsync(Guid id, Journal journal)
-        {
-            var result = await cache.GetJournalAsync(journal.JournalId);
-            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
-                foreach (var interaction in post.Interactions)
-                    if (interaction.Id == id)
-                        await SendToAdminActorAsync(translator.PrivateNoteToDelete(post, interaction));
-        }
-
         [Function("Inbox")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/actor/inbox")] HttpRequestData req)
@@ -184,11 +108,8 @@ namespace Crowmask.Functions
                 if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
                     return req.CreateResponse(HttpStatusCode.NoContent);
 
-                foreach (var boost in post.boosts)
-                    if (boost.actor_id == actor.Id)
-                        await databaseActions.RemoveInteractionAsync(identifier, boost.id);
-
-                await databaseActions.AddBoostAsync(identifier, activityId, actor);
+                if (!post.boosts.Select(boost => boost.announce_id).Contains(activityId))
+                    await databaseActions.AddBoostAsync(identifier, activityId, actor);
 
                 if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
                     await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
@@ -206,39 +127,17 @@ namespace Crowmask.Functions
                 {
                     string objectId = inReplyTo["@id"].Value<string>();
 
-                    if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
-                    {
-                        var guid = Guid.NewGuid();
+                    if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                        return req.CreateResponse(HttpStatusCode.NoContent);
 
-                        submission.Replies.Add(new SubmissionReply
-                        {
-                            Id = guid,
-                            AddedAt = DateTimeOffset.UtcNow,
-                            ActorId = actor.Id,
-                            ObjectId = replyId,
-                        });
+                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
+                        return req.CreateResponse(HttpStatusCode.NoContent);
 
-                        await context.SaveChangesAsync();
+                    if (!post.replies.Select(reply => reply.object_id).Contains(replyId))
+                        await databaseActions.AddReplyAsync(identifier, replyId, actor);
 
-                        await CreateEngagementNotificationAsync(guid, submission);
-                    }
-
-                    if (await FindJournalByObjectIdAsync(objectId) is Journal journal)
-                    {
-                        var guid = Guid.NewGuid();
-
-                        journal.Replies.Add(new JournalReply
-                        {
-                            Id = guid,
-                            AddedAt = DateTimeOffset.UtcNow,
-                            ActorId = actor.Id,
-                            ObjectId = replyId,
-                        });
-
-                        await context.SaveChangesAsync();
-
-                        await CreateEngagementNotificationAsync(guid, journal);
-                    }
+                    if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
+                        await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
