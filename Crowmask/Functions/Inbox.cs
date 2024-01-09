@@ -60,7 +60,7 @@ namespace Crowmask.Functions
         private async Task CreateEngagementNotificationAsync(Guid id, Submission submission)
         {
             var result = await cache.GetSubmissionAsync(submission.SubmitId);
-            foreach (var post in result.AsList)
+            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
                 foreach (var interaction in post.Interactions)
                     if (interaction.Id == id)
                         await SendToAdminActorAsync(translator.PrivateNoteToCreate(post, interaction));
@@ -70,7 +70,7 @@ namespace Crowmask.Functions
         private async Task DeleteEngagementNotificationAsync(Guid id, Submission submission)
         {
             var result = await cache.GetSubmissionAsync(submission.SubmitId);
-            foreach (var post in result.AsList)
+            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
                 foreach (var interaction in post.Interactions)
                     if (interaction.Id == id)
                         await SendToAdminActorAsync(translator.PrivateNoteToDelete(post, interaction));
@@ -80,7 +80,7 @@ namespace Crowmask.Functions
         private async Task CreateEngagementNotificationAsync(Guid id, Journal journal)
         {
             var result = await cache.GetJournalAsync(journal.JournalId);
-            foreach (var post in result.AsList)
+            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
                 foreach (var interaction in post.Interactions)
                     if (interaction.Id == id)
                         await SendToAdminActorAsync(translator.PrivateNoteToCreate(post, interaction));
@@ -90,7 +90,7 @@ namespace Crowmask.Functions
         private async Task DeleteEngagementNotificationAsync(Guid id, Journal journal)
         {
             var result = await cache.GetJournalAsync(journal.JournalId);
-            foreach (var post in result.AsList)
+            if (result is CacheResult.PostResult cacheResult && cacheResult.Post is Post post)
                 foreach (var interaction in post.Interactions)
                     if (interaction.Id == id)
                         await SendToAdminActorAsync(translator.PrivateNoteToDelete(post, interaction));
@@ -145,8 +145,8 @@ namespace Crowmask.Functions
                         if (like.actor_id == actor.Id && like.like_id == objectId)
                             await databaseActions.RemoveInteractionAsync(post.identifier, like.id);
 
-                    var newPost = await cache.GetCachedPostAsync(post.identifier).SingleAsync();
-                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
+                    if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
+                        await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -156,19 +156,20 @@ namespace Crowmask.Functions
                 string activityId = expansion[0]["@id"].Value<string>();
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                if (mapper.GetJointIdentifier(objectId) is JointIdentifier identifier)
-                {
-                    var post = await cache.GetCachedPostAsync(identifier).SingleAsync();
+                if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                    return req.CreateResponse(HttpStatusCode.NoContent);
 
-                    foreach (var like in post.likes)
-                        if (like.actor_id == actor.Id)
-                            await databaseActions.RemoveInteractionAsync(identifier, like.id);
+                if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
+                    return req.CreateResponse(HttpStatusCode.NoContent);
 
-                    await databaseActions.AddLikeAsync(identifier, activityId, actor);
+                foreach (var like in post.likes)
+                    if (like.actor_id == actor.Id)
+                        await databaseActions.RemoveInteractionAsync(identifier, like.id);
 
-                    var newPost = await cache.GetCachedPostAsync(identifier).SingleAsync();
-                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
-                }
+                await databaseActions.AddLikeAsync(identifier, activityId, actor);
+
+                if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
+                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
@@ -177,19 +178,20 @@ namespace Crowmask.Functions
                 string activityId = expansion[0]["@id"].Value<string>();
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
 
-                if (mapper.GetJointIdentifier(objectId) is JointIdentifier identifier)
-                {
-                    var post = await cache.GetCachedPostAsync(identifier).SingleAsync();
+                if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                    return req.CreateResponse(HttpStatusCode.NoContent);
 
-                    foreach (var boost in post.boosts)
-                        if (boost.actor_id == actor.Id)
-                            await databaseActions.RemoveInteractionAsync(identifier, boost.id);
+                if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
+                    return req.CreateResponse(HttpStatusCode.NoContent);
 
-                    await databaseActions.AddBoostAsync(identifier, activityId, actor);
+                foreach (var boost in post.boosts)
+                    if (boost.actor_id == actor.Id)
+                        await databaseActions.RemoveInteractionAsync(identifier, boost.id);
 
-                    var newPost = await cache.GetCachedPostAsync(identifier).SingleAsync();
-                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
-                }
+                await databaseActions.AddBoostAsync(identifier, activityId, actor);
+
+                if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
+                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
@@ -251,8 +253,8 @@ namespace Crowmask.Functions
                         if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)
                             await databaseActions.RemoveInteractionAsync(post.identifier, reply.id);
 
-                    var newPost = await cache.GetCachedPostAsync(post.identifier).SingleAsync();
-                    await remoteActions.UpdateAdminActorNotificationsAsync(post, newPost);
+                    if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
+                        await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);

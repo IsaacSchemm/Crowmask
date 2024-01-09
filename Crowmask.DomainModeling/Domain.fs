@@ -97,6 +97,8 @@ type Post = {
         |> Seq.sortBy (fun e -> e.AddedAt)
         |> Seq.toList
 
+type CacheResult = PostResult of Post: Post | Deleted | NotFound
+
 type Gallery = {
     gallery_count: int
 }

@@ -1,7 +1,6 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
-using Crowmask.IdMapping;
 using Crowmask.Merging;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,7 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(ActivityStreamsIdMapper mapper, CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
     {
         private async Task<string> GetContentTypeAsync(string url)
         {
@@ -33,7 +32,7 @@ namespace Crowmask.Cache
                 .Where(s => s.SubmitId == submitid)
                 .SingleOrDefaultAsync();
             return cachedSubmission != null
-                ? CacheResult.NewFound(Domain.AsNote(cachedSubmission))
+                ? CacheResult.NewPostResult(Domain.AsNote(cachedSubmission))
                 : await UpdateSubmissionAsync(submitid);
         }
 
@@ -51,7 +50,7 @@ namespace Crowmask.Cache
             if (cachedSubmission != null)
             {
                 if (!cachedSubmission.Stale)
-                    return CacheResult.NewFound(Domain.AsNote(cachedSubmission));
+                    return CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -153,7 +152,7 @@ namespace Crowmask.Cache
                     cachedSubmission.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
                     await Context.SaveChangesAsync();
 
-                    return CacheResult.NewUpdated(newSubmission);
+                    return CacheResult.NewPostResult(newSubmission);
                 }
                 else
                 {
@@ -189,7 +188,7 @@ namespace Crowmask.Cache
             {
                 return cachedSubmission == null
                     ? CacheResult.NotFound
-                    : CacheResult.NewFound(Domain.AsNote(cachedSubmission));
+                    : CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
             }
         }
 
@@ -220,8 +219,8 @@ namespace Crowmask.Cache
                 .GetRelevantSubmitIdsAsync(activity_or_reply_id)
                 .ToListAsync();
             foreach (int id in ids)
-                foreach (var item in (await GetSubmissionAsync(id)).AsList)
-                    yield return item;
+                if (await GetSubmissionAsync(id) is CacheResult.PostResult pr)
+                    yield return pr.Post;
         }
 
         public async Task<CacheResult> GetJournalAsync(int journalid)
@@ -230,7 +229,7 @@ namespace Crowmask.Cache
                 .Where(s => s.JournalId == journalid)
                 .SingleOrDefaultAsync();
             return cachedJournal != null
-                ? CacheResult.NewFound(Domain.AsArticle(cachedJournal))
+                ? CacheResult.NewPostResult(Domain.AsArticle(cachedJournal))
                 : await UpdateJournalAsync(journalid);
         }
 
@@ -243,7 +242,7 @@ namespace Crowmask.Cache
             if (cachedJournal != null)
             {
                 if (!cachedJournal.Stale)
-                    return CacheResult.NewFound(Domain.AsArticle(cachedJournal));
+                    return CacheResult.NewPostResult(Domain.AsArticle(cachedJournal));
 
                 cachedJournal.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -307,7 +306,7 @@ namespace Crowmask.Cache
                     cachedJournal.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
                     await Context.SaveChangesAsync();
 
-                    return CacheResult.NewUpdated(newJournal);
+                    return CacheResult.NewPostResult(newJournal);
                 }
                 else
                 {
@@ -343,7 +342,7 @@ namespace Crowmask.Cache
             {
                 return cachedJournal == null
                     ? CacheResult.NotFound
-                    : CacheResult.NewFound(Domain.AsArticle(cachedJournal));
+                    : CacheResult.NewPostResult(Domain.AsArticle(cachedJournal));
             }
         }
 
@@ -374,8 +373,8 @@ namespace Crowmask.Cache
                 .GetRelevantJournalIdsAsync(activity_or_reply_id)
                 .ToListAsync();
             foreach (int id in ids)
-                foreach (var item in (await GetJournalAsync(id)).AsList)
-                    yield return item;
+                if (await GetJournalAsync(id) is CacheResult.PostResult pr)
+                    yield return pr.Post;
         }
 
         public async Task<CacheResult> GetCachedPostAsync(JointIdentifier identifier)
