@@ -12,6 +12,27 @@ namespace Crowmask
 {
     public class DatabaseActions(CrowmaskDbContext context)
     {
+        public async Task AddKnownInboxAsync(Requester.RemoteActor actor)
+        {
+            string personalInbox = actor.Inbox;
+            string primaryInbox = actor.SharedInbox ?? actor.Inbox;
+
+            var known = await context.KnownInboxes
+                .Where(i => i.Inbox == personalInbox || i.Inbox == primaryInbox)
+                .Take(1)
+                .ToListAsync();
+
+            if (known.Count == 0)
+            {
+                context.KnownInboxes.Add(new KnownInbox
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = primaryInbox
+                });
+                await context.SaveChangesAsync();
+            }
+        }
+
         public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, Requester.RemoteActor remoteActor)
         {
             context.OutboundActivities.Add(new OutboundActivity

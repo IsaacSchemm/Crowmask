@@ -45,6 +45,8 @@ namespace Crowmask.Functions
             if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
                 return req.CreateResponse(HttpStatusCode.Forbidden);
 
+            await databaseActions.AddKnownInboxAsync(actor);
+
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
                 string objectId = expansion[0]["@id"].Value<string>();
