@@ -1,5 +1,6 @@
 using Crowmask.Cache;
 using Crowmask.DomainModeling;
+using Crowmask.IdMapping;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System;

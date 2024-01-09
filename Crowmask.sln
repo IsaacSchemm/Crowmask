@@ -32,7 +32,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Feed", "Crowmask.F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Signatures", "Crowmask.Signatures\Crowmask.Signatures.csproj", "{E181A40C-9937-4C2F-B389-FDB4DB70AF31}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Crowmask.InteractionSummaries", "Crowmask.InteractionSummaries\Crowmask.InteractionSummaries.fsproj", "{3C6B6DE3-760F-42DC-86E1-8E77843D663A}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.InteractionSummaries", "Crowmask.InteractionSummaries\Crowmask.InteractionSummaries.fsproj", "{3C6B6DE3-760F-42DC-86E1-8E77843D663A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crowmask.IdMapping", "Crowmask.IdMapping\Crowmask.IdMapping.csproj", "{CAA4AD93-0258-4DFF-A7E9-3039EC94030B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -88,6 +90,10 @@ Global
 		{3C6B6DE3-760F-42DC-86E1-8E77843D663A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C6B6DE3-760F-42DC-86E1-8E77843D663A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C6B6DE3-760F-42DC-86E1-8E77843D663A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAA4AD93-0258-4DFF-A7E9-3039EC94030B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAA4AD93-0258-4DFF-A7E9-3039EC94030B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAA4AD93-0258-4DFF-A7E9-3039EC94030B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAA4AD93-0258-4DFF-A7E9-3039EC94030B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

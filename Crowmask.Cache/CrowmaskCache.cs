@@ -1,6 +1,7 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.IdMapping;
 using Crowmask.Merging;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
@@ -359,18 +360,12 @@ namespace Crowmask.Cache
 
         public async Task<CacheResult> GetCachedPostAsync(string objectId)
         {
-            if (!Uri.TryCreate(objectId, UriKind.Absolute, out Uri? uri))
-                return CacheResult.NotFound;
+            var identifier = mapper.GetJointIdentifier(objectId);
 
-            string[] segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            if (!int.TryParse(segments.Last(), out int id))
-                return CacheResult.NotFound;
-
-            if (mapper.GetObjectId(JointIdentifier.NewSubmissionIdentifier(id)) == objectId)
-                return await GetSubmissionAsync(id);
-            else if (mapper.GetObjectId(JointIdentifier.NewJournalIdentifier(id)) == objectId)
-                return await GetJournalAsync(id);
+            if (identifier is JointIdentifier.SubmissionIdentifier submission)
+                return await GetSubmissionAsync(submission.submitid);
+            else if (identifier is JointIdentifier.JournalIdentifier journal)
+                return await GetJournalAsync(journal.journalid);
             else
                 return CacheResult.NotFound;
         }

@@ -1,6 +1,6 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
-using Crowmask.DomainModeling;
+using Crowmask.IdMapping;
 using Crowmask.Signatures;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;

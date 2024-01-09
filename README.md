@@ -54,6 +54,8 @@ Layers:
   are specific to Weasyl and the database schema), to more general F# records
   with only the properties needed to expose the information via ActivityPub or
   Markdown.
+* **Crowmask.IdMapping**: contains the `ActivityStreamsIdMapper`, from which
+  other code can derive the public IDs / URIs for objects in the application.
 * **Crowmask.InteractionSummaries**: provides Markdown and HTML summaries of
   interactions with posts (boosts, likes, and replies) which are shown on the
   post page and sent in private messages to the admin actor.
