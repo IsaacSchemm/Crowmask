@@ -123,20 +123,11 @@ Timed functions:
 * `RefreshCached`: Attempts cache refresh for all stale cached posts and the actor's name/avatar/etc (every day at 23:56)
 * `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
 
-Note that a cached submission will not be refreshed if:
+TODO:
 
-* the last attempted cache refresh was within the past 4 minutes
-* the last successful cache refresh was within the past hour, and the post is more than an hour old
-* the last successful cache refresh was within the past 7 days, and the post is more than 7 days old
-* the last successful cache refresh was within the past 28 days, and the post is more than 28 days old
-
-A cached user (name, icon, etc.) will not be refreshed if:
-
-* the last attempted cache refresh was within the past 4 minutes
-* the last successful cache refresh was within the past hour
-
-Cache refresh occurs as part of `RefreshUpstream` (for recent items), `RefreshCached`,
-or when a specific item is requested that is not yet in the cache.
+[ ] Add comments
+[ ] Split content negotiation off into its own project or move it into DomainModeling
+[ ] Shy mode (redirect all HTML requests to Weasyl)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
