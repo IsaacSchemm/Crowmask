@@ -2,10 +2,9 @@
 
 open System.Net
 open Crowmask.DomainModeling
-open Crowmask.IdMapping
-open Crowmask.InteractionSummaries
+open Crowmask.Interfaces
 
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: InteractionSummarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
+type MarkdownTranslator(mapper: IActivityStreamsIdMapper, summarizer: IInteractionSummarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
     let enc = WebUtility.HtmlEncode
 
     let toHtml (title: string) (str: string) = String.concat "\n" [
@@ -126,7 +125,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Interaction
         $""
 
         for i in post.Interactions do
-            $"* {summarizer.ToMarkdown post i}"
+            $"* {summarizer.ToMarkdown(post, i)}"
 
         $""
     ]

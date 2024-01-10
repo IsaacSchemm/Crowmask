@@ -1,8 +1,9 @@
 ﻿using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 
 namespace Crowmask.IdMapping
 {
-    public class ActivityStreamsIdMapper(ICrowmaskHost crowmaskHost)
+    public class ActivityStreamsIdMapper(ICrowmaskHost crowmaskHost) : IActivityStreamsIdMapper
     {
         public string ActorId =>
             $"https://{crowmaskHost.Hostname}/api/actor";
@@ -43,7 +44,7 @@ namespace Crowmask.IdMapping
             return null;
         }
 
-        public string GetObjectId(JointIdentifier identifier, Interaction interaction) =>
+        public string GetNotificationObjectId(JointIdentifier identifier, Interaction interaction) =>
             $"{GetObjectId(identifier)}/interactions/{interaction.Id}/notification";
     }
 }

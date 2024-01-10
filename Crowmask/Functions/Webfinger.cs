@@ -1,6 +1,5 @@
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
-using Crowmask.IdMapping;
+using Crowmask.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(ActivityStreamsIdMapper mapper, CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor)
+    public class WebFinger(IActivityStreamsIdMapper mapper, ICrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor)
     {
         /// <summary>
         /// Points the user agent to the Crowmask actor ID, or redirects to the equivalent endpoint on the admin actor's server.

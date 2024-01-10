@@ -1,6 +1,5 @@
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
-using Crowmask.IdMapping;
+using Crowmask.Interfaces;
 using Crowmask.Remote;
 using Crowmask.Signatures;
 using JsonLD.Core;
@@ -16,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, DatabaseActions databaseActions, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester)
+    public class Inbox(IActivityStreamsIdMapper mapper, ICrowmaskCache cache, IDatabaseActions databaseActions, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester)
     {
         /// <summary>
         /// Accepts an ActivityPub message. Supported types are:

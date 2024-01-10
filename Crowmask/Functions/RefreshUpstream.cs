@@ -1,14 +1,14 @@
 using System;
 using System.Threading.Tasks;
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Crowmask.Remote;
 using Crowmask.Weasyl;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshUpstream(CrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylUserClient weasylUserClient)
+    public class RefreshUpstream(ICrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylUserClient weasylUserClient)
     {
         /// <summary>
         /// Refreshes the cache for stale items that are among the following:

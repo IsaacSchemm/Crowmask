@@ -3,10 +3,9 @@
 open System
 open System.Net
 open Crowmask.DomainModeling
-open Crowmask.IdMapping
-open Crowmask.InteractionSummaries
+open Crowmask.Interfaces
 
-type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapper: ActivityStreamsIdMapper) =
+type Translator(adminActor: IAdminActor, summarizer: IInteractionSummarizer, mapper: IActivityStreamsIdMapper) =
     let actor = mapper.ActorId
 
     let pair key value = (key, value :> obj)
@@ -139,12 +138,12 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
     ]
 
     member _.AsPrivateNote (post: Post) (interaction: Interaction) = dict [
-        pair "id" (mapper.GetObjectId(post.identifier, interaction))
-        pair "url" (mapper.GetObjectId(post.identifier, interaction))
+        pair "id" (mapper.GetNotificationObjectId(post.identifier, interaction))
+        pair "url" (mapper.GetNotificationObjectId(post.identifier, interaction))
         pair "type" "Note"
 
         pair "attributedTo" actor
-        pair "content" (summarizer.ToHtml post interaction)
+        pair "content" (summarizer.ToHtml(post, interaction))
         pair "published" interaction.AddedAt
         pair "to" adminActor.Id
     ]
@@ -164,7 +163,7 @@ type Translator(adminActor: IAdminActor, summarizer: InteractionSummarizer, mapp
         pair "actor" actor
         pair "published" interaction.AddedAt
         pair "to" adminActor.Id
-        pair "object" (mapper.GetObjectId(post.identifier, interaction))
+        pair "object" (mapper.GetNotificationObjectId(post.identifier, interaction))
     ]
 
     member _.AcceptFollow (followId: string) = dict [

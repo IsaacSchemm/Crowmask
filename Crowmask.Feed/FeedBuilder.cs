@@ -1,5 +1,5 @@
 ﻿using Crowmask.DomainModeling;
-using Crowmask.IdMapping;
+using Crowmask.Interfaces;
 using System.Net;
 using System.ServiceModel.Syndication;
 using System.Text;
@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace Crowmask.Feed
 {
-    public class FeedBuilder(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost)
+    public class FeedBuilder(IActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost) : IFeedBuilder
     {
         private static IEnumerable<string> GetHtml(Post post)
         {

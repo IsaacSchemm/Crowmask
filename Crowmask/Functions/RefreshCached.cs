@@ -1,12 +1,11 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Crowmask.Cache;
-using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshCached(CrowmaskCache crowmaskCache)
+    public class RefreshCached(ICrowmaskCache crowmaskCache)
     {
         /// <summary>
         /// Refreshes the cache for all cached posts (artwork and journals)

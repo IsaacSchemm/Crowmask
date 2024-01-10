@@ -1,9 +1,7 @@
 using Crowmask.ActivityPub;
-using Crowmask.Cache;
-using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Crowmask.Markdown;
-using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -11,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
+    public class Outbox(ICrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
     {
         /// <summary>
         /// Returns the size of the user's outbox (which contains artwork

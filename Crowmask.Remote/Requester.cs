@@ -1,6 +1,6 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
-using Crowmask.IdMapping;
+using Crowmask.Interfaces;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Crowmask.Remote
 {
-    public class Requester(ActivityStreamsIdMapper mapper, IHttpClientFactory httpClientFactory, ISigner signer)
+    public class Requester(IActivityStreamsIdMapper mapper, IHttpClientFactory httpClientFactory, ISigner signer)
     {
         /// <summary>
         /// Fetches and returns an actor.

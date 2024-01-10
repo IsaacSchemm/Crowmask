@@ -1,5 +1,6 @@
 using Crowmask.ActivityPub;
 using Crowmask.Cache;
+using Crowmask.Interfaces;
 using Crowmask.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Actor(CrowmaskCache crowmaskCache, IPublicKeyProvider keyProvider, MarkdownTranslator markdownTranslator, Translator translator)
+    public class Actor(ICrowmaskCache crowmaskCache, IPublicKeyProvider keyProvider, MarkdownTranslator markdownTranslator, Translator translator)
     {
         /// <summary>
         /// Returns information about the sole ActivityPub actor exposed by

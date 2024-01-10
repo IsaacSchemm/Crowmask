@@ -1,9 +1,7 @@
 using Crowmask.ActivityPub;
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
-using Crowmask.Feed;
+using Crowmask.Interfaces;
 using Crowmask.Markdown;
-using Crowmask.Merging;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class OutboxPage(CrowmaskCache crowmaskCache, FeedBuilder feedBuilder, Translator translator, MarkdownTranslator markdownTranslator)
+    public class OutboxPage(ICrowmaskCache crowmaskCache, IFeedBuilder feedBuilder, Translator translator, MarkdownTranslator markdownTranslator)
     {
         /// <summary>
         /// Returns up to 20 of the user's posts (submissions and journals)

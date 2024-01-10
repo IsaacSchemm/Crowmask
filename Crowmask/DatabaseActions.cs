@@ -1,6 +1,7 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Crowmask.Remote;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -14,7 +15,7 @@ namespace Crowmask
     /// Provides a way for the inbox handler to make changes in Crowmask's
     /// database, outside of what CrowmaskCache can do.
     /// </summary>
-    public class DatabaseActions(CrowmaskDbContext context)
+    public class DatabaseActions(CrowmaskDbContext context) : IDatabaseActions
     {
         /// <summary>
         /// Adds an actor's shared inbox (or personal inbox, if there is none
@@ -24,7 +25,7 @@ namespace Crowmask
         /// Inboxes that no longer exist will be removed by OutboundActivityCleanup.
         /// </remarks>
         /// <param name="actor">The ActivityPub actor to add</param>
-        public async Task AddKnownInboxAsync(RemoteActor actor)
+        public async Task AddKnownInboxAsync(IRemoteActor actor)
         {
             string personalInbox = actor.Inbox;
             string primaryInbox = actor.SharedInbox ?? actor.Inbox;
@@ -52,7 +53,7 @@ namespace Crowmask
         /// <param name="obj">The object (from the Translator module) to serialize as JSON-LD</param>
         /// <param name="remoteActor">The actor to send the object to</param>
         /// <returns></returns>
-        public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, RemoteActor remoteActor)
+        public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, IRemoteActor remoteActor)
         {
             context.OutboundActivities.Add(new OutboundActivity
             {
@@ -72,7 +73,7 @@ namespace Crowmask
         /// <param name="objectId">The ID of the Follow activity, so Undo requests can be honored</param>
         /// <param name="actor">The follower to add</param>
         /// <returns></returns>
-        public async Task AddFollowAsync(string objectId, RemoteActor actor)
+        public async Task AddFollowAsync(string objectId, IRemoteActor actor)
         {
             var existing = await context.Followers
                 .Where(f => f.ActorId == actor.Id)
@@ -120,7 +121,7 @@ namespace Crowmask
         /// <param name="activityId">The Like activity ID, so Undo requests can be honored</param>
         /// <param name="actor">The actor who liked the post</param>
         /// <returns></returns>
-        public async Task AddLikeAsync(JointIdentifier identifier, string activityId, RemoteActor actor)
+        public async Task AddLikeAsync(JointIdentifier identifier, string activityId, IRemoteActor actor)
         {
             if (identifier.IsSubmissionIdentifier)
             {
@@ -155,7 +156,7 @@ namespace Crowmask
         /// <param name="identifier">The submission or journal ID</param>
         /// <param name="activityId">The Announce activity ID, so Undo requests can be honored</param>
         /// <param name="actor">The actor who boosted the post</param>
-        public async Task AddBoostAsync(JointIdentifier identifier, string activityId, RemoteActor actor)
+        public async Task AddBoostAsync(JointIdentifier identifier, string activityId, IRemoteActor actor)
         {
             if (identifier.IsSubmissionIdentifier)
             {
@@ -190,7 +191,7 @@ namespace Crowmask
         /// <param name="identifier">The submission or journal ID</param>
         /// <param name="activityId">The ID of the reply object (Note, etc.), so Delete requests can be honored</param>
         /// <param name="actor">The actor who replied to the post</param>
-        public async Task AddReplyAsync(JointIdentifier identifier, string replyObjectId, RemoteActor actor)
+        public async Task AddReplyAsync(JointIdentifier identifier, string replyObjectId, IRemoteActor actor)
         {
             if (identifier.IsSubmissionIdentifier)
             {

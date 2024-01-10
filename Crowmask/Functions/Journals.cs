@@ -1,6 +1,6 @@
 using Crowmask.ActivityPub;
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Crowmask.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Journals(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
+    public class Journals(ICrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
     {
         /// <summary>
         /// Returns a mirror of a journal posted to Weasyl.

@@ -1,6 +1,7 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Crowmask.Merging;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient) : ICrowmaskCache
     {
         private async Task<string> GetContentTypeAsync(string url)
         {

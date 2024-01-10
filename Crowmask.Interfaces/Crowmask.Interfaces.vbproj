@@ -1,14 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <RootNamespace>Crowmask.Interfaces</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
-    <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
   </ItemGroup>
 
 </Project>
