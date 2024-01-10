@@ -119,10 +119,12 @@ HTTP endpoints:
     * With `?view=comments`: returns a `Collection` with object IDs for all replies (not paginated)
     * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
     * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
+* `/api/submissions/{submitid}/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
 * `/api/journals/{journalid}`: returns the resulting `Article` object
     * With `?view=comments`: returns a `Collection` with object IDs for all replies (not paginated)
     * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
     * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
+* `/api/journals/{journalid}/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
 
 Timed functions:
 
@@ -132,9 +134,7 @@ Timed functions:
 
 TODO:
 
-[ ] Implement the endpoint for interaction notifications (these posts are only sent to the admin actor but the info is public)
 [ ] Add comments
-[ ] Split content negotiation off into its own project or move it into DomainModeling
 [ ] Shy mode (redirect all HTML requests to Weasyl)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt

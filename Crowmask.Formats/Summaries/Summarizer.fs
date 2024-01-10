@@ -20,5 +20,5 @@ type Summarizer(mapper: ActivityStreamsIdMapper) =
         | Like i -> $"[`{enc i.actor_id}`]({i.actor_id}) liked [{enc p.title}]({original_object_id}) ({encDate i.added_at})"
         | Reply r -> $"[`{enc r.actor_id}`]({r.actor_id}) replied to [{enc p.title}]({original_object_id}) ([{encDate r.added_at}]({r.object_id}))"
 
-    member this.ToHtml(p: Post, e: Interaction) =
-        this.ToMarkdown(p, e) |> Markdig.Markdown.ToHtml
+    //member this.ToHtmlSegment(p: Post, e: Interaction) =
+    //    this.ToMarkdown(p, e) |> Markdig.Markdown.ToHtml

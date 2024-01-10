@@ -11,11 +11,6 @@ namespace Crowmask.Dependencies.Mapping
         public string GetTransientId() =>
             $"{ActorId}#transient-{Guid.NewGuid()}";
 
-        //public string GetObjectType(JointIdentifier identifier) =>
-        //    identifier.IsSubmissionIdentifier ? "Note"
-        //    : identifier.IsJournalIdentifier ? "Article"
-        //    : throw new NotImplementedException();
-
         public string GetObjectId(JointIdentifier identifier) =>
             identifier.IsSubmissionIdentifier
                 ? $"https://{crowmaskHost.Hostname}/api/submissions/{identifier.submitid}"

@@ -127,12 +127,23 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
 
         for i in post.Interactions do
-            $"* {summarizer.ToMarkdown(post, i)}"
+            $"* {summarizer.ToMarkdown(post, i)} ([notification]({mapper.GetObjectId(post.identifier, i)}))"
 
         $""
     ]
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
+
+    member _.ToMarkdown (post: Post, interaction: Interaction) = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"{summarizer.ToMarkdown(post, interaction)}"
+        $""
+    ]
+
+    member this.ToHtml (post: Post, interaction: Interaction) = this.ToMarkdown (post, interaction) |> toHtml post.title
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         sharedHeader
