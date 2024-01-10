@@ -1,3 +1,4 @@
+using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
 using Crowmask.Formats.Markdown;
@@ -36,6 +37,7 @@ namespace Crowmask.Functions
                         req.Query["view"] == "comments" ? translator.AsCommentsCollection(journal)
                         : req.Query["view"] == "likes" ? translator.AsLikesCollection(journal)
                         : req.Query["view"] == "shares" ? translator.AsSharesCollection(journal)
+                        : req.Query["view"] == "create" ? translator.ObjectToCreate(journal)
                         : translator.AsObject(journal);
                     return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
                 }

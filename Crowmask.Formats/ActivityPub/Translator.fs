@@ -7,11 +7,23 @@ open Crowmask.Dependencies.Mapping
 open Crowmask.Formats.Summaries
 open Crowmask.Interfaces
 
+/// Creates ActivityPub objects (in string/object pair format) for actors,
+/// posts, and other objects tracked by Crowmask.
 type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
+    /// The Crowmask actor ID.
     let actor = mapper.ActorId
 
+    /// Creates a string/object pair (F# tuple) with the given key and value.
     let pair key value = (key, value :> obj)
 
+    /// Checks whether the string is restricted to characters in the set that
+    /// Weasyl allows for tags, which is a subset of what Mastodon allows.
+    let isRestrictedSet c =
+        Char.IsAscii(c)
+        && (Char.IsLetterOrDigit(c) || c = '_')
+        && not (Char.IsUpper(c))
+
+    /// Builds a Person object for the Crowmask actor.
     member _.PersonToObject (person: Person) (key: ICrowmaskKey) = dict [
         pair "id" actor
         pair "type" "Person"
@@ -54,6 +66,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         ]
     ]
 
+    /// Builds a transient Update activity for the Crowmask actor.
     member this.PersonToUpdate (person: Person) (key: ICrowmaskKey) = dict [
         pair "type" "Update"
         pair "id" (mapper.GetTransientId())
@@ -62,6 +75,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" (this.PersonToObject person key)
     ]
 
+    /// Builds a Note or Article object for a submission or journal entry.
     member _.AsObject (post: Post) = dict [
         let backdate =
             post.first_cached - post.first_upstream > TimeSpan.FromHours(24)
@@ -86,13 +100,9 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "name" post.title
         pair "content" post.content
         pair "tag" [
-            // Ensure the tag's character set matches what we expect from Weasyl, which should be OK for Mastodon too
-            // If not, don't include it
-            let isRestrictedSet c =
-                Char.IsAscii(c)
-                && (Char.IsLetterOrDigit(c) || c = '_')
-                && not (Char.IsUpper(c))
             for tag in post.tags do
+                // Skip the tag if it doesn't meet our character set expectations.
+                // Weasyl doesn't allow much so no need to do normalization ourselves.
                 if tag |> Seq.forall isRestrictedSet then
                     dict [
                         pair "type" "Hashtag"
@@ -119,9 +129,10 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         ]
     ]
 
+    /// Builds a Create activity for a submission or journal entry.
     member this.ObjectToCreate (post: Post) = dict [
         pair "type" "Create"
-        pair "id" (mapper.GetTransientId())
+        pair "id" $"{mapper.GetObjectId(post.identifier)}?view=create"
         pair "actor" actor
         pair "published" post.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -129,6 +140,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" (this.AsObject post)
     ]
 
+    /// Builds a transient Update activity for a submission or journal entry.
     member this.ObjectToUpdate (post: Post) = dict [
         pair "type" "Update"
         pair "id" (mapper.GetTransientId())
@@ -139,6 +151,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" (this.AsObject post)
     ]
 
+    /// Builds a transient Delete activity for a submission or journal entry.
     member _.ObjectToDelete (post: Post) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GetTransientId())
@@ -149,6 +162,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" (mapper.GetObjectId post.identifier)
     ]
 
+    /// Builds a Note object for a private notification to the admin actor.
     member _.AsPrivateNote (post: Post) (interaction: Interaction) = dict [
         pair "id" (mapper.GetObjectId(post.identifier, interaction))
         pair "url" (mapper.GetObjectId(post.identifier, interaction))
@@ -160,6 +174,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "to" adminActor.Id
     ]
 
+    /// Builds a transient Create activity for a private notification to the admin actor.
     member this.PrivateNoteToCreate (post: Post) (interaction: Interaction) = dict [
         pair "type" "Create"
         pair "id" (mapper.GetTransientId())
@@ -169,6 +184,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" (this.AsPrivateNote post interaction)
     ]
 
+    /// Builds a transient Delete activity for a private notification to the admin actor.
     member _.PrivateNoteToDelete (post: Post) (interaction: Interaction) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GetTransientId())
@@ -178,6 +194,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" (mapper.GetObjectId(post.identifier, interaction))
     ]
 
+    /// Builds a transient Accept activity to accept a follow request.
     member _.AcceptFollow (followId: string) = dict [
         pair "type" "Accept"
         pair "id" (mapper.GetTransientId())
@@ -185,6 +202,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "object" followId
     ]
 
+    /// Builds an OrderedCollection to represent the user's outbox.
     member _.AsOutbox (gallery: Gallery) = dict [
         pair "id" $"{actor}/outbox"
         pair "type" "OrderedCollection"
@@ -192,6 +210,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "first" $"{actor}/outbox/page"
     ]
 
+    /// Builds an OrderedCollectionPage to represent a single page of the user's outbox.
     member this.AsOutboxPage (id: string) (page: Page) = dict [
         pair "id" id
         pair "type" "OrderedCollectionPage"
@@ -203,6 +222,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "orderedItems" [for p in page.posts do this.AsObject p]
     ]
 
+    /// Builds a Collection to list the user's followers.
     member _.AsFollowersCollection (followerCollection: FollowerCollection) = dict [
         pair "id" $"{actor}/followers"
         pair "type" "Collection"
@@ -210,6 +230,9 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "items" [for f in followerCollection.followers do f.actorId]
     ]
 
+    /// An empty Collection to show that the user is not following any other
+    /// ActivityPub actors (following other ActivityPub actors should be done
+    /// outside of Crowmask, using the admin actor).
     member _.FollowingCollection = dict [
         pair "id" $"{actor}/following"
         pair "type" "Collection"
@@ -217,6 +240,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "items" []
     ]
 
+    /// Builds a Collection to list the likes on a post.
     member _.AsLikesCollection (post: Post) = dict [
         pair "id" $"{mapper.GetObjectId post.identifier}?view=likes"
         pair "type" "Collection"
@@ -224,6 +248,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "items" [for o in post.likes do o.like_id]
     ]
 
+    /// Builds a Collection to list the boosts on a post.
     member _.AsSharesCollection (post: Post) = dict [
         pair "id" $"{mapper.GetObjectId post.identifier}?view=shares"
         pair "type" "Collection"
@@ -231,6 +256,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "items" [for o in post.boosts do o.announce_id]
     ]
 
+    /// Builds a Collection to list the replies to a post, as PeerTube does.
     member _.AsCommentsCollection (post: Post) = dict [
         pair "id" $"{mapper.GetObjectId post.identifier}?view=comments"
         pair "type" "Collection"

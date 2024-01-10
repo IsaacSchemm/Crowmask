@@ -20,7 +20,7 @@ namespace Crowmask.Dependencies.Mapping
         /// Used for Update and Delete activities.
         /// </summary>
         public string GetTransientId() =>
-            $"{ActorId}#transient-{Guid.NewGuid()}";
+            $"https://{crowmaskHost.Hostname}#transient-{Guid.NewGuid()}";
 
         /// <summary>
         /// Determines the ActivityPub object ID for a post.

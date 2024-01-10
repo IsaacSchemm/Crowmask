@@ -36,6 +36,7 @@ namespace Crowmask.Functions
                         req.Query["view"] == "comments" ? translator.AsCommentsCollection(submission)
                         : req.Query["view"] == "likes" ? translator.AsLikesCollection(submission)
                         : req.Query["view"] == "shares" ? translator.AsSharesCollection(submission)
+                        : req.Query["view"] == "create" ? translator.ObjectToCreate(submission)
                         : translator.AsObject(submission);
                     return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
                 }

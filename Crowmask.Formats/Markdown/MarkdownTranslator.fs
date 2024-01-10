@@ -6,9 +6,15 @@ open Crowmask.Dependencies.Mapping
 open Crowmask.Formats.Summaries
 open Crowmask.Interfaces
 
+/// Creates Markdown and HTML renditions of Crowmask objects and pages, for
+/// use in the HTML web interface, or (for debugging) by other non-ActivityPub\
+/// user agents.
 type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
+    /// Performs HTML encoding on a string. (HTML can be inserted into
+    /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode
 
+    /// Renders an HTML page, given a title and a Markdown document.
     let toHtml (title: string) (str: string) = String.concat "\n" [
         "<!DOCTYPE html>"
         "<html>"
@@ -28,6 +34,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         "</html>"
     ]
 
+    /// A Markdown header that is included on all pages.
     let sharedHeader = String.concat "\n" [
         $"# Crowmask"
         $""
@@ -127,7 +134,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
 
         for i in post.Interactions do
-            $"* {summarizer.ToMarkdown(post, i)} ([notification]({mapper.GetObjectId(post.identifier, i)}))"
+            $"* {summarizer.ToMarkdown(post, i)}"
 
         $""
     ]
