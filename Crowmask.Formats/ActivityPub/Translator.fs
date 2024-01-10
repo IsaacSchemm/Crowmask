@@ -219,7 +219,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
             pair "next" $"{actor}/outbox/page?offset={page.offset + page.posts.Length}"
 
         pair "partOf" $"{actor}/outbox"
-        pair "orderedItems" [for p in page.posts do this.AsObject p]
+        pair "orderedItems" [for p in page.posts do this.ObjectToCreate p]
     ]
 
     /// Builds a Collection to list the user's followers.
