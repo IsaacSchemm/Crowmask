@@ -10,9 +10,21 @@ using System.Threading.Tasks;
 
 namespace Crowmask
 {
+    /// <summary>
+    /// Provides a way for the inbox handler to make changes in Crowmask's
+    /// database, outside of what CrowmaskCache can do.
+    /// </summary>
     public class DatabaseActions(CrowmaskDbContext context)
     {
-        public async Task AddKnownInboxAsync(Requester.RemoteActor actor)
+        /// <summary>
+        /// Adds an actor's shared inbox (or personal inbox, if there is none
+        /// to Crowmask's list of known inboxes, unless it is already present.
+        /// </summary>
+        /// <remarks>
+        /// Inboxes that no longer exist will be removed by OutboundActivityCleanup.
+        /// </remarks>
+        /// <param name="actor">The ActivityPub actor to add</param>
+        public async Task AddKnownInboxAsync(RemoteActor actor)
         {
             string personalInbox = actor.Inbox;
             string primaryInbox = actor.SharedInbox ?? actor.Inbox;
@@ -33,7 +45,14 @@ namespace Crowmask
             }
         }
 
-        public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, Requester.RemoteActor remoteActor)
+        /// <summary>
+        /// Adds a new outbound activity to the Crowmask database, addressed
+        /// to a single actor, to be sent by the RefreshUpstream function.
+        /// </summary>
+        /// <param name="obj">The object (from the Translator module) to serialize as JSON-LD</param>
+        /// <param name="remoteActor">The actor to send the object to</param>
+        /// <returns></returns>
+        public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, RemoteActor remoteActor)
         {
             context.OutboundActivities.Add(new OutboundActivity
             {
@@ -46,7 +65,14 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
-        public async Task AddFollowAsync(string objectId, Requester.RemoteActor actor)
+        /// <summary>
+        /// Adds a follower to the database. If the follower already exists,
+        /// the ID of the Follow activity will be updated.
+        /// </summary>
+        /// <param name="objectId">The ID of the Follow activity, so Undo requests can be honored</param>
+        /// <param name="actor">The follower to add</param>
+        /// <returns></returns>
+        public async Task AddFollowAsync(string objectId, RemoteActor actor)
         {
             var existing = await context.Followers
                 .Where(f => f.ActorId == actor.Id)
@@ -71,6 +97,11 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Remove a follower.
+        /// </summary>
+        /// <param name="objectId">The ID of the Follow activity</param>
+        /// <returns></returns>
         public async Task RemoveFollowAsync(string objectId)
         {
             var followers = context.Followers
@@ -82,7 +113,14 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
-        public async Task AddLikeAsync(JointIdentifier identifier, string activityId, Requester.RemoteActor actor)
+        /// <summary>
+        /// Adds a like to a Crowmask post.
+        /// </summary>
+        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="activityId">The Like activity ID, so Undo requests can be honored</param>
+        /// <param name="actor">The actor who liked the post</param>
+        /// <returns></returns>
+        public async Task AddLikeAsync(JointIdentifier identifier, string activityId, RemoteActor actor)
         {
             if (identifier.IsSubmissionIdentifier)
             {
@@ -111,7 +149,13 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
-        public async Task AddBoostAsync(JointIdentifier identifier, string activityId, Requester.RemoteActor actor)
+        /// <summary>
+        /// Adds a boost to a Crowmask post.
+        /// </summary>
+        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="activityId">The Announce activity ID, so Undo requests can be honored</param>
+        /// <param name="actor">The actor who boosted the post</param>
+        public async Task AddBoostAsync(JointIdentifier identifier, string activityId, RemoteActor actor)
         {
             if (identifier.IsSubmissionIdentifier)
             {
@@ -140,7 +184,13 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
-        public async Task AddReplyAsync(JointIdentifier identifier, string replyObjectId, Requester.RemoteActor actor)
+        /// <summary>
+        /// Adds a reply to a Crowmask post.
+        /// </summary>
+        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="activityId">The ID of the reply object (Note, etc.), so Delete requests can be honored</param>
+        /// <param name="actor">The actor who replied to the post</param>
+        public async Task AddReplyAsync(JointIdentifier identifier, string replyObjectId, RemoteActor actor)
         {
             if (identifier.IsSubmissionIdentifier)
             {
@@ -169,6 +219,12 @@ namespace Crowmask
             await context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Removes a like, boost, or reply from a Crowmask post.
+        /// </summary>
+        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="id">The GUID associated with the interaction in Crowmask's database</param>
+        /// <returns></returns>
         public async Task RemoveInteractionAsync(JointIdentifier identifier, Guid id)
         {
             if (identifier.IsSubmissionIdentifier)

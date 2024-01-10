@@ -1,5 +1,4 @@
 ﻿using Crowmask.ActivityPub;
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
 using Crowmask.Remote;
 using System.Collections.Generic;
@@ -16,7 +15,7 @@ namespace Crowmask
             await databaseActions.AddOutboundActivityAsync(activityPubObject, adminActorDetails);
         }
 
-        public async Task AcceptFollowAsync(string objectId, Requester.RemoteActor actor)
+        public async Task AcceptFollowAsync(string objectId, RemoteActor actor)
         {
             await databaseActions.AddOutboundActivityAsync(
                 translator.AcceptFollow(objectId),
