@@ -1,5 +1,6 @@
 ﻿using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Interfaces;
 using Crowmask.Library.Remote;
 using System.Collections.Generic;
 using System.Linq;

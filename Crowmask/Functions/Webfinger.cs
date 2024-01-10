@@ -1,5 +1,5 @@
 using Crowmask.Dependencies.Mapping;
-using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Crowmask.Library.Cache;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;

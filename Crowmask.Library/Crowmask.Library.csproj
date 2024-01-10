@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Crowmask.Dependencies\Crowmask.Dependencies.csproj" />
     <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
     <ProjectReference Include="..\Crowmask.Formats\Crowmask.Formats.fsproj" />
+    <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
   </ItemGroup>
 
 </Project>

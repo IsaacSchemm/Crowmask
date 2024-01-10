@@ -5,13 +5,14 @@ open System.Net
 open Crowmask.DomainModeling
 open Crowmask.Dependencies.Mapping
 open Crowmask.Formats.Summaries
+open Crowmask.Interfaces
 
 type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
     let actor = mapper.ActorId
 
     let pair key value = (key, value :> obj)
 
-    member _.PersonToObject (person: Person) (key: IPublicKey) = dict [
+    member _.PersonToObject (person: Person) (key: ICrowmaskKey) = dict [
         pair "id" actor
         pair "type" "Person"
         pair "inbox" $"{actor}/inbox"
@@ -48,7 +49,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         ]
     ]
 
-    member this.PersonToUpdate (person: Person) (key: IPublicKey) = dict [
+    member this.PersonToUpdate (person: Person) (key: ICrowmaskKey) = dict [
         pair "type" "Update"
         pair "id" (mapper.GetTransientId())
         pair "actor" actor

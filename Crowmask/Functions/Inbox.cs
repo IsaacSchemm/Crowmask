@@ -59,11 +59,8 @@ namespace Crowmask.Functions
 
             // Verify HTTP signature against the public key
             var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
-                new IncomingRequest(
-                    new HttpMethod(req.Method),
-                    req.Url,
-                    req.Headers),
-                verificationKey: actor);
+                req.AsIRequest(),
+                actor);
 
             if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
                 return req.CreateResponse(HttpStatusCode.Forbidden);

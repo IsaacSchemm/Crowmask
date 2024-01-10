@@ -1,9 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
-using Crowmask.DomainModeling;
-using Crowmask.Library.Cache;
-using Crowmask.Library.Remote;
+using Crowmask.Interfaces;
 using System;
 using System.Threading.Tasks;
 
@@ -13,9 +11,9 @@ namespace Crowmask
     /// Provides access to an encryption key in Azure Key Vault. This key is
     /// used as the signing key for the ActivityPub actor.
     /// </summary>
-    public class KeyProvider : IPublicKeyProvider, ISigner
+    public class KeyProvider : ICrowmaskKeyProvider
     {
-        private record PublicKey(string Pem) : IPublicKey;
+        private record PublicKey(string Pem) : ICrowmaskKey;
 
         private readonly KeyClient _keyClient;
 
@@ -23,17 +21,18 @@ namespace Crowmask
         /// Creates a new KeyProvider and initializes an Azure Key Vault client.
         /// </summary>
         /// <param name="vaultUri">The URI of the Azure Key Vault instance</param>
-        public KeyProvider(Uri vaultUri)
+        public KeyProvider(IKeyVaultHost host)
         {
+            var vaultUri = new Uri($"https://{host.Hostname}");
             var tokenCredential = new DefaultAzureCredential();
             _keyClient = new KeyClient(vaultUri, tokenCredential);
         }
 
         /// <summary>
-        /// Retrieves the public key and renders it in PEM format for use in the ActivityPub Person object.
+        /// Retrieves the public key and renders it in PEM format for use in the ActivityPub actor object.
         /// </summary>
         /// <returns>An object that contains the public key in PEM format</returns>
-        public async Task<IPublicKey> GetPublicKeyAsync()
+        public async Task<ICrowmaskKey> GetPublicKeyAsync()
         {
             var key = await _keyClient.GetKeyAsync("crowmask-ap");
             byte[] arr = key.Value.Key.ToRSA().ExportSubjectPublicKeyInfo();

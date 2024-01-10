@@ -1,5 +1,6 @@
 ﻿using Crowmask.Dependencies.Mapping;
 using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using System.Net;
 using System.ServiceModel.Syndication;
 using System.Text;

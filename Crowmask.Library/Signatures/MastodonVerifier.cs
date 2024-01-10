@@ -5,6 +5,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using Crowmask.Interfaces;
 using Crowmask.Library.Remote;
 using NSign;
 using NSign.Signatures;
@@ -35,7 +36,7 @@ public partial class MastodonVerifier
     private static readonly StringSplitOptions RemoveEmpty = StringSplitOptions.RemoveEmptyEntries;
     private static readonly StringSplitOptions Trim = StringSplitOptions.TrimEntries;
 
-    public VerificationResult VerifyRequestSignature(IncomingRequest message, RemoteActor remoteActor)
+    public VerificationResult VerifyRequestSignature(IRequest message, RemoteActor remoteActor)
     {
         var builder = new MastodonComponentBuilder(message);
         var components = ParseMastodonSignatureComponents(message);
@@ -59,7 +60,7 @@ public partial class MastodonVerifier
         return defaultResult;
     }
 
-    private IEnumerable<MastodonSignatureComponents> ParseMastodonSignatureComponents(IncomingRequest message)
+    private IEnumerable<MastodonSignatureComponents> ParseMastodonSignatureComponents(IRequest message)
     {
         if (!message.Headers.TryGetValues(Constants.Headers.Signature, out var values))
             yield break;
