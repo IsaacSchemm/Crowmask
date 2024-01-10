@@ -11,7 +11,7 @@ namespace Crowmask.Functions
     public class RefreshUpstream(CrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylUserClient weasylUserClient)
     {
         [Function("ShortUpdate")]
-        public async Task Run([TimerTrigger("* */10 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo myTimer)
         {
             DateTimeOffset yesterday = DateTimeOffset.UtcNow.AddDays(-1);
 
