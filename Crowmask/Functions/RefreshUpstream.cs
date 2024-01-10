@@ -17,7 +17,9 @@ namespace Crowmask.Functions
         /// <item>The most recent journal on Weasyl, plus any additional journals within the past day</item>
         /// <item>Any cached posts in Crowmask that were posted to Weasyl within the past day</item>
         /// </list>
-        /// This function handles new post discovery, updates, and deletions in the short term. Runs every ten minutes.
+        /// This function handles new post discovery, updates, and deletions
+        /// in the short term, and is responsible for sending outbound
+        /// activities. Runs every ten minutes.
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>

@@ -1,7 +1,6 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.IdMapping;
-using Crowmask.Signatures;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
@@ -12,23 +11,6 @@ namespace Crowmask.Remote
 {
     public class Requester(ActivityStreamsIdMapper mapper, IHttpClientFactory httpClientFactory, ISigner signer)
     {
-        public record RemoteActor(
-            string Id,
-            string? Name,
-            string Inbox,
-            string? SharedInbox,
-            string KeyId,
-            string KeyPem) : ISigningKey
-        {
-            Uri ISigningKey.Id => new(KeyId);
-            RSA ISigningKey.GetRsa()
-            {
-                var rsa = RSA.Create();
-                rsa.ImportFromPem(KeyPem);
-                return rsa;
-            }
-        }
-
         /// <summary>
         /// Fetches and returns an actor.
         /// </summary>
