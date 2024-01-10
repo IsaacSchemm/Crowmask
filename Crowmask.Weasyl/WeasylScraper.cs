@@ -18,15 +18,14 @@ namespace Crowmask.Weasyl
     {
         private static readonly HtmlParser _htmlParser = new();
 
-        private async Task<string> GetHtmlAsync(string uri, CancellationToken cancellationToken = default)
+        private async Task<HttpResponseMessage> GetHtmlAsync(string uri, CancellationToken cancellationToken = default)
         {
             using var httpClient = httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.1"));
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
             httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
 
-            using var resp = await httpClient.GetAsync(uri, cancellationToken);
-            resp.EnsureSuccessStatusCode();
-            return await resp.Content.ReadAsStringAsync(cancellationToken);
+            return await httpClient.GetAsync(uri, cancellationToken);
         }
 
         [GeneratedRegex(@"^/journal/([0-9]+)")]
@@ -34,7 +33,13 @@ namespace Crowmask.Weasyl
 
         public async IAsyncEnumerable<int> GetJournalIdsAsync(string login_name, [EnumeratorCancellation]CancellationToken cancellationToken = default)
         {
-            string html = await GetHtmlAsync($"https://www.weasyl.com/journals/{Uri.EscapeDataString(login_name)}", cancellationToken);
+            using var resp = await GetHtmlAsync(
+                $"https://www.weasyl.com/journals/{Uri.EscapeDataString(login_name)}",
+                cancellationToken);
+
+            resp.EnsureSuccessStatusCode();
+            string html = await resp.Content.ReadAsStringAsync(cancellationToken);
+
             using var document = await _htmlParser.ParseDocumentAsync(html, cancellationToken);
             foreach (var link in document.QuerySelectorAll($"#journals-content .text-post-title a"))
             {
@@ -49,33 +54,68 @@ namespace Crowmask.Weasyl
             }
         }
 
-        public async Task<JournalEntry> GetJournalAsync(int journalid, CancellationToken cancellationToken = default)
+        public async Task<JournalEntry?> GetJournalAsync(int journalid, CancellationToken cancellationToken = default)
         {
-            string html = await GetHtmlAsync($"https://www.weasyl.com/journal/{journalid}", cancellationToken);
+            using var resp = await GetHtmlAsync(
+                $"https://www.weasyl.com/journal/{journalid}",
+                cancellationToken);
+            if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+
+            resp.EnsureSuccessStatusCode();
+            string html = await resp.Content.ReadAsStringAsync(cancellationToken);
+
             using var document = await _htmlParser.ParseDocumentAsync(html, cancellationToken);
+
+            string? journalId = document.GetElementsByTagName("input")
+                .Where(i => i.GetAttribute("name") == "journalid")
+                .Select(i => i.GetAttribute("value"))
+                .Distinct()
+                .DefaultIfEmpty(null)
+                .Single();
+            if (journalId == null)
+                return null;
+
+            string? title = document.GetElementById("detail-bar-title")?.TextContent;
+            if (title == null)
+                return null;
+
+            string? content = document.GetElementById("detail-journal")?.InnerHtml?.Trim();
+            if (content == null)
+                return null;
+
+            string? username = document.QuerySelectorAll("#detail-bar")
+                .SelectMany(e => e.GetElementsByClassName("username"))
+                .Select(e => e.TextContent)
+                .Distinct()
+                .DefaultIfEmpty(null)
+                .Single();
+            if (username == null)
+                return null;
+
+            string? postedAt = document.GetElementsByTagName("time")
+                .Select(e => e.GetAttribute("datetime"))
+                .Where(e => e != null)
+                .DefaultIfEmpty(null)
+                .First();
+            if (postedAt == null)
+                return null;
+
+            string? rating = document.GetElementsByTagName("dt")
+                .Where(dt => dt.TextContent == "Rating:")
+                .Select(dt => dt.NextElementSibling?.TextContent)
+                .DefaultIfEmpty(null)
+                .Single();
+            if (rating == null)
+                return null;
+
             return new JournalEntry(
-                JournalId: int.Parse(
-                    document.GetElementsByTagName("input")
-                    .Where(i => i.GetAttribute("name") == "journalid")
-                    .Select(i => i.GetAttribute("value"))
-                    .Distinct()
-                    .Single()),
-                Title: document.GetElementById("detail-bar-title").TextContent,
-                Content: document.GetElementById("detail-journal").InnerHtml.Trim(),
-                Username: document.GetElementById("detail-bar")
-                    .GetElementsByClassName("username")
-                    .Select(e => e.TextContent)
-                    .Distinct()
-                    .Single(),
-                PostedAt: DateTimeOffset.Parse(
-                    document.GetElementsByTagName("time")
-                    .Select(e => e.GetAttribute("datetime"))
-                    .Where(e => e != null)
-                    .First()),
-                Rating: document.GetElementsByTagName("dt")
-                    .Where(dt => dt.TextContent == "Rating:")
-                    .Select(dt => dt.NextElementSibling.TextContent)
-                    .Single(),
+                JournalId: int.Parse(journalId),
+                Title: title,
+                Content: content,
+                Username: username,
+                PostedAt: DateTimeOffset.Parse(postedAt),
+                Rating: rating,
                 VisibilityRestricted: document.GetElementById("detail-visibility-restricted") != null);
         }
     }
