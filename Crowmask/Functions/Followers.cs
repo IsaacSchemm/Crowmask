@@ -31,7 +31,7 @@ namespace Crowmask.Functions
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
-                if (format.IsActivityJson)
+                if (format.IsActivityStreams)
                 {
                     var coll = translator.AsFollowersCollection(followerCollection);
 

@@ -6,6 +6,14 @@ using System.Linq;
 
 namespace Crowmask
 {
+    /// <summary>
+    /// Provides a way to quickly look up a Crowmask post, given the ID of a
+    /// relevant ActivityPub object (a Like, an Announce, or a reply). This
+    /// implementation is specific to the Cosmos DB backend and would need to
+    /// be modified (or replaced with a much less efficient implementation
+    /// that loops through all posts) if an SQL backend were used.
+    /// </summary>
+    /// <param name="context"></param>
     public class FastInteractionLookup(CrowmaskDbContext context) : IInteractionLookup
     {
         public async IAsyncEnumerable<int> GetRelevantSubmitIdsAsync(string external_activity_or_object_id)
