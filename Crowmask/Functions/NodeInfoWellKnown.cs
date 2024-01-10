@@ -1,4 +1,4 @@
-using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;

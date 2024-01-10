@@ -1,6 +1,7 @@
 ﻿using Crowmask.Data;
 using Crowmask.Dependencies.Mapping;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Interfaces;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
@@ -9,7 +10,7 @@ using System.Text;
 
 namespace Crowmask.Library.Remote
 {
-    public class Requester(ActivityStreamsIdMapper mapper, IHttpClientFactory httpClientFactory, ISigner signer)
+    public class Requester(ActivityStreamsIdMapper mapper, ICrowmaskKeyProvider keyProvider, IHttpClientFactory httpClientFactory)
     {
         /// <summary>
         /// Fetches and returns an actor.
@@ -77,7 +78,7 @@ namespace Crowmask.Library.Remote
         {
             string ds = string.Join("\n", GetHeadersToSign(req));
             byte[] data = Encoding.UTF8.GetBytes(ds);
-            byte[] signature = await signer.SignRsaSha256Async(data);
+            byte[] signature = await keyProvider.SignRsaSha256Async(data);
             string headerNames = "(request-target) host date";
             if (req.Headers.Contains("Digest"))
             {

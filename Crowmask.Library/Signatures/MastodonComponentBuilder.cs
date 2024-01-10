@@ -4,10 +4,11 @@
 
 using static NSign.Constants;
 using NSign.Signatures;
+using Crowmask.Interfaces;
 
 namespace Crowmask.Library.Signatures;
 
-public class MastodonComponentBuilder(IncomingRequest _message) : ISignatureComponentVisitor
+public class MastodonComponentBuilder(IRequest _message) : ISignatureComponentVisitor
 {
     private readonly List<string> _derivedParamsValues = [];
     private readonly List<string> _headerParamsValues = [];

@@ -3,12 +3,13 @@ using Crowmask.Dependencies.Async;
 using Crowmask.Dependencies.Weasyl;
 using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 
 namespace Crowmask.Library.Cache
 {
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, IPublicKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
     {
         private async Task<string> GetContentTypeAsync(string url)
         {

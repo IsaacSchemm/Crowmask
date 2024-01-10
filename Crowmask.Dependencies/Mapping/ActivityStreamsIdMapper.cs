@@ -1,4 +1,5 @@
 ﻿using Crowmask.DomainModeling;
+using Crowmask.Interfaces;
 
 namespace Crowmask.Dependencies.Mapping
 {

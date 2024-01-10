@@ -3,10 +3,10 @@ using Crowmask;
 using Crowmask.Data;
 using Crowmask.Dependencies.Mapping;
 using Crowmask.Dependencies.Weasyl;
-using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
 using Crowmask.Formats.Markdown;
 using Crowmask.Formats.Summaries;
+using Crowmask.Interfaces;
 using Crowmask.Library.Cache;
 using Crowmask.Library.Feed;
 using Crowmask.Library.Remote;
@@ -41,18 +41,15 @@ var host = new HostBuilder()
             services.AddSingleton<IHandleHost>(new Host(handleHost));
 
         if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost)
-        {
-            var provider = new KeyProvider(new Uri($"https://{keyVaultHost}"));
-            services.AddSingleton<ISigner>(provider);
-            services.AddSingleton<IPublicKeyProvider>(provider);
-        }
+            services.AddSingleton<IKeyVaultHost>(new Host(keyVaultHost));
 
         if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
             services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
 
         services.AddHttpClient();
 
-        services.AddSingleton<IInteractionLookup, FastInteractionLookup>();
+        services.AddScoped<ICrowmaskKeyProvider, KeyProvider>();
+        services.AddScoped<IInteractionLookup, FastInteractionLookup>();
 
         services.AddScoped<ActivityStreamsIdMapper>();
         services.AddScoped<CrowmaskCache>();
@@ -73,6 +70,6 @@ host.Run();
 
 record AdminActor(string Id) : IAdminActor;
 
-record Host(string Hostname) : ICrowmaskHost, IHandleHost;
+record Host(string Hostname) : ICrowmaskHost, IHandleHost, IKeyVaultHost;
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

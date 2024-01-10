@@ -4,6 +4,7 @@ open System.Net
 open Crowmask.DomainModeling
 open Crowmask.Dependencies.Mapping
 open Crowmask.Formats.Summaries
+open Crowmask.Interfaces
 
 type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
     let enc = WebUtility.HtmlEncode

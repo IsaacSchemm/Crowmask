@@ -43,6 +43,8 @@ doesn't indicate any particular media type.
 
 Layers:
 
+* **Crowmask.Interfaces**: contains interfaces used to pass configuration
+  values between layers or to allow inner layers to call outer-layer code.
 * **Crowmask.Data**: contains the data types and and data context, which map
   to documents in the Cosmos DB backend of EF Core.
 * **Crowmask.DomainModeling**: converts data objects like `Submission` (which
