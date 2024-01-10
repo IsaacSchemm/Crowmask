@@ -2,12 +2,20 @@
 
 open Microsoft.Net.Http.Headers
 
-/// A response type supported by Crowmask's HTTP content negoation.
+/// A response type supported by Crowmask's HTTP content negotiation.
 type CrowmaskFormat = HTML | ActivityStreams | Markdown | RSS | Atom
 with
     /// All response types that can be supported by Crowmask's HTTP content
-    /// negoation, in order of Crowmask's preference when the user agent does
+    /// negotiation, in order of Crowmask's preference when the user agent does
     /// not express its own.
+    ///
+    /// The default output format of Crowmask is the Markdown that it uses to
+    /// generate its HTML. ActivityPub applications and web browers should use
+    /// appropriate Accept headers to request ActivityStreams JSON or HTML,
+    /// respectively.
+    ///
+    /// RSS and Atom feeds can be requested through content negotiation or
+    /// through a query parameter on the OutboxPage endpoint.
     static member All = [
         Markdown
         HTML

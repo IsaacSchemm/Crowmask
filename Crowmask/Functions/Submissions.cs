@@ -29,6 +29,9 @@ namespace Crowmask.Functions
             {
                 if (format.IsActivityStreams)
                 {
+                    // This endpoint also implements the collections for likes, shares, and (similar to PeerTube) comments.
+                    // Most ActivityPub applications would store these interactions in their own tables and paginate them here, if they expose them at all.
+                    // I wanted them visible on the HTML variant of the page, so I decided to include them.
                     var objectToSerialize =
                         req.Query["view"] == "comments" ? translator.AsCommentsCollection(submission)
                         : req.Query["view"] == "likes" ? translator.AsLikesCollection(submission)

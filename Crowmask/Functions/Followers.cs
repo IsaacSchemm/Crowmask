@@ -23,6 +23,8 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/followers")] HttpRequestData req)
         {
+            // All followers are included in one list, for ease of implementation.
+            // Most ActivityPub applications would paginate this.
             var followers = await context.Followers
                 .OrderBy(f => f.ActorId)
                 .ToListAsync();
