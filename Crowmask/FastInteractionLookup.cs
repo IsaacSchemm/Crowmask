@@ -3,6 +3,7 @@ using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Crowmask
 {
@@ -16,7 +17,7 @@ namespace Crowmask
     /// <param name="context"></param>
     public class FastInteractionLookup(CrowmaskDbContext context) : IInteractionLookup
     {
-        public async IAsyncEnumerable<int> GetRelevantSubmitIdsAsync(string external_activity_or_object_id)
+        public async Task<int?> GetRelevantSubmitIdAsync(string external_activity_or_object_id)
         {
             IReadOnlyList<IQueryable<Submission>> queries = [
                 context.Submissions.FromSqlRaw(
@@ -34,10 +35,12 @@ namespace Crowmask
 
             foreach (var query in queries)
                 await foreach (var item in query.AsAsyncEnumerable())
-                    yield return item.SubmitId;
+                    return item.SubmitId;
+
+            return null;
         }
 
-        public async IAsyncEnumerable<int> GetRelevantJournalIdsAsync(string external_activity_or_object_id)
+        public async Task<int?> GetRelevantJournalIdAsync(string external_activity_or_object_id)
         {
             IReadOnlyList<IQueryable<Journal>> queries = [
                 context.Journals.FromSqlRaw(
@@ -55,7 +58,9 @@ namespace Crowmask
 
             foreach (var query in queries)
                 await foreach (var item in query.AsAsyncEnumerable())
-                    yield return item.JournalId;
+                    return item.JournalId;
+
+            return null;
         }
     }
 }

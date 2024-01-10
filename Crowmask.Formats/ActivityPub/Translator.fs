@@ -46,6 +46,11 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
                         | Some uri -> $"<a href='{uri}'>{WebUtility.HtmlEncode(metadata.value)}</a>"
                         | None -> WebUtility.HtmlEncode(metadata.value)
                 |}
+            {|
+                ``type`` = "PropertyValue"
+                name = "Mirrored by"
+                value = $"<a href='https://github.com/IsaacSchemm/Crowmask/'>Crowmask</a> (APGLv3)"
+            |}
         ]
     ]
 

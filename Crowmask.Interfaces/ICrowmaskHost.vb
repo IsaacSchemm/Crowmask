@@ -7,6 +7,5 @@ Public Interface ICrowmaskHost
     ''' The host / domain name used by Crowmask.
     ''' May or may not be the same as the domain in the actor's handle.
     ''' </summary>
-    ''' <returns></returns>
     ReadOnly Property Hostname As String
 End Interface

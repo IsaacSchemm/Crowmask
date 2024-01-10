@@ -5,6 +5,5 @@ Public Interface ICrowmaskKey
     ''' <summary>
     ''' The public key, in PEM format.
     ''' </summary>
-    ''' <returns></returns>
     ReadOnly Property Pem As String
 End Interface

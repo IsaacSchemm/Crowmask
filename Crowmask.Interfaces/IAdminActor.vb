@@ -6,6 +6,5 @@ Public Interface IAdminActor
     ''' <summary>
     ''' The admin actor's ActivityPub ID.
     ''' </summary>
-    ''' <returns></returns>
     ReadOnly Property Id As String
 End Interface
