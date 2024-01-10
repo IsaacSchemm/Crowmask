@@ -20,6 +20,29 @@ namespace Crowmask.Functions
 {
     public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, DatabaseActions databaseActions, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester)
     {
+        /// <summary>
+        /// Accepts an ActivityPub message. Supported types are:
+        /// <list type="bullet">
+        /// <item>Follow (adds the follower and sends back an Accept message)</item>
+        /// <item>Undo (removes a follower, like, or boost)</item>
+        /// <item>Like (records a like on one of this actor's posts)</item>
+        /// <item>Announce (records a boost on one of this actor's posts)</item>
+        /// <item>Create (records the ID of a post by another actor, if it's a reply to this actor)</item>
+        /// <item>Delete (removes the ID of a post by another actor, if it was a reply to this actor)</item>
+        /// </list>
+        /// New likes, boosts, and replies also generate private Notes sent to the admin actor. Other actions are ignored.
+        /// </summary>
+        /// <remarks>
+        /// Crowmask does not currently forward activities.
+        /// </remarks>
+        /// <param name="req"></param>
+        /// <returns>
+        /// <list type="bullet">
+        /// <item>202 Accepted</item>
+        /// <item>204 No Content (in some cases where Crowmask takes no action)</item>
+        /// <item>403 Forbidden (if HTTP validation fails)</item>
+        /// </list>
+        /// </returns>
         [Function("Inbox")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/actor/inbox")] HttpRequestData req)

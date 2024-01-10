@@ -13,6 +13,11 @@ namespace Crowmask.Functions
 {
     public class NodeInfo(CrowmaskCache crowmaskCache, IHandleHost handleHost)
     {
+        /// <summary>
+        /// Returns a NodeInfo 2.2 response with information about the user and about Crowmask.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>A NodeInfo response</returns>
         [Function("NodeInfo")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/nodeinfo")] HttpRequestData req)

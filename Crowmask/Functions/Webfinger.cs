@@ -12,6 +12,12 @@ namespace Crowmask.Functions
 {
     public class WebFinger(ActivityStreamsIdMapper mapper, CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor)
     {
+        /// <summary>
+        /// Points the user agent to the Crowmask actor ID, or redirects to
+        /// the equivalent endpoint on the admin actor's server.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>A WebFinger response</returns>
         [Function("WebFinger")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = ".well-known/webfinger")] HttpRequestData req)

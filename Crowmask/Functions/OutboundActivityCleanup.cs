@@ -9,6 +9,11 @@ namespace Crowmask.Functions
 {
     public class OutboundActivityCleanup(CrowmaskDbContext context)
     {
+        /// <summary>
+        /// Removes pending outbound activities that are more than seven days old. Runs 2 minutes after the top of the hour.
+        /// </summary>
+        /// <param name="myTimer"></param>
+        /// <returns></returns>
         [Function("OutboundActivityCleanup")]
         public async Task Run([TimerTrigger("0 2 * * * *")] TimerInfo myTimer)
         {

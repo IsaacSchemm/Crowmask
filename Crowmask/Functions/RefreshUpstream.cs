@@ -10,6 +10,17 @@ namespace Crowmask.Functions
 {
     public class RefreshUpstream(CrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylUserClient weasylUserClient)
     {
+        /// <summary>
+        /// Refreshes the cache for stale items that are among the following:
+        /// <list type="bullet">
+        /// <item>The most recent submission on Weasyl, plus any additional submissions within the past day</item>
+        /// <item>The most recent journal on Weasyl, plus any additional journals within the past day</item>
+        /// <item>Any cached posts in Crowmask that were posted to Weasyl within the past day</item>
+        /// </list>
+        /// This function handles new post discovery, updates, and deletions in the short term. Runs every ten minutes.
+        /// </summary>
+        /// <param name="myTimer"></param>
+        /// <returns></returns>
         [Function("ShortUpdate")]
         public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo myTimer)
         {

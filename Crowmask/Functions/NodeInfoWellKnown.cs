@@ -10,6 +10,11 @@ namespace Crowmask.Functions
 {
     public class NodeInfoWellKnown(ICrowmaskHost host)
     {
+        /// <summary>
+        /// Points the user agent to the NodeInfo endpoint.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>A WebFinger response</returns>
         [Function("NodeInfoWellKnown")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = ".well-known/nodeinfo")] HttpRequestData req)

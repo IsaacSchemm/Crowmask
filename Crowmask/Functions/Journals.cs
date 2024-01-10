@@ -11,6 +11,12 @@ namespace Crowmask.Functions
 {
     public class Journals(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
     {
+        /// <summary>
+        /// Returns a mirror of a journal posted to Weasyl.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <param name="journalid">The numeric ID of the journal on Weasyl</param>
+        /// <returns>An ActivityStreams Article or Collection or a Markdown or HTML response, depending on the query string and the user agent's Accept header.</returns>
         [Function("Journals")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/journals/{journalid}")] HttpRequestData req,

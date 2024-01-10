@@ -104,13 +104,7 @@ HTTP endpoints:
 * `/api/actor`: returns the `Person` object
 * `/api/actor/followers`: contains the IDs of all followers (not paginated)
 * `/api/actor/following`: an empty list
-* `/api/actor/inbox`: processes the following activities:
-    * `Follow`: adds a new follower (or updates the `Follow` ID of an existing follower)
-    * `Undo`: undoes a `Follow`, `Announce`, or `Like`
-    * `Like`: if it matches a `Submission`, records the like, then sends a transient message to the admin actor
-    * `Announce`: if it matches a `Submission`, records the boost, then sends a transient message to the admin actor
-    * `Create`: if it's for a reply to a `Submission`, records the new message, then sends a transient message to the admin
-    * `Delete`: if it's for a reply to a `Submission` that was recorded earlier, deletes that reply
+* `/api/actor/inbox`: processes incoming activities
 * `/api/actor/nodeinfo`: returns a NodeInfo 2.2 response
 * `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
 * `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)

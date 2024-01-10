@@ -14,6 +14,11 @@ namespace Crowmask.Functions
 {
     public class Followers(CrowmaskDbContext context, Translator translator, MarkdownTranslator markdownTranslator)
     {
+        /// <summary>
+        /// Returns a list of ActivityPub actors that follow this Crowmask instance.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>An ActivityStreams Collection object or a Markdown or HTML response, depending on the user agent's Accept header.</returns>
         [Function("Followers")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/followers")] HttpRequestData req)
