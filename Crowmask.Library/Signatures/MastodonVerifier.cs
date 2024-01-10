@@ -5,6 +5,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using Crowmask.Library.Remote;
 using NSign;
 using NSign.Signatures;
 
@@ -34,7 +35,7 @@ public partial class MastodonVerifier
     private static readonly StringSplitOptions RemoveEmpty = StringSplitOptions.RemoveEmptyEntries;
     private static readonly StringSplitOptions Trim = StringSplitOptions.TrimEntries;
 
-    public VerificationResult VerifyRequestSignature(IncomingRequest message, ISigningKey verificationKey)
+    public VerificationResult VerifyRequestSignature(IncomingRequest message, RemoteActor remoteActor)
     {
         var builder = new MastodonComponentBuilder(message);
         var components = ParseMastodonSignatureComponents(message);
@@ -44,10 +45,12 @@ public partial class MastodonVerifier
         {
             if (!Uri.TryCreate(parsed.keyId, UriKind.Absolute, out Uri? keyId))
                 continue;
-            if (keyId != verificationKey.Id)
+            if (!Uri.TryCreate(remoteActor.KeyId, UriKind.Absolute, out Uri? remoteKeyId))
+                continue;
+            if (keyId != remoteKeyId)
                 continue;
 
-            if (VerifySignature(parsed, verificationKey, builder))
+            if (VerifySignature(parsed, remoteActor, builder))
                 return VerificationResult.SuccessfullyVerified;
 
             defaultResult = VerificationResult.SignatureMismatch;
@@ -119,10 +122,11 @@ public partial class MastodonVerifier
         return components;
     }
 
-    private bool VerifySignature(MastodonSignatureComponents components, ISigningKey verificationKey,
+    private bool VerifySignature(MastodonSignatureComponents components, RemoteActor remoteActor,
         MastodonComponentBuilder builder)
     {
-        var algorithm = verificationKey.GetRsa();
+        using var algorithm = RSA.Create();
+        algorithm.ImportFromPem(remoteActor.KeyPem);
         builder.Visit(components.spec.SignatureParameters);
         return algorithm.VerifyData(
             Encoding.ASCII.GetBytes(builder.SigningDocument),
