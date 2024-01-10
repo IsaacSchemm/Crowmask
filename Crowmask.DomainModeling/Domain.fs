@@ -179,20 +179,18 @@ module Domain =
             first_upstream = submission.PostedAt
             first_cached = submission.FirstCachedAt
             attachments = [
-                if submission.SubtypeId = Submission.Subtype.Visual then
-                    for media in submission.Media do
-                        Image {
-                            mediaType = media.ContentType
-                            url = media.Url
-                        }
+                for media in submission.Media do
+                    Image {
+                        mediaType = media.ContentType
+                        url = media.Url
+                    }
             ]
             thumbnails = [
-                if submission.SubtypeId = Submission.Subtype.Visual then
-                    for thumbnail in submission.Thumbnails do
-                        {
-                            mediaType = thumbnail.ContentType
-                            url = thumbnail.Url
-                        }
+                for thumbnail in submission.Thumbnails do
+                    {
+                        mediaType = thumbnail.ContentType
+                        url = thumbnail.Url
+                    }
             ]
             tags = [for t in submission.Tags do t.Tag]
             sensitivity =

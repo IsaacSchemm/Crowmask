@@ -5,16 +5,34 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Crowmask.Data
 {
+    /// <summary>
+    /// A pointer from a Weasyl user to another social media site (with or
+    /// without a working URL).
+    /// </summary>
     public class UserLink
     {
+        /// <summary>
+        /// An internal Crowmask ID, for compatibility with relational
+        /// database backends.
+        /// </summary>
         public Guid Id { get; set; }
 
+        /// <summary>
+        /// The name of the site this link is for.
+        /// </summary>
         [Required]
         public string Site { get; set; }
 
+        /// <summary>
+        /// The username / URL value entered by the user on their Weasyl profile.
+        /// </summary>
         [Required]
         public string UsernameOrUrl { get; set; }
 
+        /// <summary>
+        /// A valid URL for the hyperlink, or null if Crowmask cannot
+        /// determine the intended URL.
+        /// </summary>
         [NotMapped]
         public string Url
         {

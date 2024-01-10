@@ -93,7 +93,6 @@ namespace Crowmask.Library.Cache
                     var oldSubmission = Domain.AsNote(cachedSubmission);
 
                     cachedSubmission.Description = weasylSubmission.description;
-                    cachedSubmission.FriendsOnly = weasylSubmission.friends_only;
                     cachedSubmission.Media = await weasylSubmission.media.submission
                         .ToAsyncEnumerable()
                         .SelectAwait(async s => new SubmissionMedia
@@ -119,13 +118,6 @@ namespace Crowmask.Library.Cache
                         "moderate" => Submission.Rating.Moderate,
                         "mature" => Submission.Rating.Mature,
                         "explicit" => Submission.Rating.Explicit,
-                        _ => 0
-                    };
-                    cachedSubmission.SubtypeId = weasylSubmission.subtype switch
-                    {
-                        "visual" => Submission.Subtype.Visual,
-                        "literary" => Submission.Subtype.Literary,
-                        "multimedia" => Submission.Subtype.Multimedia,
                         _ => 0
                     };
                     cachedSubmission.Tags = weasylSubmission.tags
@@ -281,7 +273,6 @@ namespace Crowmask.Library.Cache
                     cachedJournal.PostedAt = weasylJournal.PostedAt;
                     cachedJournal.Rating = weasylJournal.Rating;
                     cachedJournal.Title = weasylJournal.Title;
-                    cachedJournal.VisibilityRestricted = weasylJournal.VisibilityRestricted;
 
                     var newJournal = Domain.AsArticle(cachedJournal);
 
@@ -439,8 +430,7 @@ namespace Crowmask.Library.Cache
                 .Select(a => new UserAvatar
                 {
                     Id = Guid.NewGuid(),
-                    Url = a.url,
-                    MediaId = a.mediaid
+                    Url = a.url
                 })
                 .ToList();
             cachedUser.Age = weasylUser.user_info.age;
