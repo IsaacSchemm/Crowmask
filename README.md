@@ -43,36 +43,41 @@ doesn't indicate any particular media type.
 
 Layers:
 
-* **Crowmask.Merging**: code to merge the results of multiple asynchronous
-  sequences into a single sequence by taking the newest items first. Used to
-  combine submissions and journals into a single feed.
-* **Crowmask.Data**: contains the data storage types and and data context,
-  which map to documents in Cosmos DB using the Cosmos DB backend of EF Core.
-* **Crowmask.Weasyl**: used to connect to the Weasyl API and retrieve user and
-  submission information.
+* **Crowmask.Data**: contains the data types and and data context, which map
+  to documents in the Cosmos DB backend of EF Core.
 * **Crowmask.DomainModeling**: converts data objects like `Submission` (which
-  are specific to Weasyl and the database schema), to more general F# records
-  with only the properties needed to expose the information via ActivityPub or
-  Markdown.
-* **Crowmask.IdMapping**: contains the `ActivityStreamsIdMapper`, from which
-  other code can derive the public IDs / URIs for objects in the application.
-* **Crowmask.InteractionSummaries**: provides Markdown and HTML summaries of
-  interactions with posts (boosts, likes, and replies) which are shown on the
-  post page and sent in private messages to the admin actor.
-* **Crowmask.ActivityPub**: converts domain model objects to ActivityPub
-  objects (represented as `IDictionary<string, object>`); serializes these
-  objects to LD-JSON (by manually adding the `@context`), and creates
-  private messages to the admin actor.
-* **Crowmask.Cache**: Retrieves new user or submission information from Weasyl
-  when necessary, and creates ActivityPub `Update` activities when the
-  ActivityPub representation of a user or submission changes.
-* **Crowmask.Signatures**: HTTP signature validation, adapted from
-  [Letterbook](https://github.com/Letterbook/Letterbook).
-* **Crowmask.Remote**: Talks to other ActivityPub servers.
-* **Crowmask.Feed**: Implements RSS and Atom feeds.
-* **Crowmask.Markdown**: Implements the web UI by creating Markdown and HTML
-  representations of data available through ActivityPub `GET` endpoints, and
-  helps perform content negotiation with the `Accept` header.
+  are specific to the database schema) to more general F# records with only
+  the properties needed to expose the information via ActivityPub, RSS / Atom,
+  or Markdown / HTML.
+* **Crowmask.Dependencies**:
+    * **Async**: code to merge the results of multiple asynchronous sequences
+      (`IAsyncEnumerable<T>`) into a single sequence by taking the newest
+      items first. Used to combine all posts into a single feed.
+    * **Weasyl**: used to connect to the Weasyl API and retrieve user and
+      submission information.
+    * **Mapping**: contains the `ActivityStreamsIdMapper`, from which other
+      code can derive the ActivityPub IDs / URIs for users, posts, and
+      interaction notifications.
+* **Crowmask.Formats**:
+    * **ContentNeogtiation**: helps perform content negotiation with the
+      `Accept` header.
+    * **Summaries**: provides Markdown and HTML summaries of interactions with
+      posts (boosts, likes, and replies) which are shown on the post page and
+      sent in private messages to the admin actor.
+    * **Markdown**: Implements the web UI by creating Markdown and HTML
+      representations of data available through ActivityPub `GET` endpoints.
+    * **ActivityPub**: converts domain model objects to ActivityPub
+      objects (represented as `IDictionary<string, object>`); serializes these
+      objects to LD-JSON (by manually adding the `@context`), and creates
+      private messages to the admin actor.
+* **Crowmask.Library**:
+    * **Cache**: Retrieves new user or submission information from Weasyl when
+      necessary, and creates ActivityPub `Update` activities when the
+      ActivityPub representation of a user or submission changes.
+    * **Signatures**: HTTP signature validation, adapted from
+      [Letterbook](https://github.com/Letterbook/Letterbook).
+    * **Remote**: Talks to other ActivityPub servers.
+    * **Feed**: Implements RSS and Atom feeds.
 * **Crowmask**: The main Azure Functions project, responsible for handling
   HTTP requests and running timed functions.
 
@@ -125,6 +130,7 @@ Timed functions:
 
 TODO:
 
+[ ] Implement the endpoint for interaction notifications (these posts are only sent to the admin actor but the info is public)
 [ ] Add comments
 [ ] Split content negotiation off into its own project or move it into DomainModeling
 [ ] Shy mode (redirect all HTML requests to Weasyl)

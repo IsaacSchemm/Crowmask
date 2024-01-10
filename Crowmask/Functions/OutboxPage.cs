@@ -1,9 +1,9 @@
-using Crowmask.ActivityPub;
-using Crowmask.Cache;
 using Crowmask.DomainModeling;
-using Crowmask.Feed;
-using Crowmask.Markdown;
-using Crowmask.Merging;
+using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
+using Crowmask.Formats.Markdown;
+using Crowmask.Library.Cache;
+using Crowmask.Library.Feed;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;

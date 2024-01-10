@@ -1,8 +1,7 @@
-using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
-using Crowmask.Markdown;
-using Microsoft.Azure.Cosmos.Linq;
+using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="json-ld.net" Version="1.0.7" />
+    <PackageReference Include="NSign.Client" Version="0.19.2" />
+    <PackageReference Include="NSign.SignatureProviders" Version="0.19.2" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="System.ServiceModel.Syndication" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Crowmask.Dependencies\Crowmask.Dependencies.csproj" />
+    <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
+    <ProjectReference Include="..\Crowmask.Formats\Crowmask.Formats.fsproj" />
+  </ItemGroup>
+
+</Project>

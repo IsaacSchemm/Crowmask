@@ -1,8 +1,8 @@
-using Crowmask.Cache;
+using Crowmask.Dependencies.Mapping;
 using Crowmask.DomainModeling;
-using Crowmask.IdMapping;
-using Crowmask.Remote;
-using Crowmask.Signatures;
+using Crowmask.Library.Cache;
+using Crowmask.Library.Remote;
+using Crowmask.Library.Signatures;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;

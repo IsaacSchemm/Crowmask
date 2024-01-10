@@ -1,6 +1,6 @@
-﻿using Crowmask.ActivityPub;
-using Crowmask.DomainModeling;
-using Crowmask.Remote;
+﻿using Crowmask.DomainModeling;
+using Crowmask.Formats.ActivityPub;
+using Crowmask.Library.Remote;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

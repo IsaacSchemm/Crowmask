@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Crowmask.Cache;
+using Crowmask.Dependencies.Weasyl;
 using Crowmask.DomainModeling;
-using Crowmask.Remote;
-using Crowmask.Weasyl;
+using Crowmask.Library.Cache;
+using Crowmask.Library.Remote;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
