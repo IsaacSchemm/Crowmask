@@ -45,7 +45,7 @@ namespace Crowmask.Functions
 
             foreach (var format in acceptableFormats)
             {
-                if (format.IsActivityJson)
+                if (format.IsActivityStreams)
                 {
                     var outboxPage = translator.AsOutboxPage(req.Url.OriginalString, galleryPage);
 

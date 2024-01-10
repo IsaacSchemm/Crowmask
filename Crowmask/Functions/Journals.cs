@@ -27,7 +27,7 @@ namespace Crowmask.Functions
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
-                if (format.IsActivityJson)
+                if (format.IsActivityStreams)
                 {
                     var objectToSerialize =
                         req.Query["view"] == "comments" ? translator.AsCommentsCollection(journal)

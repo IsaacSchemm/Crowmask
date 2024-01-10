@@ -29,7 +29,7 @@ namespace Crowmask.Functions
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
-                if (format.IsActivityJson)
+                if (format.IsActivityStreams)
                 {
                     var outbox = translator.AsOutbox(gallery);
 
