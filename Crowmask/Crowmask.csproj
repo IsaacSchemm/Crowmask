@@ -5,6 +5,7 @@
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.10.4" />
 		<PackageReference Include="Azure.Security.KeyVault.Keys" Version="4.5.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.1.0" />
@@ -22,15 +23,11 @@
 		<PackageReference Include="System.Linq.Async" Version="6.0.1" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Crowmask.ActivityPub\Crowmask.ActivityPub.fsproj" />
-		<ProjectReference Include="..\Crowmask.Cache\Crowmask.Cache.csproj" />
 		<ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
-		<ProjectReference Include="..\Crowmask.Feed\Crowmask.Feed.csproj" />
-		<ProjectReference Include="..\Crowmask.Markdown\Crowmask.Markdown.fsproj" />
-		<ProjectReference Include="..\Crowmask.Merging\Crowmask.Merging.csproj" />
-		<ProjectReference Include="..\Crowmask.Remote\Crowmask.Remote.csproj" />
-		<ProjectReference Include="..\Crowmask.Signatures\Crowmask.Signatures.csproj" />
-		<ProjectReference Include="..\Crowmask.Weasyl\Crowmask.Weasyl.csproj" />
+		<ProjectReference Include="..\Crowmask.Dependencies\Crowmask.Dependencies.csproj" />
+		<ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
+		<ProjectReference Include="..\Crowmask.Formats\Crowmask.Formats.fsproj" />
+		<ProjectReference Include="..\Crowmask.Library\Crowmask.Library.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Update="host.json">

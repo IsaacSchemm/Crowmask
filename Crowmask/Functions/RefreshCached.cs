@@ -1,7 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
-using Crowmask.Cache;
-using Crowmask.DomainModeling;
+using Crowmask.Library.Cache;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions

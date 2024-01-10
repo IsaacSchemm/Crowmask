@@ -1,9 +1,9 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
-using Crowmask.ActivityPub;
-using Crowmask.Cache;
-using Crowmask.Remote;
+using Crowmask.DomainModeling;
+using Crowmask.Library.Cache;
+using Crowmask.Library.Remote;
 using System;
 using System.Threading.Tasks;
 

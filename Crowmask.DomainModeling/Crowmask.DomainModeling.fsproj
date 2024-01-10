@@ -9,6 +9,7 @@
     <Compile Include="IAdminActor.fs" />
     <Compile Include="ICrowmaskHost.fs" />
     <Compile Include="IHandleHost.fs" />
+    <Compile Include="IPublicKey.fs" />
     <Compile Include="Domain.fs" />
   </ItemGroup>
 

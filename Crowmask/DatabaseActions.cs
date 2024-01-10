@@ -1,7 +1,7 @@
-﻿using Crowmask.ActivityPub;
-using Crowmask.Data;
+﻿using Crowmask.Data;
 using Crowmask.DomainModeling;
-using Crowmask.Remote;
+using Crowmask.Formats.ActivityPub;
+using Crowmask.Library.Remote;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
