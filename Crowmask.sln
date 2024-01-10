@@ -22,7 +22,7 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.Formats", "Crowmas
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Library", "Crowmask.Library\Crowmask.Library.csproj", "{FA0DCBE2-8707-4B0D-B149-1CC2FDC1B598}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Crowmask.Interfaces", "Crowmask.Interfaces\Crowmask.Interfaces.vbproj", "{A0022FDE-13CA-4861-B2A8-22235D91C7C0}"
+Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "Crowmask.Interfaces", "Crowmask.Interfaces\Crowmask.Interfaces.vbproj", "{A0022FDE-13CA-4861-B2A8-22235D91C7C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
