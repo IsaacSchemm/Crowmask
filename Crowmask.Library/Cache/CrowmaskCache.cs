@@ -225,10 +225,7 @@ namespace Crowmask.Library.Cache
 
         public async IAsyncEnumerable<Post> GetRelevantSubmissionsAsync(string activity_or_reply_id)
         {
-            var ids = await interactionLookup
-                .GetRelevantSubmitIdsAsync(activity_or_reply_id)
-                .ToListAsync();
-            foreach (int id in ids)
+            if (await interactionLookup.GetRelevantSubmitIdAsync(activity_or_reply_id) is int id)
                 if (await GetSubmissionAsync(id) is CacheResult.PostResult pr)
                     yield return pr.Post;
         }
@@ -373,10 +370,7 @@ namespace Crowmask.Library.Cache
 
         public async IAsyncEnumerable<Post> GetRelevantJournalsAsync(string activity_or_reply_id)
         {
-            var ids = await interactionLookup
-                .GetRelevantJournalIdsAsync(activity_or_reply_id)
-                .ToListAsync();
-            foreach (int id in ids)
+            if (await interactionLookup.GetRelevantJournalIdAsync(activity_or_reply_id) is int id)
                 if (await GetJournalAsync(id) is CacheResult.PostResult pr)
                     yield return pr.Post;
         }
@@ -427,10 +421,7 @@ namespace Crowmask.Library.Cache
         {
             var cachedUser = await Context.GetUserAsync();
 
-            if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshSucceededAt < TimeSpan.FromHours(1))
-                return Domain.AsPerson(cachedUser);
-
-            if (DateTimeOffset.UtcNow - cachedUser.CacheRefreshAttemptedAt < TimeSpan.FromMinutes(5))
+            if (!cachedUser.Stale)
                 return Domain.AsPerson(cachedUser);
 
             cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;

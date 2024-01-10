@@ -15,6 +15,7 @@ namespace Crowmask.Functions
         /// <list type="bullet">
         /// <item>The most recent submission on Weasyl, plus any additional submissions within the past day</item>
         /// <item>The most recent journal on Weasyl, plus any additional journals within the past day</item>
+        /// <item>The user profile</item>
         /// <item>Any cached posts in Crowmask that were posted to Weasyl within the past day</item>
         /// </list>
         /// This function handles new post discovery, updates, and deletions
@@ -41,6 +42,8 @@ namespace Crowmask.Functions
                 if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
                     break;
             }
+
+            await crowmaskCache.UpdateUserAsync();
 
             await foreach (var post in crowmaskCache.GetAllCachedPostsAsync())
             {

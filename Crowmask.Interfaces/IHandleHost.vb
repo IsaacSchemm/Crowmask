@@ -6,6 +6,5 @@ Public Interface IHandleHost
     ''' The host / domain name used in the Crowmask actor's preferred handle.
     ''' May or may not be the same as Crowmask's domain.
     ''' </summary>
-    ''' <returns></returns>
     ReadOnly Property Hostname As String
 End Interface

@@ -127,7 +127,7 @@ HTTP endpoints:
 Timed functions:
 
 * `RefreshUpstream`: Checks Weasyl for recent posts (stopping when a post is more than a day old), updating cache as needed, then sends outbound activities (every ten minutes)
-* `RefreshCached`: Attempts cache refresh for all stale cached posts and the actor's name/avatar/etc (every day at 23:56)
+* `RefreshCached`: Attempts cache refresh for all stale cached posts (every day at 23:56)
 * `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
 
 TODO:

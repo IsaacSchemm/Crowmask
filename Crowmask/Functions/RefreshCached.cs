@@ -17,8 +17,6 @@ namespace Crowmask.Functions
         [Function("RefreshCached")]
         public async Task Run([TimerTrigger("0 56 23 * * *")] TimerInfo myTimer)
         {
-            await crowmaskCache.UpdateUserAsync();
-
             var posts = crowmaskCache.GetAllCachedPostsAsync()
                 .Where(post => post.stale);
 
