@@ -73,7 +73,7 @@ namespace Crowmask.Cache
 
             try
             {
-                WeasylSubmissionDetail weasylSubmission = await weasylUserClient.GetMyPublicSubmissionAsync(submitid);
+                WeasylSubmissionDetail? weasylSubmission = await weasylUserClient.GetMyPublicSubmissionAsync(submitid);
                 if (weasylSubmission != null)
                 {
                     bool newlyCreated = false;
@@ -261,7 +261,7 @@ namespace Crowmask.Cache
             {
                 var whoami = await weasylUserClient.GetMyUserAsync();
 
-                var weasylJournal = await weasylUserClient.GetMyJournalAsync(journalid);
+                JournalEntry? weasylJournal = await weasylUserClient.GetMyJournalAsync(journalid);
                 if (weasylJournal != null)
                 {
                     bool newlyCreated = false;
