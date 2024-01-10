@@ -155,7 +155,7 @@ type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: Activit
         pair "type" "Note"
 
         pair "attributedTo" actor
-        pair "content" (summarizer.ToHtml(post, interaction))
+        pair "content" ((post, interaction) |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
         pair "published" interaction.AddedAt
         pair "to" adminActor.Id
     ]
