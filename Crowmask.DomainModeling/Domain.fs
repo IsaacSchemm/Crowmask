@@ -4,12 +4,14 @@ open System
 open System.Net
 open Crowmask.Data
 
+/// A name/value pair (with optional link) that can appear on a user profile.
 type PersonMetadata = {
     name: string
     value: string
     uri: string option
 }
 
+/// A user profile; in particular, the one created by this Crowmask instance.
 type Person = {
     preferredUsername: string
     name: string
@@ -19,20 +21,25 @@ type Person = {
     attachments: PersonMetadata list
 }
 
+/// An image with a known media type.
 type Image = {
     mediaType: string
     url: string
 }
 
+/// An attachment to a post.
 type Attachment = Image of Image
 
+/// A sensitivity level for a post - either general, or with a specific warning.
 type Sensitivity = General | Sensitive of warning: string
 
+/// A link to display alongside the post in Crowmask's HTML interface.
 type Link = {
     text: string
     href: string
 }
 
+/// A boost (Announce activity) from another user.
 type Boost = {
     id: Guid
     actor_id: string
@@ -40,6 +47,7 @@ type Boost = {
     added_at: DateTimeOffset
 }
 
+/// A like (Like activity) from another user.
 type Like = {
     id: Guid
     actor_id: string
@@ -47,6 +55,7 @@ type Like = {
     added_at: DateTimeOffset
 }
 
+/// A reply from another user.
 type Reply = {
     id: Guid
     actor_id: string
@@ -54,6 +63,8 @@ type Reply = {
     added_at: DateTimeOffset
 }
 
+/// An interaction with a post by another user (a boost, like, or reply), with
+/// an internal Crowmask ID and an "added at" date.
 type Interaction = Boost of Boost | Like of Like | Reply of Reply
 with
     member this.Id =
@@ -67,11 +78,16 @@ with
         | Like l -> l.added_at
         | Reply r -> r.added_at
 
+/// An internal ID for a post (either a submission ID or a journal ID). This
+/// union is compiled to a value type and can be used inside Nullable<T>;
+/// consumers must check the type (submission or journal) before accessing the
+/// ID value.
 [<Struct>]
 type JointIdentifier =
 | SubmissionIdentifier of submitid: int
 | JournalIdentifier of journalid: int
 
+/// A post (submission or journal) to mirror to ActivityPub.
 type Post = {
     identifier: JointIdentifier
     title: string
@@ -97,22 +113,30 @@ type Post = {
         |> Seq.sortBy (fun e -> e.AddedAt)
         |> Seq.toList
 
+
+/// A result from a request to Crowmask's database cache looking for a post:
+/// either found (with a Post object), deleted, or not found. C# consumers can
+/// perform a type check with the "is" operator to retrieve post information.
 type CacheResult = PostResult of Post: Post | Deleted | NotFound
 
+/// The main page of the user's outbox / gallery (not the first page).
 type Gallery = {
     gallery_count: int
 }
 
+/// A single page of the user's outbox / gallery.
 type Page = {
     posts: Post list
     offset: int
 }
 
+/// An ActivityPub actor who is following this actor.
 type FollowerActor = {
     followerId: Guid
     actorId: string
 }
 
+/// A list of ActivityPub actors who are following this actor.
 type FollowerCollection = {
     followers: FollowerActor list
 }
