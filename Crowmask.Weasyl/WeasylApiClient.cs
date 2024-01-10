@@ -60,7 +60,7 @@ namespace Crowmask.Weasyl
         int? backid,
         int? nextid);
 
-    public class WeasylApiClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
+    internal class WeasylApiClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
         private async Task<HttpResponseMessage> GetAsync(string uri, CancellationToken cancellationToken)
         {
