@@ -13,6 +13,12 @@ namespace Crowmask.Functions
 {
     public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
     {
+        /// <summary>
+        /// Returns the size of the user's outbox (which contains artwork
+        /// submissions and journals) and a link to the first page.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>An ActivityStreams OrderedCollection or a Markdown or HTML response, depending on the user agent's Accept header.</returns>
         [Function("Outbox")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)

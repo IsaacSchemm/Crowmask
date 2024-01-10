@@ -11,6 +11,12 @@ namespace Crowmask.Functions
 {
     public class Submissions(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
     {
+        /// <summary>
+        /// Returns a mirror of an artwork submission posted to Weasyl.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <param name="submitid">The numeric ID of the submission on Weasyl</param>
+        /// <returns>An ActivityStreams Note or Collection or a Markdown or HTML response, depending on the query string and the user agent's Accept header.</returns>
         [Function("Submissions")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequestData req,

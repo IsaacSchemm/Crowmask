@@ -15,6 +15,14 @@ namespace Crowmask.Functions
 {
     public class OutboxPage(CrowmaskCache crowmaskCache, FeedBuilder feedBuilder, Translator translator, MarkdownTranslator markdownTranslator)
     {
+        /// <summary>
+        /// Returns up to 20 of the user's posts (submissions and journals)
+        /// mirrored from Weasyl and cached in Crowmask's database. Posts are
+        /// rendered in reverse chronological order (newest first) by
+        /// combining submission and journal streams from Crowmask's cache.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>An ActivityStreams OrderedCollectionPage or a Markdown or HTML response, depending on the user agent's Accept header.</returns>
         [Function("OutboxPage")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)

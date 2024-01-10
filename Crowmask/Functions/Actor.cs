@@ -10,6 +10,12 @@ namespace Crowmask.Functions
 {
     public class Actor(CrowmaskCache crowmaskCache, IPublicKeyProvider keyProvider, MarkdownTranslator markdownTranslator, Translator translator)
     {
+        /// <summary>
+        /// Returns information about the sole ActivityPub actor exposed by
+        /// Crowmask, which is set up to mirror the configured Weasyl profile.
+        /// </summary>
+        /// <param name="req"></param>
+        /// <returns>An ActivityStreams Person object or a Markdown or HTML response, depending on the user agent's Accept header.</returns>
         [Function("Actor")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor")] HttpRequestData req)
