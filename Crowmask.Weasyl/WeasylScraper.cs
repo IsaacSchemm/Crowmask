@@ -14,7 +14,7 @@ namespace Crowmask.Weasyl
         string Rating,
         bool VisibilityRestricted);
 
-    public partial class WeasylScraper(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
+    internal partial class WeasylScraper(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
         private static readonly HtmlParser _htmlParser = new();
 

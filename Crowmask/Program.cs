@@ -66,8 +66,6 @@ var host = new HostBuilder()
         services.AddScoped<RemoteActions>();
         services.AddScoped<Requester>();
         services.AddScoped<Translator>();
-        services.AddScoped<WeasylApiClient>();
-        services.AddScoped<WeasylScraper>();
         services.AddScoped<WeasylUserClient>();
     })
     .Build();

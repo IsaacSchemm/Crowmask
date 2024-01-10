@@ -1,7 +1,10 @@
 ﻿namespace Crowmask.Weasyl
 {
-    public class WeasylUserClient(WeasylApiClient weasylClient, WeasylScraper weasylScraper)
+    public class WeasylUserClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
+        private readonly WeasylApiClient weasylClient = new(httpClientFactory, apiKeyProvider);
+        private readonly WeasylScraper weasylScraper = new(httpClientFactory, apiKeyProvider);
+
         private WeasylWhoami? _whoami = null;
         private WeasylUserProfile? _userProfile = null;
 
