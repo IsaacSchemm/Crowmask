@@ -31,19 +31,19 @@ namespace Crowmask.Functions
 
             await foreach (var submission in weasylUserClient.GetMyGallerySubmissionsAsync())
             {
-                var cacheResult = await crowmaskCache.UpdateSubmissionAsync(submission.submitid);
+                var cacheResult = await crowmaskCache.GetSubmissionAsync(submission.submitid);
                 if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
                     break;
             }
 
             await foreach (int journalid in weasylUserClient.GetMyJournalIdsAsync())
             {
-                var cacheResult = await crowmaskCache.UpdateJournalAsync(journalid);
+                var cacheResult = await crowmaskCache.GetJournalAsync(journalid);
                 if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
                     break;
             }
 
-            await crowmaskCache.UpdateUserAsync();
+            await crowmaskCache.GetUserAsync();
 
             await foreach (var post in crowmaskCache.GetAllCachedPostsAsync())
             {
@@ -51,9 +51,9 @@ namespace Crowmask.Functions
                     break;
 
                 if (post.identifier.IsSubmissionIdentifier)
-                    await crowmaskCache.UpdateSubmissionAsync(post.identifier.submitid);
+                    await crowmaskCache.GetSubmissionAsync(post.identifier.submitid);
                 if (post.identifier.IsJournalIdentifier)
-                    await crowmaskCache.UpdateJournalAsync(post.identifier.journalid);
+                    await crowmaskCache.GetJournalAsync(post.identifier.journalid);
             }
 
             await outboundActivityProcessor.ProcessOutboundActivities();

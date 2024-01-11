@@ -20,8 +20,10 @@ namespace Crowmask.Functions
             int submitid,
             Guid guid)
         {
-            if (await crowmaskCache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr || pr.Post is not Post submission)
+            if (await crowmaskCache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                 return req.CreateResponse(HttpStatusCode.NotFound);
+
+            var submission = pr.Post;
 
             if (!submission.Interactions.Any(i => i.Id == guid))
                 return req.CreateResponse(HttpStatusCode.NotFound);

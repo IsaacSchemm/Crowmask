@@ -20,8 +20,10 @@ namespace Crowmask.Functions
             int journalid,
             Guid guid)
         {
-            if (await crowmaskCache.GetJournalAsync(journalid) is not CacheResult.PostResult pr || pr.Post is not Post journal)
+            if (await crowmaskCache.GetJournalAsync(journalid) is not CacheResult.PostResult pr)
                 return req.CreateResponse(HttpStatusCode.NotFound);
+
+            var journal = pr.Post;
 
             if (!journal.Interactions.Any(i => i.Id == guid))
                 return req.CreateResponse(HttpStatusCode.NotFound);

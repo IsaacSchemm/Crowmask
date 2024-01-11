@@ -22,8 +22,10 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequestData req,
             int submitid)
         {
-            if (await crowmaskCache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr || pr.Post is not Post submission)
+            if (await crowmaskCache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                 return req.CreateResponse(HttpStatusCode.NotFound);
+
+            var submission = pr.Post;
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {

@@ -9,8 +9,17 @@ using System.Net.Http.Headers;
 
 namespace Crowmask.Library.Cache
 {
+    /// <summary>
+    /// Accesses cached posts and user information from the Crowmask database,
+    /// and refreshes cached information from Weasyl when stale or missing.
+    /// </summary>
     public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
     {
+        /// <summary>
+        /// Finds the Content-Type of a remote URL.
+        /// </summary>
+        /// <param name="url">A remote URL</param>
+        /// <returns>The media type, or application/octet-stream if the media type could not be determined</returns>
         private async Task<string> GetContentTypeAsync(string url)
         {
             using var httpClient = httpClientFactory.CreateClient();
@@ -22,37 +31,37 @@ namespace Crowmask.Library.Cache
             return val?.MediaType ?? "application/octet-stream";
         }
 
+        /// <summary>
+        /// Gets a set of ActivityPub inboxes to send a message to.
+        /// </summary>
+        /// <param name="followersOnly">Whether to limit the message to only followers' servers. If false, Crowmask will include all known servers.</param>
+        /// <returns>A set of inbox URLs</returns>
         private async Task<IReadOnlySet<string>> GetDistinctInboxesAsync(bool followersOnly = false)
         {
             async IAsyncEnumerable<string> enumerate()
             {
+                // Go through follower inboxes first - prefer shared inbox if present
                 await foreach (var follower in Context.Followers.AsAsyncEnumerable())
                     yield return follower.SharedInbox ?? follower.Inbox;
 
+                // Then include all other known inboxes, if enabled
                 if (!followersOnly)
                     await foreach (var known in Context.KnownInboxes.AsAsyncEnumerable())
                         yield return known.Inbox;
             }
 
+            // Combine results above into an unordered set of unique items
             return await enumerate().ToHashSetAsync();
         }
 
+        /// <summary>
+        /// Pulls a submission from Crowmask's database, or attempts a refresh
+        /// from Weasyl if the submission is stale or absent. New, updated,
+        /// and deleted posts will generate new ActivityPub messages.
+        /// </summary>
+        /// <param name="submitid">The submission ID</param>
+        /// <returns>A CacheResult union, with the found post if any</returns>
         public async Task<CacheResult> GetSubmissionAsync(int submitid)
-        {
-            var cachedSubmission = await Context.Submissions
-                .Include(s => s.Boosts)
-                .Include(s => s.Likes)
-                .Include(s => s.Replies)
-                .Include(s => s.Media)
-                .Include(s => s.Tags)
-                .Where(s => s.SubmitId == submitid)
-                .SingleOrDefaultAsync();
-            return cachedSubmission != null
-                ? CacheResult.NewPostResult(Domain.AsNote(cachedSubmission))
-                : await UpdateSubmissionAsync(submitid);
-        }
-
-        public async Task<CacheResult> UpdateSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
                 .Include(s => s.Boosts)
@@ -194,6 +203,12 @@ namespace Crowmask.Library.Cache
             }
         }
 
+        /// <summary>
+        /// Returns all cached submissions in Crowmask's database, with the
+        /// newest submissions (with higher submission IDs) first. Stale posts
+        /// will not be refreshed.
+        /// </summary>
+        /// <returns>An asynchronous sequence of posts</returns>
         public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync()
         {
             int last = int.MaxValue;
@@ -215,24 +230,14 @@ namespace Crowmask.Library.Cache
             }
         }
 
-        public async IAsyncEnumerable<Post> GetRelevantSubmissionsAsync(string activity_or_reply_id)
-        {
-            if (await interactionLookup.GetRelevantSubmitIdAsync(activity_or_reply_id) is int id)
-                if (await GetSubmissionAsync(id) is CacheResult.PostResult pr)
-                    yield return pr.Post;
-        }
-
+        /// <summary>
+        /// Pulls a journal entry from Crowmask's database, or attempts a
+        /// refresh from Weasyl if the journal entry is stale or absent. New,
+        /// updated, and deleted posts will generate new ActivityPub messages.
+        /// </summary>
+        /// <param name="journalid">The journal ID</param>
+        /// <returns>A CacheResult union, with the found post if any</returns>
         public async Task<CacheResult> GetJournalAsync(int journalid)
-        {
-            var cachedJournal = await Context.Journals
-                .Where(s => s.JournalId == journalid)
-                .SingleOrDefaultAsync();
-            return cachedJournal != null
-                ? CacheResult.NewPostResult(Domain.AsArticle(cachedJournal))
-                : await UpdateJournalAsync(journalid);
-        }
-
-        public async Task<CacheResult> UpdateJournalAsync(int journalid)
         {
             var cachedJournal = await Context.Journals
                 .Where(s => s.JournalId == journalid)
@@ -338,6 +343,12 @@ namespace Crowmask.Library.Cache
             }
         }
 
+        /// <summary>
+        /// Returns all cached journal entries in Crowmask's database, with
+        /// the newest entries (with higher journal IDs) first. Stale posts
+        /// will not be refreshed.
+        /// </summary>
+        /// <returns>An asynchronous sequence of posts</returns>
         public async IAsyncEnumerable<Post> GetCachedJournalsAsync()
         {
             int last = int.MaxValue;
@@ -359,13 +370,14 @@ namespace Crowmask.Library.Cache
             }
         }
 
-        public async IAsyncEnumerable<Post> GetRelevantJournalsAsync(string activity_or_reply_id)
-        {
-            if (await interactionLookup.GetRelevantJournalIdAsync(activity_or_reply_id) is int id)
-                if (await GetJournalAsync(id) is CacheResult.PostResult pr)
-                    yield return pr.Post;
-        }
-
+        /// <summary>
+        /// Pulls a post (submission or journal entry) from Crowmask's
+        /// database, or attempts a refresh from Weasyl if the post is stale
+        /// or absent. New, updated, and deleted posts will generate new
+        /// ActivityPub messages.
+        /// </summary>
+        /// <param name="identifier">The submission or journal ID</param>
+        /// <returns>A CacheResult union, with the found post if any</returns>
         public async Task<CacheResult> GetCachedPostAsync(JointIdentifier identifier)
         {
             if (identifier.IsSubmissionIdentifier)
@@ -376,6 +388,11 @@ namespace Crowmask.Library.Cache
                 return CacheResult.NotFound;
         }
 
+        /// <summary>
+        /// Returns the current number of cached posts (submissions and
+        /// journal entries) in Crowmask's database.
+        /// </summary>
+        /// <returns></returns>
         public async Task<int> GetCachedPostCountAsync()
         {
             int submissions = await Context.Submissions.CountAsync();
@@ -383,6 +400,12 @@ namespace Crowmask.Library.Cache
             return submissions + journals;
         }
 
+        /// <summary>
+        /// Returns all cached posts (submissions and journal entries) in
+        /// Crowmask's database, with the newest entries  first. Stale posts
+        /// will not be refreshed.
+        /// </summary>
+        /// <returns>An asynchronous sequence of posts</returns>
         public IAsyncEnumerable<Post> GetAllCachedPostsAsync()
         {
             return new[] {
@@ -392,23 +415,32 @@ namespace Crowmask.Library.Cache
             .MergeNewest(post => post.first_upstream);
         }
 
-        public async IAsyncEnumerable<Post> GetRelevantCachedPostsAsync(string activity_or_reply_id)
+        /// <summary>
+        /// Returns the post that the given like, boost, or reply is attached
+        /// to, if any.
+        /// </summary>
+        /// <param name="activity_or_reply_id">The activity ID of the like or boost, or the ID of the reply</param>
+        /// <returns>A CacheResult union, with the found post if any</returns>
+        public async Task<CacheResult> GetRelevantCachedPostAsync(string activity_or_reply_id)
         {
-            await foreach (var post in GetRelevantSubmissionsAsync(activity_or_reply_id))
-                yield return post;
-            await foreach (var post in GetRelevantJournalsAsync(activity_or_reply_id))
-                yield return post;
+            if (await interactionLookup.GetRelevantSubmitIdAsync(activity_or_reply_id) is int submitid)
+                if (await GetSubmissionAsync(submitid) is CacheResult.PostResult r)
+                    return r;
+
+            if (await interactionLookup.GetRelevantJournalIdAsync(activity_or_reply_id) is int journalid)
+                if (await GetJournalAsync(journalid) is CacheResult.PostResult r)
+                    return r;
+
+            return CacheResult.NotFound;
         }
 
+        /// <summary>
+        /// Pulls user profile information from Crowmask's database, or
+        /// attempts a refresh from Weasyl if the information is stale or
+        /// absent. Any changes will generate new ActivityPub messages.
+        /// </summary>
+        /// <returns>A Person object</returns>
         public async Task<Person> GetUserAsync()
-        {
-            var cachedUser = await Context.GetUserAsync();
-            return cachedUser == null
-                ? await UpdateUserAsync()
-                : Domain.AsPerson(cachedUser);
-        }
-
-        public async Task<Person> UpdateUserAsync()
         {
             var cachedUser = await Context.GetUserAsync();
 

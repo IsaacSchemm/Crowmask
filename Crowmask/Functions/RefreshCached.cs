@@ -23,9 +23,9 @@ namespace Crowmask.Functions
             await foreach (var post in posts)
             {
                 if (post.identifier.IsSubmissionIdentifier)
-                    await crowmaskCache.UpdateSubmissionAsync(post.identifier.submitid);
+                    await crowmaskCache.GetSubmissionAsync(post.identifier.submitid);
                 else if (post.identifier.IsJournalIdentifier)
-                    await crowmaskCache.UpdateJournalAsync(post.identifier.journalid);
+                    await crowmaskCache.GetJournalAsync(post.identifier.journalid);
             }
         }
     }
