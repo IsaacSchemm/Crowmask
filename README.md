@@ -134,7 +134,7 @@ Timed functions:
 
 TODO:
 
-[ ] Add comments
+[ ] Add comments in Crowmask.Library
 [ ] Shy mode (redirect all HTML requests to Weasyl)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
