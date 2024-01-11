@@ -19,6 +19,16 @@ namespace Crowmask.Functions
     public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, DatabaseActions databaseActions, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester)
     {
         /// <summary>
+        /// Sends messages to the admin actor to add or remove private
+        /// notifications as appropriate.
+        /// </summary>
+        /// <param name="post">The post, before any changes; the same post will be re-read from the cache</param>
+        private async Task SynchronizeAdminActorNotificationsAsync(Post post) {
+            if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newResult)
+                await remoteActions.UpdateAdminActorNotificationsAsync(post, newResult.Post);
+        }
+
+        /// <summary>
         /// Accepts an ActivityPub message. Supported types are:
         /// <list type="bullet">
         /// <item>Follow (adds the follower and sends back an Accept message)</item>
@@ -38,7 +48,6 @@ namespace Crowmask.Functions
         /// <list type="bullet">
         /// <item>202 Accepted</item>
         /// <item>204 No Content (in some cases where Crowmask takes no action)</item>
-        /// <item>400 Bad Request (if more than one activity type is specified)</item>
         /// <item>403 Forbidden (if HTTP validation fails)</item>
         /// </list>
         /// </returns>
@@ -69,10 +78,7 @@ namespace Crowmask.Functions
             // If we've never seen this inbox before, record it so we can send it Update and Delete messages
             await databaseActions.AddKnownInboxAsync(actor);
 
-            if (expansion[0]["@type"].Count() != 1)
-                return req.CreateResponse(HttpStatusCode.BadRequest);
-
-            string type = expansion[0]["@type"][0].Value<string>();
+            string type = expansion[0]["@type"].Single().Value<string>();
 
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
@@ -92,8 +98,10 @@ namespace Crowmask.Functions
                     await databaseActions.RemoveFollowAsync(objectId);
 
                     // Figure out which post the ID belongs to (if any)
-                    await foreach (var post in cache.GetRelevantCachedPostsAsync(objectId))
+                    if (await cache.GetRelevantCachedPostAsync(objectId) is CacheResult.PostResult result)
                     {
+                        var post = result.Post;
+
                         // If the ID to undo is the ID of a boost or like, then undo it
                         foreach (var boost in post.boosts)
                             if (boost.actor_id == actor.Id && boost.announce_id == objectId)
@@ -103,8 +111,7 @@ namespace Crowmask.Functions
                                 await databaseActions.RemoveInteractionAsync(post.identifier, like.id);
 
                         // Remove notifications to the admin actor of now-removed likes and boosts
-                        if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
-                            await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
+                        await SynchronizeAdminActorNotificationsAsync(post);
                     }
                 }
 
@@ -122,8 +129,10 @@ namespace Crowmask.Functions
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
+                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr)
                         return req.CreateResponse(HttpStatusCode.NoContent);
+
+                    var post = pr.Post;
 
                     // Remove any previous likes on this post by this actor
                     foreach (var like in post.likes)
@@ -134,8 +143,7 @@ namespace Crowmask.Functions
                     await databaseActions.AddLikeAsync(identifier, activityId, actor);
 
                     // Notify the admin actor of the new like
-                    if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
-                        await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
+                    await SynchronizeAdminActorNotificationsAsync(post);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -152,16 +160,17 @@ namespace Crowmask.Functions
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
+                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr)
                         return req.CreateResponse(HttpStatusCode.NoContent);
+
+                    var post = pr.Post;
 
                     // Add the boost to the post, unless it's a boost we already know about
                     if (!post.boosts.Select(boost => boost.announce_id).Contains(activityId))
                         await databaseActions.AddBoostAsync(identifier, activityId, actor);
 
                     // Notify the admin actor of the new boost
-                    if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
-                        await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
+                    await SynchronizeAdminActorNotificationsAsync(post);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -186,16 +195,17 @@ namespace Crowmask.Functions
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         // Get the cached post that corresponds to this ID, if any
-                        if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr || pr.Post is not Post post)
+                        if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr)
                             return req.CreateResponse(HttpStatusCode.NoContent);
+
+                        var post = pr.Post;
 
                         // Add the reply to the post, unless it's a reply we already know about
                         if (!post.replies.Select(reply => reply.object_id).Contains(replyId))
                             await databaseActions.AddReplyAsync(identifier, replyId, actor);
 
                         // Notify the admin actor of the new boost
-                        if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
-                            await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
+                        await SynchronizeAdminActorNotificationsAsync(post);
                     }
                 }
 
@@ -208,16 +218,17 @@ namespace Crowmask.Functions
                     string deletedObjectId = deletedObject["@id"].Value<string>();
 
                     // Figure out which post the deleted post was in reply to (if any)
-                    await foreach (var post in cache.GetRelevantCachedPostsAsync(deletedObjectId))
+                    if (await cache.GetRelevantCachedPostAsync(deletedObjectId) is CacheResult.PostResult result)
                     {
+                        var post = result.Post;
+
                         // If the actor who sent the Delete request was the actor who originally posted the reply, then delete it from our cache
                         foreach (var reply in post.replies)
                             if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)
                                 await databaseActions.RemoveInteractionAsync(post.identifier, reply.id);
 
                         // Remove notifications to the admin actor of now-removed replies
-                        if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newData)
-                            await remoteActions.UpdateAdminActorNotificationsAsync(post, newData.Post);
+                        await SynchronizeAdminActorNotificationsAsync(post);
                     }
                 }
 

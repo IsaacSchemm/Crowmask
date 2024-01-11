@@ -23,8 +23,10 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/journals/{journalid}")] HttpRequestData req,
             int journalid)
         {
-            if (await crowmaskCache.GetJournalAsync(journalid) is not CacheResult.PostResult pr || pr.Post is not Post journal)
+            if (await crowmaskCache.GetJournalAsync(journalid) is not CacheResult.PostResult pr)
                 return req.CreateResponse(HttpStatusCode.NotFound);
+
+            var journal = pr.Post;
 
             foreach (var format in req.GetAcceptableCrowmaskFormats())
             {
