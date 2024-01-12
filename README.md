@@ -83,27 +83,6 @@ Layers:
 * **Crowmask**: The main Azure Functions project, responsible for handling
   HTTP requests and running timed functions.
 
-Configuration values are passed using custom singleton dependencies:
-
-* `DomainModeling.IAdminActor`: provides the admin actor's ActivityPub ID. Implemented in `Program.cs` from the configuration value `AdminActor`.
-* `DomainModeling.ICrowmaskHost`: provides the domain name that Crowmask is expected to run on. Implemented in `Program.cs` from the configuration value `CrowmaskHost`.
-* `DomainModeling.IHandleHost`: provides the domain name used in the Crowmask actor's handle. (Can be the same as the Crowmask domain.) Implemented in `Program.cs` from the configuration value `HandleHost`.
-* `Remote.ISigner`: signs HTTP requests. Implemented by `KeyProvider`, which uses the key from Azure Key Vault specified in `KeyVaultHost`.
-* `Cache.IPublicKeyProvider`: provides the actor's public key in PEM format. Implemented by `KeyProvider`, which uses the key from Azure Key Vault specified in `KeyVaultHost`.
-* `Weasyl.IWeasylApiKeyProvider`: provides the Weasyl API key. Implemented in `Program.cs` from the configuration value `WeasylApiKey`.
-
-Internal objects include:
-
-* `User`: a cached user from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-* `Submission`: a cached artwork post from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-* `Journal`: a cached journal entry from Weasyl, along with information about when Crowmask last attempted to refresh it and when it was last refreshed
-* `Follower`: an ActivityPub actor who follows this actor
-* `KnownInbox`: a list of inboxes for instances that have sent messages to Crowmask's own inbox in the past
-* `OutboundActivity`: a list of unsent `Accept`, `Announce`, `Undo`, `Create`, `Update`, and `Delete` activities sent to particular actors or instances
-
-Other objects in Crowmask.Data, like `SubmissionTag` and `UserAvatar`, are
-stored as arrays within the parent document in Cosmos DB.
-
 HTTP endpoints:
 
 * `/.well-known/nodeinfo`: returns the location of the NodeInfo endpoint
@@ -134,7 +113,6 @@ Timed functions:
 
 TODO:
 
-[ ] Add comments in Crowmask.Library
 [ ] Shy mode (redirect all HTML requests to Weasyl)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
@@ -142,9 +120,6 @@ to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-st
 was quickly modified to support the strongly typed nature of .NET and the specificity of this app.
 Still, having a simple, working ActivityPub implementation in a language I was able to understand (if
 not compile) was incredibly helpful.
-
-See also [bird.makeup](https://sr.ht/~cloutier/bird.makeup/), which is another
-ActivityPub bridge written in C# / .NET.
 
 Example `local.settings.json`:
 

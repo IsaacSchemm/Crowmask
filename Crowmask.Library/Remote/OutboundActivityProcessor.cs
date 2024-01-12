@@ -3,8 +3,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Library.Remote
 {
+    /// <summary>
+    /// Sends queued ActivityPub activities to other servers.
+    /// </summary>
     public class OutboundActivityProcessor(CrowmaskDbContext context, Requester requester)
     {
+        /// <summary>
+        /// Sends queued ActivityPub activities to other servers.
+        /// </summary>
+        /// <remarks>
+        /// If an outbox cannot be reached, the message - and any further
+        /// activities to that inbox - will be skipped for the next four
+        /// hours.
+        /// </remarks>
         public async Task ProcessOutboundActivities()
         {
             HashSet<string> inboxesToSkip = [];
