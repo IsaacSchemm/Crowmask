@@ -1,7 +1,5 @@
 using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
-using Crowmask.Formats.ContentNegotiation;
-using Crowmask.Formats.Markdown;
+using Crowmask.Formats;
 using Crowmask.Library.Cache;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -10,7 +8,11 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Submissions(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Negotiator negotiator, Translator translator)
+    public class Submissions(
+        CrowmaskCache crowmaskCache,
+        MarkdownTranslator markdownTranslator,
+        ContentNegotiator negotiator,
+        ActivityPubTranslator translator)
     {
         /// <summary>
         /// Returns a mirror of an artwork submission posted to Weasyl.
@@ -41,7 +43,7 @@ namespace Crowmask.Functions
                         : req.Query["view"] == "shares" ? translator.AsSharesCollection(submission)
                         : req.Query["view"] == "create" ? translator.ObjectToCreate(submission)
                         : translator.AsObject(submission);
-                    return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
+                    return await req.WriteCrowmaskResponseAsync(format, ActivityPubSerializer.SerializeWithContext(objectToSerialize));
                 }
                 else if (format.Family.IsMarkdown)
                 {

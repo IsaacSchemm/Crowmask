@@ -1,5 +1,4 @@
-using Crowmask.Formats.ActivityPub;
-using Crowmask.Formats.ContentNegotiation;
+using Crowmask.Formats;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Following(Negotiator negotiator, Translator translator)
+    public class Following(ContentNegotiator negotiator, ActivityPubTranslator translator)
     {
         /// <summary>
         /// Returns an empty ActivityStreams Collection.
@@ -24,7 +23,7 @@ namespace Crowmask.Functions
                 {
                     var coll = translator.FollowingCollection;
 
-                    string json = AP.SerializeWithContext(coll);
+                    string json = ActivityPubSerializer.SerializeWithContext(coll);
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }

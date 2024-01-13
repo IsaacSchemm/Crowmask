@@ -1,7 +1,5 @@
 using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
-using Crowmask.Formats.ContentNegotiation;
-using Crowmask.Formats.Markdown;
+using Crowmask.Formats;
 using Crowmask.Library.Cache;
 using Crowmask.Library.Feed;
 using Microsoft.Azure.Functions.Worker;
@@ -13,7 +11,12 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class OutboxPage(CrowmaskCache crowmaskCache, FeedBuilder feedBuilder, Translator translator, MarkdownTranslator markdownTranslator, Negotiator negotiator)
+    public class OutboxPage(
+        CrowmaskCache crowmaskCache,
+        FeedBuilder feedBuilder,
+        ActivityPubTranslator translator,
+        MarkdownTranslator markdownTranslator,
+        ContentNegotiator negotiator)
     {
         /// <summary>
         /// Returns up to 20 of the user's posts (submissions and journals)
@@ -39,8 +42,8 @@ namespace Crowmask.Functions
             var person = await crowmaskCache.GetUserAsync();
 
             var acceptableFormats =
-                req.Query["format"] == "rss" ? [NegotiatorModule.RSS]
-                : req.Query["format"] == "atom" ? [NegotiatorModule.Atom]
+                req.Query["format"] == "rss" ? [ContentNegotiation.RSS]
+                : req.Query["format"] == "atom" ? [ContentNegotiation.Atom]
                 : negotiator.GetAcceptableFormats(req.Headers);
 
             foreach (var format in acceptableFormats)
@@ -49,7 +52,7 @@ namespace Crowmask.Functions
                 {
                     var outboxPage = translator.AsOutboxPage(req.Url.OriginalString, galleryPage);
 
-                    string json = AP.SerializeWithContext(outboxPage);
+                    string json = ActivityPubSerializer.SerializeWithContext(outboxPage);
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }

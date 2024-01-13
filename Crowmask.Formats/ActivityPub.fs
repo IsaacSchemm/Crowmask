@@ -1,15 +1,39 @@
-﻿namespace Crowmask.Formats.ActivityPub
+﻿namespace Crowmask.Formats
 
 open System
+open System.Collections.Generic
 open System.Net
+open System.Text.Json
 open Crowmask.DomainModeling
 open Crowmask.Dependencies.Mapping
-open Crowmask.Formats.Summaries
+open Crowmask.Formats
 open Crowmask.Interfaces
+
+/// Contains functions for JSON-LD serialization.
+module ActivityPubSerializer =
+    /// A JSON-LD context that includes all fields used by Crowmask.
+    let Context: obj list = [
+        "https://w3id.org/security/v1"
+        "https://www.w3.org/ns/activitystreams"
+        {| 
+            // https://docs.joinmastodon.org/spec/activitypub/#as
+            Hashtag = "as:Hashtag"
+            sensitive = "as:sensitive"
+            // https://docs.joinpeertube.org/api/activitypub#example-2
+            comments = "as:comments"
+        |}
+    ]
+
+    /// Converts ActivityPub objects in string/object pair format to an
+    /// acceptable JSON-LD rendition.
+    let SerializeWithContext (apObject: IDictionary<string, obj>) = JsonSerializer.Serialize(dict [   
+        "@context", Context :> obj
+        for p in apObject do p.Key, p.Value
+    ])
 
 /// Creates ActivityPub objects (in string/object pair format) for actors,
 /// posts, and other objects tracked by Crowmask.
-type Translator(adminActor: IAdminActor, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
+type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
     /// The Crowmask actor ID.
     let actor = mapper.ActorId
 

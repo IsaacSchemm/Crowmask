@@ -6,13 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ContentNegotiation\CrowmaskFormatFamily.fs" />
-    <Compile Include="ContentNegotiation\CrowmaskFormat.fs" />
-    <Compile Include="ContentNegotiation\Negotiator.fs" />
-    <Compile Include="Summaries\Summarizer.fs" />
-    <Compile Include="Markdown\MarkdownTranslator.fs" />
-    <Compile Include="ActivityPub\AP.fs" />
-    <Compile Include="ActivityPub\Translator.fs" />
+    <Compile Include="ContentNegotiation.fs" />
+    <Compile Include="Summarizer.fs" />
+    <Compile Include="MarkdownTranslator.fs" />
+    <Compile Include="ActivityPub.fs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-﻿namespace Crowmask.Formats.Summaries
+﻿namespace Crowmask.Formats
 
 open System
 open System.Net

@@ -1,5 +1,5 @@
 ﻿using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Crowmask.Library.Remote;
 using System.Collections.Generic;
@@ -13,7 +13,11 @@ namespace Crowmask
     /// ActivityPub actor. Outgoing messages will be stored in the Crowmask
     /// database and sent by RefreshUpstream.
     /// </summary>
-    public class RemoteActions(IAdminActor adminActor, DatabaseActions databaseActions, Requester requester, Translator translator)
+    public class RemoteActions(
+        IAdminActor adminActor,
+        DatabaseActions databaseActions,
+        Requester requester,
+        ActivityPubTranslator translator)
     {
         private async Task SendToAdminActorAsync(IDictionary<string, object> activityPubObject)
         {

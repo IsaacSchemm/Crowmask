@@ -1,9 +1,16 @@
-﻿namespace Crowmask.Formats.ContentNegotiation
+﻿namespace Crowmask.Formats
 
 open System.Net.Http.Headers
 open Microsoft.Net.Http.Headers
 
-module Negotiator =
+type CrowmaskFormatFamily = Markdown | HTML | ActivityPub | RSS | Atom
+
+type CrowmaskFormat = {
+    Family: CrowmaskFormatFamily
+    MediaType: string
+}
+
+module ContentNegotiation =
     let private format family mediaType = {
         Family = family
         MediaType = mediaType
@@ -28,7 +35,7 @@ module Negotiator =
     let RSS = format RSS "application/rss+xml"
     let Atom = format Atom "application/atom+xml"
 
-type Negotiator() =
+type ContentNegotiator() =
     let parse (str: string) =
         MediaTypeHeaderValue.Parse(str)
 
@@ -44,7 +51,7 @@ type Negotiator() =
             |> Seq.map parse
             |> sortByQuality
         for acceptedType in parsed do
-            for candidate in Negotiator.Supported do
+            for candidate in ContentNegotiation.Supported do
                 let responseType = parse candidate.MediaType
                 if responseType.IsSubsetOf(acceptedType) then
                     yield candidate

@@ -1,12 +1,10 @@
-﻿using Crowmask.Formats.ContentNegotiation;
+﻿using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Net.Http.Headers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,7 +20,7 @@ namespace Crowmask
         {
             HttpMethod IRequest.Method => new(Request.Method);
             Uri IRequest.RequestUri => Request.Url;
-            System.Net.Http.Headers.HttpHeaders IRequest.Headers => Request.Headers;
+            HttpHeaders IRequest.Headers => Request.Headers;
         }
 
         /// <summary>

@@ -1,9 +1,8 @@
-﻿namespace Crowmask.Formats.Markdown
+﻿namespace Crowmask.Formats
 
 open System.Net
 open Crowmask.DomainModeling
 open Crowmask.Dependencies.Mapping
-open Crowmask.Formats.Summaries
 open Crowmask.Interfaces
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
