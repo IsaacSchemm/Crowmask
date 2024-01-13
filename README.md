@@ -31,13 +31,17 @@ older submissions are updated daily.
 ## Browsing
 
 Crowmask is primarily an [ActivityPub](https://www.w3.org/TR/activitypub/)
-server, but it does include profile, submission list, and submission pages,
-which you can access by pointing a web browser (or another non-ActivityPub
-user agent) at the actor, outbox, and object URIs, respectively. For example,
-the URL `/api/actor` will send ActivityPub info to a program that asks for it
-(in the `Accept` header), but it will send an HTML profile page to a web
-browser, and a Markdown version of that page to something like `curl` that
-doesn't indicate any particular media type.
+server, but it does include profile and submission pages, among others. If
+`ReturnHTML` is set to `true` in Program.cs, you can access these pages by
+pointing a web browser at any of the ActivityPub URLs.
+
+If `ReturnMarkdown` is set to `true` in Program.cs, Crowmask will return
+Markdown renditions of these pages to user agents that do not request a more
+specific content type.
+
+If `UpstreamRedirect` is set to `true` in Program.cs, Crowmask will redirect
+actor and post URLs to the equivalent Weasyl pages for any web browsers that
+request them.
 
 ## Implementation details
 
@@ -110,10 +114,6 @@ Timed functions:
 * `RefreshUpstream`: Checks Weasyl for recent posts (stopping when a post is more than a day old), updating cache as needed, then sends outbound activities (every ten minutes)
 * `RefreshCached`: Attempts cache refresh for all stale cached posts (every day at 23:56)
 * `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
-
-TODO:
-
-[ ] Shy mode (redirect all HTML requests to Weasyl)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but

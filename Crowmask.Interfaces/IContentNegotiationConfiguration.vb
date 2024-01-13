@@ -3,14 +3,20 @@
 ''' </summary>
 Public Interface IContentNegotiationConfiguration
     ''' <summary>
-    ''' Whether the HTML and Markdown user interfaces of Crowmask are enabled.
+    ''' Whether the HTML (text/html) user interface of Crowmask is enabled.
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property UserInterface As Boolean
+    ReadOnly Property ReturnHTML As Boolean
 
     ''' <summary>
-    ''' Whether requests from web browsers should redirect to Weasyl.
-    ''' Applies only to individual posts and the user profile.
+    ''' Whether the Markdown (text/plain) user interface of Crowmask is enabled.
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property ReturnMarkdown As Boolean
+
+    ''' <summary>
+    ''' Whether requests from web browsers to individual posts or to the actor
+    ''' URL should redirect to Weasyl.
     ''' </summary>
     ''' <returns></returns>
     ReadOnly Property UpstreamRedirect As Boolean
