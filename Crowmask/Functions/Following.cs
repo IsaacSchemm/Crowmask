@@ -1,4 +1,5 @@
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Following(Translator translator)
+    public class Following(Negotiator negotiator, Translator translator)
     {
         /// <summary>
         /// Returns an empty ActivityStreams Collection.
@@ -17,9 +18,9 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/following")] HttpRequestData req)
         {
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
-                if (format.IsActivityStreams)
+                if (format.Family.IsActivityPub)
                 {
                     var coll = translator.FollowingCollection;
 

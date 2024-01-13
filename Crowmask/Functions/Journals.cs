@@ -1,6 +1,7 @@
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Crowmask.Formats.Markdown;
 using Crowmask.Library.Cache;
 using Microsoft.Azure.Functions.Worker;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Journals(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
+    public class Journals(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Negotiator negotiator, Translator translator)
     {
         /// <summary>
         /// Returns a mirror of a journal posted to Weasyl.
@@ -28,9 +29,9 @@ namespace Crowmask.Functions
 
             var journal = pr.Post;
 
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
-                if (format.IsActivityStreams)
+                if (format.Family.IsActivityPub)
                 {
                     // This endpoint also implements the collections for likes, shares, and (similar to PeerTube) comments.
                     // Most ActivityPub applications would store these interactions in their own tables and paginate them here, if they expose them at all.
@@ -43,11 +44,11 @@ namespace Crowmask.Functions
                         : translator.AsObject(journal);
                     return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
                 }
-                else if (format.IsMarkdown)
+                else if (format.Family.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(journal));
                 }
-                else if (format.IsHTML)
+                else if (format.Family.IsHTML)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(journal));
                 }

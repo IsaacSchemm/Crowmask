@@ -1,4 +1,5 @@
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Crowmask.Formats.Markdown;
 using Crowmask.Interfaces;
 using Crowmask.Library.Cache;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Actor(CrowmaskCache crowmaskCache, ICrowmaskKeyProvider keyProvider, MarkdownTranslator markdownTranslator, Translator translator)
+    public class Actor(CrowmaskCache crowmaskCache, ICrowmaskKeyProvider keyProvider, MarkdownTranslator markdownTranslator, Negotiator negotiator, Translator translator)
     {
         /// <summary>
         /// Returns information about the sole ActivityPub actor exposed by
@@ -25,19 +26,19 @@ namespace Crowmask.Functions
 
             var key = await keyProvider.GetPublicKeyAsync();
 
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
-                if (format.IsActivityStreams)
+                if (format.Family.IsActivityPub)
                 {
                     string json = AP.SerializeWithContext(translator.PersonToObject(person, key));
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }
-                else if (format.IsHTML)
+                else if (format.Family.IsHTML)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(person));
                 }
-                else if (format.IsMarkdown)
+                else if (format.Family.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person));
                 }
