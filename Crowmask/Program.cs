@@ -34,7 +34,8 @@ var host = new HostBuilder()
 
         services.AddSingleton<IContentNegotiationConfiguration>(
             new ContentNegotiationConfiguration(
-                UserInterface: false,
+                ReturnHTML: false,
+                ReturnMarkdown: false,
                 UpstreamRedirect: true));
 
         if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
@@ -74,7 +75,7 @@ host.Run();
 
 record AdminActor(string Id) : IAdminActor;
 
-record ContentNegotiationConfiguration(bool UserInterface, bool UpstreamRedirect) : IContentNegotiationConfiguration;
+record ContentNegotiationConfiguration(bool ReturnHTML, bool ReturnMarkdown, bool UpstreamRedirect) : IContentNegotiationConfiguration;
 
 record Host(string Hostname) : ICrowmaskHost, IHandleHost, IKeyVaultHost;
 

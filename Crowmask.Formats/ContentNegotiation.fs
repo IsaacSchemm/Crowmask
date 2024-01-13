@@ -18,16 +18,21 @@ type ContentNegotiator(configuration: IContentNegotiationConfiguration) =
     }
 
     let supported = [
-        if configuration.UpstreamRedirect then
-            format UpstreamRedirect "text/html"
-        if configuration.UserInterface then
-            format HTML "text/html"
+        if configuration.ReturnMarkdown then
             format Markdown "text/plain"
             format Markdown "text/markdown"
+
         format ActivityPub "application/activity+json"
         format ActivityPub "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\""
         format ActivityPub "application/json"
         format ActivityPub "text/json"
+
+        if configuration.UpstreamRedirect then
+            format UpstreamRedirect "text/html"
+
+        if configuration.ReturnHTML then
+            format HTML "text/html"
+
         format RSS "application/rss+xml"
         format RSS "application/xml"
         format RSS "text/xml"
