@@ -34,9 +34,9 @@ var host = new HostBuilder()
 
         services.AddSingleton<IContentNegotiationConfiguration>(
             new ContentNegotiationConfiguration(
-                ReturnHTML: false,
-                ReturnMarkdown: false,
-                UpstreamRedirect: true));
+                ReturnHTML: true,
+                ReturnMarkdown: true,
+                UpstreamRedirect: false));
 
         if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
             services.AddSingleton<ICrowmaskHost>(new Host(crowmaskHost));
