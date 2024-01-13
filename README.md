@@ -43,6 +43,12 @@ If `UpstreamRedirect` is set to `true` in Program.cs, Crowmask will redirect
 actor and post URLs to the equivalent Weasyl pages for any web browsers that
 request them.
 
+Crowmask implements ActivityPub, HTML, and Markdown responses through content
+negotiation. The RSS and Atom feeds are implemented on the endpoint for page 1
+of the outbox, but must be explicitly requested with `format=rss` or
+`format=atom`, as (historically) some browsers have sent Accept headers that
+explicitly prefer `application/xml` over `text/html`.
+
 ## Implementation details
 
 Layers:
@@ -67,10 +73,10 @@ Layers:
 * **Crowmask.Formats**:
     * **ContentNeogtiation**: helps perform content negotiation with the
       `Accept` header.
-    * **Summaries**: provides Markdown and HTML summaries of interactions with
+    * **Summarizer**: provides Markdown / HTML summaries of interactions with
       posts (boosts, likes, and replies) which are shown on the post page and
       sent in private messages to the admin actor.
-    * **Markdown**: Implements the web UI by creating Markdown and HTML
+    * **MarkdownTranslator**: Implements the Markdown and HTML UIs by making
       representations of data available through ActivityPub `GET` endpoints.
     * **ActivityPub**: converts domain model objects to ActivityPub
       objects (represented as `IDictionary<string, object>`); serializes these

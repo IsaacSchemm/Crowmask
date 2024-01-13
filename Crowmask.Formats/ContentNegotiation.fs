@@ -1,5 +1,6 @@
 ﻿namespace Crowmask.Formats
 
+open System.Linq
 open System.Net.Http.Headers
 open Microsoft.Net.Http.Headers
 open Crowmask.Interfaces
@@ -32,23 +33,13 @@ type ContentNegotiator(configuration: IContentNegotiationConfiguration) =
 
         if configuration.ReturnHTML then
             format HTML "text/html"
-
-        format RSS "application/rss+xml"
-        format RSS "application/xml"
-        format RSS "text/xml"
-        format Atom "application/atom+xml"
-        format Atom "application/xml"
-        format Atom "text/xml"
     ]
 
     let parse (str: string) =
         MediaTypeHeaderValue.Parse(str)
 
     let sortByQuality (values: MediaTypeHeaderValue seq) =
-        System.Linq.Enumerable.OrderByDescending(
-            values,
-            id,
-            MediaTypeHeaderValueComparer.QualityComparer)
+        values.OrderByDescending(id, MediaTypeHeaderValueComparer.QualityComparer)
 
     member _.RSS = format RSS "application/rss+xml"
     member _.Atom = format Atom "application/atom+xml"
