@@ -1,8 +1,6 @@
 using Crowmask.Data;
 using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
-using Crowmask.Formats.ContentNegotiation;
-using Crowmask.Formats.Markdown;
+using Crowmask.Formats;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +10,11 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Followers(CrowmaskDbContext context, Translator translator, MarkdownTranslator markdownTranslator, Negotiator negotiator)
+    public class Followers(
+        CrowmaskDbContext context,
+        ActivityPubTranslator translator,
+        MarkdownTranslator markdownTranslator,
+        ContentNegotiator negotiator)
     {
         /// <summary>
         /// Returns a list of ActivityPub actors that follow this Crowmask instance.
@@ -37,7 +39,7 @@ namespace Crowmask.Functions
                 {
                     var coll = translator.AsFollowersCollection(followerCollection);
 
-                    string json = AP.SerializeWithContext(coll);
+                    string json = ActivityPubSerializer.SerializeWithContext(coll);
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }

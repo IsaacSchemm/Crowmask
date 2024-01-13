@@ -1,8 +1,5 @@
 using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
-using Crowmask.Formats.ContentNegotiation;
-using Crowmask.Formats.Markdown;
-using Crowmask.Formats.Summaries;
+using Crowmask.Formats;
 using Crowmask.Library.Cache;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -13,7 +10,11 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class JournallInteractionNotification(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Negotiator negotiator, Translator translator)
+    public class JournallInteractionNotification(
+        CrowmaskCache crowmaskCache,
+        MarkdownTranslator markdownTranslator,
+        ContentNegotiator negotiator,
+        ActivityPubTranslator translator)
     {
         [Function("JournallInteractionNotification")]
         public async Task<HttpResponseData> Run(
@@ -36,7 +37,7 @@ namespace Crowmask.Functions
                 if (format.Family.IsActivityPub)
                 {
                     var objectToSerialize = translator.AsPrivateNote(journal, interaction);
-                    return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
+                    return await req.WriteCrowmaskResponseAsync(format, ActivityPubSerializer.SerializeWithContext(objectToSerialize));
                 }
                 else if (format.Family.IsMarkdown)
                 {

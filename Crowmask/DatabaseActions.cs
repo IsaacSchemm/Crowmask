@@ -1,6 +1,6 @@
 ﻿using Crowmask.Data;
 using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats;
 using Crowmask.Library.Remote;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -58,7 +58,7 @@ namespace Crowmask
             {
                 Id = Guid.NewGuid(),
                 Inbox = remoteActor.Inbox,
-                JsonBody = AP.SerializeWithContext(obj),
+                JsonBody = ActivityPubSerializer.SerializeWithContext(obj),
                 StoredAt = DateTimeOffset.UtcNow
             });
 

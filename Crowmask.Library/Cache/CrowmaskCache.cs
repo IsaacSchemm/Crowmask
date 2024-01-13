@@ -2,7 +2,7 @@
 using Crowmask.Dependencies.Async;
 using Crowmask.Dependencies.Weasyl;
 using Crowmask.DomainModeling;
-using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
@@ -13,7 +13,7 @@ namespace Crowmask.Library.Cache
     /// Accesses cached posts and user information from the Crowmask database,
     /// and refreshes cached information from Weasyl when stale or missing.
     /// </summary>
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, Translator Translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, ActivityPubTranslator translator, WeasylUserClient weasylUserClient)
     {
         /// <summary>
         /// Finds the Content-Type of a remote URL.
@@ -154,10 +154,10 @@ namespace Crowmask.Library.Cache
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox,
-                                JsonBody = AP.SerializeWithContext(
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
                                     newlyCreated
-                                    ? Translator.ObjectToCreate(newSubmission)
-                                    : Translator.ObjectToUpdate(newSubmission)),
+                                    ? translator.ObjectToCreate(newSubmission)
+                                    : translator.ObjectToUpdate(newSubmission)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -180,7 +180,9 @@ namespace Crowmask.Library.Cache
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox,
-                                JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(Domain.AsNote(cachedSubmission))),
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                    translator.ObjectToDelete(
+                                        Domain.AsNote(cachedSubmission))),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -294,10 +296,10 @@ namespace Crowmask.Library.Cache
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox,
-                                JsonBody = AP.SerializeWithContext(
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
                                     newlyCreated
-                                    ? Translator.ObjectToCreate(newJournal)
-                                    : Translator.ObjectToUpdate(newJournal)),
+                                    ? translator.ObjectToCreate(newJournal)
+                                    : translator.ObjectToUpdate(newJournal)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -320,7 +322,9 @@ namespace Crowmask.Library.Cache
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox,
-                                JsonBody = AP.SerializeWithContext(Translator.ObjectToDelete(Domain.AsArticle(cachedJournal))),
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                    translator.ObjectToDelete(
+                                        Domain.AsArticle(cachedJournal))),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -498,7 +502,10 @@ namespace Crowmask.Library.Cache
                     {
                         Id = Guid.NewGuid(),
                         Inbox = inbox,
-                        JsonBody = AP.SerializeWithContext(Translator.PersonToUpdate(newUser, key)),
+                        JsonBody = ActivityPubSerializer.SerializeWithContext(
+                            translator.PersonToUpdate(
+                                newUser,
+                                key)),
                         StoredAt = DateTimeOffset.UtcNow
                     });
                 }

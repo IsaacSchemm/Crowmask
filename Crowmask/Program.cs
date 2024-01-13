@@ -3,10 +3,7 @@ using Crowmask;
 using Crowmask.Data;
 using Crowmask.Dependencies.Mapping;
 using Crowmask.Dependencies.Weasyl;
-using Crowmask.Formats.ActivityPub;
-using Crowmask.Formats.ContentNegotiation;
-using Crowmask.Formats.Markdown;
-using Crowmask.Formats.Summaries;
+using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Crowmask.Library.Cache;
 using Crowmask.Library.Feed;
@@ -52,18 +49,18 @@ var host = new HostBuilder()
         services.AddScoped<ICrowmaskKeyProvider, KeyProvider>();
         services.AddScoped<IInteractionLookup, FastInteractionLookup>();
 
+        services.AddScoped<ActivityPubTranslator>();
         services.AddScoped<ActivityStreamsIdMapper>();
+        services.AddScoped<ContentNegotiator>();
         services.AddScoped<CrowmaskCache>();
         services.AddScoped<DatabaseActions>();
         services.AddScoped<FeedBuilder>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
-        services.AddScoped<Negotiator>();
         services.AddScoped<OutboundActivityProcessor>();
         services.AddScoped<RemoteActions>();
         services.AddScoped<Requester>();
         services.AddScoped<Summarizer>();
-        services.AddScoped<Translator>();
         services.AddScoped<WeasylUserClient>();
     })
     .Build();
