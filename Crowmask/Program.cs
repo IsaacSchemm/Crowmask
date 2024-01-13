@@ -4,6 +4,7 @@ using Crowmask.Data;
 using Crowmask.Dependencies.Mapping;
 using Crowmask.Dependencies.Weasyl;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Crowmask.Formats.Markdown;
 using Crowmask.Formats.Summaries;
 using Crowmask.Interfaces;
@@ -57,6 +58,7 @@ var host = new HostBuilder()
         services.AddScoped<FeedBuilder>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
+        services.AddScoped<Negotiator>();
         services.AddScoped<OutboundActivityProcessor>();
         services.AddScoped<RemoteActions>();
         services.AddScoped<Requester>();

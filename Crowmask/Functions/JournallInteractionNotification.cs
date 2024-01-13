@@ -1,5 +1,6 @@
 using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Crowmask.Formats.Markdown;
 using Crowmask.Formats.Summaries;
 using Crowmask.Library.Cache;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class JournallInteractionNotification(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Translator translator)
+    public class JournallInteractionNotification(CrowmaskCache crowmaskCache, MarkdownTranslator markdownTranslator, Negotiator negotiator, Translator translator)
     {
         [Function("JournallInteractionNotification")]
         public async Task<HttpResponseData> Run(
@@ -30,18 +31,18 @@ namespace Crowmask.Functions
 
             var interaction = journal.Interactions.SingleOrDefault(i => i.Id == guid);
 
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
-                if (format.IsActivityStreams)
+                if (format.Family.IsActivityPub)
                 {
                     var objectToSerialize = translator.AsPrivateNote(journal, interaction);
                     return await req.WriteCrowmaskResponseAsync(format, AP.SerializeWithContext(objectToSerialize));
                 }
-                else if (format.IsMarkdown)
+                else if (format.Family.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(journal, interaction));
                 }
-                else if (format.IsHTML)
+                else if (format.Family.IsHTML)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(journal, interaction));
                 }

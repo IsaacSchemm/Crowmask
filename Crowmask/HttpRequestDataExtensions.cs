@@ -54,22 +54,5 @@ namespace Crowmask
             await resp.WriteStringAsync(content, Encoding.UTF8);
             return resp;
         }
-
-        /// <summary>
-        /// Determine which formats should be used for the given request, in order of preference.
-        /// </summary>
-        /// <param name="req">The HTTP request</param>
-        /// <returns>Supported formats (Markdown, HTML, ActivityStreams, RSS, or Atom), in order of preference based on the Accept header</returns>
-        public static IEnumerable<CrowmaskFormat> GetAcceptableCrowmaskFormats(this HttpRequestData req)
-        {
-            var headers = req.Headers.GetValues("Accept")
-                .Select(str => MediaTypeHeaderValue.Parse(str))
-                .OrderByDescending(h => h, MediaTypeHeaderValueComparer.QualityComparer);
-            foreach (var accept in headers)
-                foreach (var format in CrowmaskFormat.All)
-                    foreach (var type in format.MediaTypes)
-                        if (type.IsSubsetOf(accept))
-                            yield return format;
-        }
     }
 }

@@ -1,6 +1,7 @@
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Crowmask.Formats.Markdown;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Followers(CrowmaskDbContext context, Translator translator, MarkdownTranslator markdownTranslator)
+    public class Followers(CrowmaskDbContext context, Translator translator, MarkdownTranslator markdownTranslator, Negotiator negotiator)
     {
         /// <summary>
         /// Returns a list of ActivityPub actors that follow this Crowmask instance.
@@ -30,9 +31,9 @@ namespace Crowmask.Functions
 
             var followerCollection = Domain.AsFollowerCollection(followers);
 
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
-                if (format.IsActivityStreams)
+                if (format.Family.IsActivityPub)
                 {
                     var coll = translator.AsFollowersCollection(followerCollection);
 
@@ -40,11 +41,11 @@ namespace Crowmask.Functions
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }
-                else if (format.IsHTML)
+                else if (format.Family.IsHTML)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(followerCollection));
                 }
-                else if (format.IsMarkdown)
+                else if (format.Family.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(followerCollection));
                 }

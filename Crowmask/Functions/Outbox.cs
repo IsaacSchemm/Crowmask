@@ -1,5 +1,6 @@
 using Crowmask.DomainModeling;
 using Crowmask.Formats.ActivityPub;
+using Crowmask.Formats.ContentNegotiation;
 using Crowmask.Formats.Markdown;
 using Crowmask.Library.Cache;
 using Microsoft.Azure.Functions.Worker;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator)
+    public class Outbox(CrowmaskCache crowmaskCache, Translator translator, MarkdownTranslator markdownTranslator, Negotiator negotiator)
     {
         /// <summary>
         /// Returns the size of the user's outbox (which contains artwork
@@ -25,9 +26,9 @@ namespace Crowmask.Functions
 
             var gallery = Domain.AsGallery(count: count);
 
-            foreach (var format in req.GetAcceptableCrowmaskFormats())
+            foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
-                if (format.IsActivityStreams)
+                if (format.Family.IsActivityPub)
                 {
                     var outbox = translator.AsOutbox(gallery);
 
@@ -35,11 +36,11 @@ namespace Crowmask.Functions
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }
-                else if (format.IsHTML)
+                else if (format.Family.IsHTML)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(gallery));
                 }
-                else if (format.IsMarkdown)
+                else if (format.Family.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(gallery));
                 }
