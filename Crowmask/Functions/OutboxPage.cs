@@ -42,8 +42,8 @@ namespace Crowmask.Functions
             var person = await crowmaskCache.GetUserAsync();
 
             var acceptableFormats =
-                req.Query["format"] == "rss" ? [ContentNegotiation.RSS]
-                : req.Query["format"] == "atom" ? [ContentNegotiation.Atom]
+                req.Query["format"] == "rss" ? [negotiator.RSS]
+                : req.Query["format"] == "atom" ? [negotiator.Atom]
                 : negotiator.GetAcceptableFormats(req.Headers);
 
             foreach (var format in acceptableFormats)

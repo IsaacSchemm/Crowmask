@@ -45,6 +45,10 @@ namespace Crowmask.Functions
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person));
                 }
+                else if (format.Family.IsUpstreamRedirect)
+                {
+                    return req.Redirect(person.url);
+                }
             }
 
             return req.CreateResponse(HttpStatusCode.NotAcceptable);
