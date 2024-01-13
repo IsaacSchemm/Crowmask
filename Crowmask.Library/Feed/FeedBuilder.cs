@@ -31,10 +31,7 @@ namespace Crowmask.Library.Feed
                 yield return $"<p>{WebUtility.HtmlEncode(s.warning)}</p>";
             }
 
-            foreach (var link in post.links)
-            {
-                yield return $"<a href='{link.href}'>{WebUtility.HtmlEncode(link.text)}</a>";
-            }
+            yield return $"<a href='{post.url}'>View on Weasyl</a>";
         }
 
         /// <summary>

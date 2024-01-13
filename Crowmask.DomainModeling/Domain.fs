@@ -92,7 +92,7 @@ type Post = {
     identifier: JointIdentifier
     title: string
     content: string
-    links: Link list
+    url: string
     first_upstream: DateTimeOffset
     first_cached: DateTimeOffset
     attachments: Attachment list
@@ -193,13 +193,7 @@ module Domain =
                         $"<a href='{WebUtility.HtmlEncode href}' rel='tag'>#{WebUtility.HtmlEncode tag.Tag}</a>"
                 ]
             ]
-            links = [
-                if not (String.IsNullOrEmpty submission.Link)
-                then {
-                    text = "View on Weasyl"
-                    href = submission.Link
-                }
-            ]
+            url = submission.Link
             first_upstream = submission.PostedAt
             first_cached = submission.FirstCachedAt
             attachments = [
@@ -258,13 +252,7 @@ module Domain =
             identifier = JournalIdentifier journal.JournalId
             title = journal.Title
             content = journal.Content
-            links = [
-                if not (String.IsNullOrEmpty journal.Link)
-                then {
-                    text = "View on Weasyl"
-                    href = journal.Link
-                }
-            ]
+            url = journal.Link
             first_upstream = journal.PostedAt
             first_cached = journal.FirstCachedAt
             attachments = []

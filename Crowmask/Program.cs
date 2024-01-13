@@ -32,6 +32,11 @@ var host = new HostBuilder()
                     new DefaultAzureCredential(),
                     databaseName: "Crowmask"));
 
+        services.AddSingleton<IContentNegotiationConfiguration>(
+            new ContentNegotiationConfiguration(
+                UserInterface: false,
+                UpstreamRedirect: true));
+
         if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
             services.AddSingleton<ICrowmaskHost>(new Host(crowmaskHost));
 
@@ -68,6 +73,8 @@ var host = new HostBuilder()
 host.Run();
 
 record AdminActor(string Id) : IAdminActor;
+
+record ContentNegotiationConfiguration(bool UserInterface, bool UpstreamRedirect) : IContentNegotiationConfiguration;
 
 record Host(string Hostname) : ICrowmaskHost, IHandleHost, IKeyVaultHost;
 

@@ -41,7 +41,7 @@ namespace Crowmask
         /// <param name="req">The HTTP request</param>
         /// <param name="format">The format to use (Markdown, HTML, ActivityStreams, RSS, or Atom)</param>
         /// <param name="content">The string content (after any serialization)</param>
-        /// <returns></returns>
+        /// <returns>The HTTP response object</returns>
         public static async Task<HttpResponseData> WriteCrowmaskResponseAsync(
             this HttpRequestData req,
             CrowmaskFormat format,
@@ -50,6 +50,21 @@ namespace Crowmask
             var resp = req.CreateResponse(HttpStatusCode.OK);
             resp.Headers.Add("Content-Type", $"{format.MediaType}; charset=utf-8");
             await resp.WriteStringAsync(content, Encoding.UTF8);
+            return resp;
+        }
+
+        /// <summary>
+        /// Writes an HTTP 307 redirect response.
+        /// </summary>
+        /// <param name="req">The HTTP request</param>
+        /// <param name="url">The URL to redirect to</param>
+        /// <returns>The HTTP response object</returns>
+        public static HttpResponseData Redirect(
+            this HttpRequestData req,
+            string url)
+        {
+            var resp = req.CreateResponse(HttpStatusCode.TemporaryRedirect);
+            resp.Headers.Add("Location", url);
             return resp;
         }
     }

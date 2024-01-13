@@ -24,6 +24,7 @@ namespace Crowmask.Data
         /// <summary>
         /// The URL to the submission on Weasyl.
         /// </summary>
+        [Required]
         public string Link { get; set; }
 
         /// <summary>

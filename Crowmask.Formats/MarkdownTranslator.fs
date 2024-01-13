@@ -121,9 +121,8 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
             $""
             post.content
         $""
-        for link in post.links do
-            $"[{enc link.text}]({link.href})"
-            $""
+        $"[View on Weasyl]({post.url})"
+        $""
         $""
         $"----------"
         $""

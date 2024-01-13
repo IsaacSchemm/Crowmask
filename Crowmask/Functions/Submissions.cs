@@ -1,3 +1,4 @@
+using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Formats;
 using Crowmask.Library.Cache;
@@ -52,6 +53,10 @@ namespace Crowmask.Functions
                 else if (format.Family.IsHTML)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(submission));
+                }
+                else if (format.Family.IsUpstreamRedirect)
+                {
+                    return req.Redirect(submission.url);
                 }
             }
 
