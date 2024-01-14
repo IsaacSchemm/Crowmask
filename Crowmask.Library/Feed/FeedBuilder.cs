@@ -11,7 +11,7 @@ namespace Crowmask.Library.Feed
     /// <summary>
     /// Builds Atom and RSS feeds for the outbox.
     /// </summary>
-    public class FeedBuilder(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost)
+    public class FeedBuilder(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IHandleName handleName)
     {
         /// <summary>
         /// Generates an HTML rendition of the post, including image(s), description, and outgoing link(s).
@@ -67,9 +67,9 @@ namespace Crowmask.Library.Feed
             var feed = new SyndicationFeed
             {
                 Id = uri,
-                Title = new TextSyndicationContent($"@{person.preferredUsername}@{handleHost.Hostname}", TextSyndicationContentKind.Plaintext),
-                Description = new TextSyndicationContent($"Submissions and journals posted to Weasyl by {person.preferredUsername}", TextSyndicationContentKind.Plaintext),
-                Copyright = new TextSyndicationContent($"{person.preferredUsername}", TextSyndicationContentKind.Plaintext),
+                Title = new TextSyndicationContent($"@{handleName.PreferredUsername}@{handleHost.Hostname}", TextSyndicationContentKind.Plaintext),
+                Description = new TextSyndicationContent($"Submissions and journals posted to Weasyl by {person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
+                Copyright = new TextSyndicationContent($"{person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
                 LastUpdatedTime = posts.Select(x => x.first_upstream).Max(),
                 ImageUrl = person.iconUrls.Select(str => new Uri(str)).FirstOrDefault(),
                 Items = posts.Select(ToSyndicationItem)

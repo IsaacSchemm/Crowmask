@@ -8,7 +8,7 @@ open Crowmask.Interfaces
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub\
 /// user agents.
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost) =
+type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost, handleName: IHandleName) =
     /// Performs HTML encoding on a string. (HTML can be inserted into
     /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode
@@ -68,11 +68,11 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $"## ActivityPub"
         $""
         for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
-            $"    @{enc person.preferredUsername}@{hostname}"
+            $"    @{enc handleName.PreferredUsername}@{hostname}"
         $""
         $"[View outbox](/api/actor/outbox)"
         $""
-        $"The outbox and contains all submissions and journals posted by {enc person.preferredUsername}."
+        $"The outbox and contains all submissions and journals posted by {enc person.upstreamUsername}."
         $""
         $"[View followers](/api/actor/followers)"
         $""

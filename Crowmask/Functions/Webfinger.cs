@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(ActivityStreamsIdMapper mapper, CrowmaskCache crowmaskCache, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IAdminActor adminActor)
+    public class WebFinger(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IHandleName handleName, IAdminActor adminActor)
     {
         /// <summary>
         /// Points the user agent to the Crowmask actor ID, or redirects to the equivalent endpoint on the admin actor's server.
@@ -26,10 +26,8 @@ namespace Crowmask.Functions
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            var person = await crowmaskCache.GetUserAsync();
-
-            string handle = $"acct:{person.preferredUsername}@{handleHost.Hostname}";
-            string alternate = $"acct:{person.preferredUsername}@{crowmaskHost.Hostname}";
+            string handle = $"acct:{handleName.PreferredUsername}@{handleHost.Hostname}";
+            string alternate = $"acct:{handleName.PreferredUsername}@{crowmaskHost.Hostname}";
 
             if (resource == handle || resource == mapper.ActorId || resource == alternate)
             {
@@ -44,7 +42,7 @@ namespace Crowmask.Functions
                         {
                             rel = "http://webfinger.net/rel/profile-page",
                             type = "text/html",
-                            href = person.url
+                            href = mapper.ActorId
                         },
                         new
                         {

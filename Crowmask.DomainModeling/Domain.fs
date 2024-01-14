@@ -13,7 +13,7 @@ type PersonMetadata = {
 
 /// A user profile; in particular, the one created by this Crowmask instance.
 type Person = {
-    preferredUsername: string
+    upstreamUsername: string
     name: string
     summary: string
     url: string
@@ -144,7 +144,7 @@ type FollowerCollection = {
 module Domain =
     let AsPerson (user: User) =
         {
-            preferredUsername = user.Username
+            upstreamUsername = user.Username
             name = user.DisplayName
             summary = user.Summary
             url = user.Url
