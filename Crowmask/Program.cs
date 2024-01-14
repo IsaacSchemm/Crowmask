@@ -44,6 +44,9 @@ var host = new HostBuilder()
         if (Environment.GetEnvironmentVariable("HandleHost") is string handleHost)
             services.AddSingleton<IHandleHost>(new Host(handleHost));
 
+        if (Environment.GetEnvironmentVariable("HandleName") is string handleName)
+            services.AddSingleton<IHandleName>(new HandleName(handleName));
+
         if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost)
             services.AddSingleton<IKeyVaultHost>(new Host(keyVaultHost));
 
@@ -78,5 +81,7 @@ record AdminActor(string Id) : IAdminActor;
 record ContentNegotiationConfiguration(bool ReturnHTML, bool ReturnMarkdown, bool UpstreamRedirect) : IContentNegotiationConfiguration;
 
 record Host(string Hostname) : ICrowmaskHost, IHandleHost, IKeyVaultHost;
+
+record HandleName(string PreferredUsername) : IHandleName;
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

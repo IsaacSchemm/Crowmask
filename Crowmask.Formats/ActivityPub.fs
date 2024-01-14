@@ -48,14 +48,14 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         && not (Char.IsUpper(c))
 
     /// Builds a Person object for the Crowmask actor.
-    member _.PersonToObject (person: Person) (key: ICrowmaskKey) = dict [
+    member _.PersonToObject (person: Person) (key: ICrowmaskKey) (handleName: IHandleName) = dict [
         pair "id" actor
         pair "type" "Person"
         pair "inbox" $"{actor}/inbox"
         pair "outbox" $"{actor}/outbox"
         pair "followers" $"{actor}/followers"
         pair "following" $"{actor}/following"
-        pair "preferredUsername" person.preferredUsername
+        pair "preferredUsername" handleName.PreferredUsername
         pair "name" person.name
         pair "summary" person.summary
         pair "url" actor

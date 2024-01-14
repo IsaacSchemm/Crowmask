@@ -137,6 +137,7 @@ Example `local.settings.json`:
         "CosmosDBAccountKey": "...",
         "CrowmaskHost": "crowmask.example.com",
         "HandleHost": "crowmask.example.com",
+        "HandleName": "activitypub-username-here",
         "KeyVaultHost": "crowmask.vault.azure.net",
         "WeasylApiKey": "...",
         "AzureWebJobsStorage": "UseDevelopmentStorage=true",
