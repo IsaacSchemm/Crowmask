@@ -121,14 +121,7 @@ namespace Crowmask.Library.Cache
                         })
                         .ToListAsync();
                     cachedSubmission.PostedAt = weasylSubmission.posted_at;
-                    cachedSubmission.RatingId = weasylSubmission.rating switch
-                    {
-                        "general" => Submission.Rating.General,
-                        "moderate" => Submission.Rating.Moderate,
-                        "mature" => Submission.Rating.Mature,
-                        "explicit" => Submission.Rating.Explicit,
-                        _ => 0
-                    };
+                    cachedSubmission.Rating = weasylSubmission.rating;
                     cachedSubmission.Tags = weasylSubmission.tags
                         .Select(t => new SubmissionTag
                         {
@@ -258,7 +251,7 @@ namespace Crowmask.Library.Cache
             {
                 var whoami = await weasylUserClient.GetMyUserAsync();
 
-                JournalEntry? weasylJournal = await weasylUserClient.GetMyJournalAsync(journalid);
+                WeasylJournalDetail? weasylJournal = await weasylUserClient.GetMyJournalAsync(journalid);
                 if (weasylJournal != null)
                 {
                     bool newlyCreated = false;
@@ -268,7 +261,7 @@ namespace Crowmask.Library.Cache
                         newlyCreated = true;
                         cachedJournal = new Journal
                         {
-                            JournalId = weasylJournal.JournalId,
+                            JournalId = weasylJournal.journalid,
                             FirstCachedAt = DateTimeOffset.UtcNow
                         };
                         Context.Journals.Add(cachedJournal);
@@ -276,10 +269,10 @@ namespace Crowmask.Library.Cache
 
                     var oldJournal = Domain.AsArticle(cachedJournal);
 
-                    cachedJournal.Content = weasylJournal.Content;
-                    cachedJournal.PostedAt = weasylJournal.PostedAt;
-                    cachedJournal.Rating = weasylJournal.Rating;
-                    cachedJournal.Title = weasylJournal.Title;
+                    cachedJournal.Content = weasylJournal.content;
+                    cachedJournal.PostedAt = weasylJournal.posted_at;
+                    cachedJournal.Rating = weasylJournal.rating;
+                    cachedJournal.Title = weasylJournal.title;
 
                     var newJournal = Domain.AsArticle(cachedJournal);
 

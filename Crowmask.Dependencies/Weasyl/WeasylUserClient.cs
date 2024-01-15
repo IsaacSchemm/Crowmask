@@ -105,11 +105,11 @@
         /// </summary>
         /// <param name="journalid">The journal ID</param>
         /// <returns>A journal entry object</returns>
-        public async Task<JournalEntry?> GetMyJournalAsync(int journalid)
+        public async Task<WeasylJournalDetail?> GetMyJournalAsync(int journalid)
         {
             var whoami = await WhoamiAsync();
-            var journal = await weasylScraper.GetJournalAsync(journalid);
-            return journal != null && journal.Username == whoami.login && !journal.VisibilityRestricted
+            var journal = await weasylClient.GetJournalAsync(journalid);
+            return journal != null && journal.owner == whoami.login && !journal.friends_only
                 ? journal
                 : null;
         }
