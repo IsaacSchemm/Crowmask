@@ -85,9 +85,6 @@ namespace Crowmask.Data
         {
             get
             {
-                if (Rating == null)
-                    return true;
-
                 var now = DateTimeOffset.UtcNow;
 
                 bool older_than_1_hour =
