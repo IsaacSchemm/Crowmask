@@ -1,12 +1,11 @@
 ﻿namespace Crowmask.Dependencies.Weasyl
 {
     /// <summary>
-    /// Allows access to Weasyl data, both through the Weasyl API and through the web interface.
+    /// Allows access to Weasyl data using an API key.
     /// </summary>
-    public class WeasylUserClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
+    public class WeasylClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
         private readonly WeasylApiClient weasylClient = new(httpClientFactory, apiKeyProvider);
-        private readonly WeasylScraper weasylScraper = new(httpClientFactory, apiKeyProvider);
 
         private WeasylWhoami? _whoami = null;
         private WeasylUserProfile? _userProfile = null;
@@ -94,7 +93,7 @@
         public async IAsyncEnumerable<int> GetMyJournalIdsAsync()
         {
             var user = await GetMyUserAsync();
-            await foreach (var uri in weasylScraper.GetJournalIdsAsync(user.login_name))
+            await foreach (var uri in weasylClient.GetJournalIdsAsync(user.login_name))
                 yield return uri;
         }
 

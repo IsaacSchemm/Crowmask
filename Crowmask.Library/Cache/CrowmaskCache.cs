@@ -13,7 +13,7 @@ namespace Crowmask.Library.Cache
     /// Accesses cached posts and user information from the Crowmask database,
     /// and refreshes cached information from Weasyl when stale or missing.
     /// </summary>
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, ActivityPubTranslator translator, WeasylUserClient weasylUserClient)
+    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, ActivityPubTranslator translator, WeasylClient weasylClient)
     {
         /// <summary>
         /// Finds the Content-Type of a remote URL.
@@ -83,7 +83,7 @@ namespace Crowmask.Library.Cache
 
             try
             {
-                WeasylSubmissionDetail? weasylSubmission = await weasylUserClient.GetMyPublicSubmissionAsync(submitid);
+                WeasylSubmissionDetail? weasylSubmission = await weasylClient.GetMyPublicSubmissionAsync(submitid);
                 if (weasylSubmission != null)
                 {
                     bool newlyCreated = false;
@@ -249,9 +249,9 @@ namespace Crowmask.Library.Cache
 
             try
             {
-                var whoami = await weasylUserClient.GetMyUserAsync();
+                var whoami = await weasylClient.GetMyUserAsync();
 
-                WeasylJournalDetail? weasylJournal = await weasylUserClient.GetMyJournalAsync(journalid);
+                WeasylJournalDetail? weasylJournal = await weasylClient.GetMyJournalAsync(journalid);
                 if (weasylJournal != null)
                 {
                     bool newlyCreated = false;
@@ -447,7 +447,7 @@ namespace Crowmask.Library.Cache
             cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
             await Context.SaveChangesAsync();
 
-            var weasylUser = await weasylUserClient.GetMyUserAsync();
+            var weasylUser = await weasylClient.GetMyUserAsync();
 
             var oldUser = Domain.AsPerson(cachedUser);
 
