@@ -8,7 +8,7 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshUpstream(CrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylUserClient weasylUserClient)
+    public class RefreshUpstream(CrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylClient weasylClient)
     {
         /// <summary>
         /// Refreshes the cache for stale items that are among the following:
@@ -25,18 +25,18 @@ namespace Crowmask.Functions
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("ShortUpdate")]
-        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("20 48 * * * *")] TimerInfo myTimer)
         {
             DateTimeOffset yesterday = DateTimeOffset.UtcNow.AddDays(-1);
 
-            await foreach (var submission in weasylUserClient.GetMyGallerySubmissionsAsync())
+            await foreach (var submission in weasylClient.GetMyGallerySubmissionsAsync())
             {
                 var cacheResult = await crowmaskCache.GetSubmissionAsync(submission.submitid);
                 if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
                     break;
             }
 
-            await foreach (int journalid in weasylUserClient.GetMyJournalIdsAsync())
+            await foreach (int journalid in weasylClient.GetMyJournalIdsAsync())
             {
                 var cacheResult = await crowmaskCache.GetJournalAsync(journalid);
                 if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)

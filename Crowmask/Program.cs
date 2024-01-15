@@ -70,7 +70,7 @@ var host = new HostBuilder()
         services.AddScoped<RemoteActions>();
         services.AddScoped<Requester>();
         services.AddScoped<Summarizer>();
-        services.AddScoped<WeasylUserClient>();
+        services.AddScoped<WeasylClient>();
     })
     .Build();
 

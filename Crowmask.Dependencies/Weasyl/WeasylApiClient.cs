@@ -1,88 +1,26 @@
-﻿using Microsoft.FSharp.Collections;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace Crowmask.Dependencies.Weasyl
 {
-    public record WeasylWhoami(
-        string login,
-        int userid);
-
-    public record WeasylMediaFile(
-        int? mediaid,
-        string url);
-
-    public record WeasylUserMedia(
-        FSharpList<WeasylMediaFile> avatar);
-
-    public record WeasylStatistics(
-        int submissions);
-
-    public record WeasylUserInfo(
-        int? age,
-        string? gender,
-        string? location,
-        FSharpMap<string, FSharpList<string>> user_links);
-
-    public record WeasylUserProfile(
-        string username,
-        string full_name,
-        string profile_text,
-        WeasylUserMedia media,
-        string login_name,
-        WeasylStatistics statistics,
-        WeasylUserInfo user_info,
-        string link);
-
-    public record WeasylSubmissionMedia(
-        FSharpList<WeasylMediaFile> submission,
-        FSharpList<WeasylMediaFile> thumbnail);
-
-    public record WeasylGallerySubmission(
-        DateTime posted_at,
-        int submitid);
-
-    public record WeasylSubmissionDetail(
-        string link,
-        WeasylSubmissionMedia media,
-        string owner,
-        DateTime posted_at,
-        string rating,
-        string title,
-        bool friends_only,
-        FSharpSet<string> tags,
-        int submitid,
-        string description);
-
-    public record WeasylJournalDetail(
-        string link,
-        string owner,
-        DateTime posted_at,
-        string rating,
-        string title,
-        bool friends_only,
-        FSharpSet<string> tags,
-        int journalid,
-        string content);
-
-    public record WeasylGallery(
-        FSharpList<WeasylGallerySubmission> submissions,
-        int? backid,
-        int? nextid);
-
-    internal class WeasylApiClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
+    internal partial class WeasylApiClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
-        private async Task<HttpResponseMessage> GetAsync(string uri, CancellationToken cancellationToken)
+        [GeneratedRegex(@"/journal/([0-9]+)")]
+        private static partial Regex JournalUriPattern();
+
+        private async Task<HttpResponseMessage> GetAsync(string uri, CancellationToken cancellationToken, string? accept = null)
         {
             using var httpClient = httpClientFactory.CreateClient();
             httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.1"));
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(accept ?? "application/json"));
             httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
 
             return await httpClient.GetAsync(uri, cancellationToken);
         }
 
-        internal async Task<WeasylGallery> GetUserGalleryAsync(string username, int? count = null, int? nextid = null, int? backid = null, CancellationToken cancellationToken = default)
+        public async Task<WeasylGallery> GetUserGalleryAsync(string username, int? count = null, int? nextid = null, int? backid = null, CancellationToken cancellationToken = default)
         {
             IEnumerable<string> query()
             {
@@ -99,7 +37,7 @@ namespace Crowmask.Dependencies.Weasyl
                 ?? throw new NotImplementedException();
         }
 
-        internal async Task<WeasylSubmissionDetail?> GetSubmissionAsync(int submitid, CancellationToken cancellationToken = default)
+        public async Task<WeasylSubmissionDetail?> GetSubmissionAsync(int submitid, CancellationToken cancellationToken = default)
         {
             using var resp = await GetAsync(
                 $"https://www.weasyl.com/api/submissions/{submitid}/view",
@@ -112,7 +50,25 @@ namespace Crowmask.Dependencies.Weasyl
                 ?? throw new NotImplementedException();
         }
 
-        internal async Task<WeasylJournalDetail?> GetJournalAsync(int journalid, CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<int> GetJournalIdsAsync(string login_name, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            using var resp = await GetAsync(
+                $"https://www.weasyl.com/journals/{Uri.EscapeDataString(login_name)}",
+                cancellationToken,
+                accept: "text/html");
+
+            resp.EnsureSuccessStatusCode();
+            string html = await resp.Content.ReadAsStringAsync(cancellationToken);
+
+            var matches = JournalUriPattern().Matches(html);
+            for (int i = 0; i < matches.Count; i++)
+            {
+                var match = matches[i];
+                yield return int.Parse(match.Groups[1].Value);
+            }
+        }
+
+        public async Task<WeasylJournalDetail?> GetJournalAsync(int journalid, CancellationToken cancellationToken = default)
         {
             using var resp = await GetAsync(
                 $"https://www.weasyl.com/api/journals/{journalid}/view",
@@ -125,7 +81,7 @@ namespace Crowmask.Dependencies.Weasyl
                 ?? throw new NotImplementedException();
         }
 
-        internal async Task<WeasylUserProfile> GetUserAsync(string user, CancellationToken cancellationToken = default)
+        public async Task<WeasylUserProfile> GetUserAsync(string user, CancellationToken cancellationToken = default)
         {
             using var resp = await GetAsync(
                 $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view",
@@ -135,7 +91,7 @@ namespace Crowmask.Dependencies.Weasyl
                 ?? throw new NotImplementedException();
         }
 
-        internal async Task<WeasylWhoami> WhoamiAsync(CancellationToken cancellationToken = default)
+        public async Task<WeasylWhoami> WhoamiAsync(CancellationToken cancellationToken = default)
         {
             using var resp = await GetAsync(
                 $"https://www.weasyl.com/api/whoami",
