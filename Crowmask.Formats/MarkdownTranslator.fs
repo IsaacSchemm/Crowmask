@@ -156,7 +156,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"--------"
         $""
-        $"## Gallery"
+        $"## Outbox"
         $""
         $"{gallery.gallery_count} item(s)."
         $""
@@ -164,7 +164,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
     ]
 
-    member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Gallery"
+    member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Outbox"
 
     member _.ToMarkdown (page: Page) = String.concat "\n" [
         sharedHeader
