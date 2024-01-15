@@ -52,8 +52,18 @@ namespace Crowmask.Dependencies.Weasyl
         bool friends_only,
         FSharpSet<string> tags,
         int submitid,
-        string subtype,
         string description);
+
+    public record WeasylJournalDetail(
+        string link,
+        string owner,
+        DateTime posted_at,
+        string rating,
+        string title,
+        bool friends_only,
+        FSharpSet<string> tags,
+        int journalid,
+        string content);
 
     public record WeasylGallery(
         FSharpList<WeasylGallerySubmission> submissions,
@@ -99,6 +109,19 @@ namespace Crowmask.Dependencies.Weasyl
 
             resp.EnsureSuccessStatusCode();
             return await resp.Content.ReadFromJsonAsync<WeasylSubmissionDetail>(cancellationToken)
+                ?? throw new NotImplementedException();
+        }
+
+        internal async Task<WeasylJournalDetail?> GetJournalAsync(int journalid, CancellationToken cancellationToken = default)
+        {
+            using var resp = await GetAsync(
+                $"https://www.weasyl.com/api/journals/{journalid}/view",
+                cancellationToken);
+            if (resp.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return null;
+
+            resp.EnsureSuccessStatusCode();
+            return await resp.Content.ReadFromJsonAsync<WeasylJournalDetail>(cancellationToken)
                 ?? throw new NotImplementedException();
         }
 

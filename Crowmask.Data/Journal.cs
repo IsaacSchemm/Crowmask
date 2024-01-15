@@ -34,10 +34,9 @@ namespace Crowmask.Data
         public DateTimeOffset PostedAt { get; set; }
 
         /// <summary>
-        /// The rating of the journal entry, as scraped from the page.
-        /// Crowmask will mark anything other than "General" as sensitive on the ActivityPub side.
+        /// The rating of this journal entry on Weasyl.
+        /// Crowmask will mark anything other than "general" as sensitive on the ActivityPub side.
         /// </summary>
-        [Required]
         public string Rating { get; set; }
 
         /// <summary>
@@ -86,6 +85,9 @@ namespace Crowmask.Data
         {
             get
             {
+                if (Rating == null)
+                    return true;
+
                 var now = DateTimeOffset.UtcNow;
 
                 bool older_than_1_hour =

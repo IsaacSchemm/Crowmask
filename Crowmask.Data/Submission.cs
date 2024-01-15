@@ -43,21 +43,10 @@ namespace Crowmask.Data
         public DateTimeOffset PostedAt { get; set; }
 
         /// <summary>
-        /// A rating for a Weasyl submission.
-        /// </summary>
-        public enum Rating
-        {
-            General = 1,
-            Moderate = 2,
-            Mature = 3,
-            Explicit = 4
-        }
-
-        /// <summary>
         /// The rating of this submission on Weasyl. 
-        /// Crowmask will mark anything other than "General" as sensitive on the ActivityPub side.
+        /// Crowmask will mark anything other than "general" as sensitive on the ActivityPub side.
         /// </summary>
-        public Rating RatingId { get; set; }
+        public string Rating { get; set; }
 
         /// <summary>
         /// A list of tags associated with the submission on Weasyl.
@@ -115,6 +104,9 @@ namespace Crowmask.Data
         {
             get
             {
+                if (Rating == null)
+                    return true;
+
                 var now = DateTimeOffset.UtcNow;
 
                 bool older_than_1_hour =

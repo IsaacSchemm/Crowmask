@@ -35,11 +35,9 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
 
     /// A Markdown header that is included on all pages.
     let sharedHeader = String.concat "\n" [
-        $"# Crowmask"
+        $"This is an ActivityPub mirror of an external artwork gallery. The user at [{enc adminActor.Id}]({adminActor.Id}) will be notified of any likes, shares, or replies."
         $""
-        $"This is an ActivityPub mirror powered by [Crowmask](https://github.com/IsaacSchemm/Crowmask). The ActivityPub user at [{enc adminActor.Id}]({adminActor.Id}) will be notified of any likes, shares, or replies."
-        $""
-        $"[Return to the user profile page](/api/actor)"
+        $"[Return to the user profile page]({mapper.ActorId})"
     ]
 
     member _.ToMarkdown (person: Person) = String.concat "\n" [
@@ -114,12 +112,15 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"## {enc post.title}"
         $""
-        if post.sensitivity = Sensitivity.General then
+        match post.sensitivity with
+        | General ->
             for attachment in post.attachments do
                 match attachment with Image image ->
                     $"[![]({image.url})]({image.url})"
             $""
             post.content
+        | Sensitive message ->
+            enc message
         $""
         $"[View on Weasyl]({post.url})"
         $""
@@ -182,11 +183,14 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
 
             $"### [{enc post.title}]({post_url}) ({enc date})"
             $""
-            if post.sensitivity = Sensitivity.General then
+            match post.sensitivity with
+            | General ->
                 for thumbnail in post.thumbnails do
                     $"[![]({thumbnail.url})]({post_url})"
                 if post.thumbnails = [] then
                     $"No thumbnail available"
+            | Sensitive message ->
+                enc message
             $""
         $""
         if page.posts <> [] then

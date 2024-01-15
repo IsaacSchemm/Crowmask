@@ -212,11 +212,11 @@ module Domain =
             ]
             tags = [for t in submission.Tags do t.Tag]
             sensitivity =
-                match submission.RatingId with
-                | Submission.Rating.General -> General
-                | Submission.Rating.Mature -> Sensitive "Mature (18+)"
-                | Submission.Rating.Explicit -> Sensitive "Explicit (18+)"
-                | _ -> Sensitive "Potentially sensitive (nature unknown)"
+                match submission.Rating with
+                | "general" -> General
+                | "mature" -> Sensitive "Mature (18+)"
+                | "explicit" -> Sensitive "Explicit (18+)"
+                | x -> Sensitive x
             boosts = [
                 for i in submission.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
@@ -260,8 +260,10 @@ module Domain =
             tags = []
             sensitivity =
                 match journal.Rating with
-                | "General" -> General
-                | str -> Sensitive str
+                | "general" -> General
+                | "mature" -> Sensitive "Mature (18+)"
+                | "explicit" -> Sensitive "Explicit (18+)"
+                | x -> Sensitive x
             boosts = [
                 for i in journal.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
                     {
