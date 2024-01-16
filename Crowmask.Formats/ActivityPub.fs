@@ -236,7 +236,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "type" "OrderedCollectionPage"
 
         if page.posts <> [] then
-            pair "next" $"{actor}/outbox/page?offset={page.offset + page.posts.Length}"
+            pair "next" $"{actor}/outbox/page?nextid={List.min [for p in page.posts do p.submitid]}"
 
         pair "partOf" $"{actor}/outbox"
         pair "orderedItems" [for p in page.posts do this.ObjectToCreate p]

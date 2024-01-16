@@ -4,8 +4,6 @@ using Crowmask.Library.Cache;
 using Crowmask.Library.Feed;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -29,14 +27,11 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)
         {
-            int offset = int.TryParse(req.Query["offset"], out int n) ? n : 0;
+            var posts = int.TryParse(req.Query["nextid"], out int nextid)
+                ? await crowmaskCache.GetCachedSubmissionsAsync(nextid: nextid, count: 20)
+                : await crowmaskCache.GetCachedSubmissionsAsync(count: 20);
 
-            var posts = await crowmaskCache.GetCachedSubmissionsAsync()
-                .Skip(offset)
-                .Take(20)
-                .ToListAsync();
-
-            var galleryPage = Domain.AsPage(posts, offset);
+            var galleryPage = Domain.AsPage(posts, nextid);
 
             var person = await crowmaskCache.GetUserAsync();
 
