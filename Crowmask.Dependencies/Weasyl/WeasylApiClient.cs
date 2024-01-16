@@ -8,7 +8,7 @@ namespace Crowmask.Dependencies.Weasyl
         private async Task<HttpResponseMessage> GetAsync(string uri, CancellationToken cancellationToken)
         {
             using var httpClient = httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.1"));
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.2"));
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
 

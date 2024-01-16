@@ -37,20 +37,18 @@ namespace Crowmask.Library.Cache
         /// <returns>A set of inbox URLs</returns>
         private async Task<IReadOnlySet<string>> GetDistinctInboxesAsync(bool followersOnly = false)
         {
-            async IAsyncEnumerable<string> enumerate()
-            {
-                // Go through follower inboxes first - prefer shared inbox if present
-                await foreach (var follower in Context.Followers.AsAsyncEnumerable())
-                    yield return follower.SharedInbox ?? follower.Inbox;
+            HashSet<string> inboxes = [];
 
-                // Then include all other known inboxes, if enabled
-                if (!followersOnly)
-                    await foreach (var known in Context.KnownInboxes.AsAsyncEnumerable())
-                        yield return known.Inbox;
-            }
+            // Go through follower inboxes first - prefer shared inbox if present
+            await foreach (var follower in Context.Followers.AsAsyncEnumerable())
+                inboxes.Add(follower.SharedInbox ?? follower.Inbox);
 
-            // Combine results above into an unordered set of unique items
-            return await enumerate().ToHashSetAsync();
+            // Then include all other known inboxes, if enabled
+            if (!followersOnly)
+                await foreach (var known in Context.KnownInboxes.AsAsyncEnumerable())
+                    inboxes.Add(known.Inbox);
+
+            return inboxes;
         }
 
         /// <summary>
@@ -198,29 +196,29 @@ namespace Crowmask.Library.Cache
         }
 
         /// <summary>
-        /// Returns all cached submissions in Crowmask's database, with the
-        /// newest submissions (with higher submission IDs) first.
+        /// Returns a list of cached submissions from Crowmask's database.
+        /// Submissions with higher IDs will be returned first.
         /// </summary>
-        /// <returns>An asynchronous sequence of posts</returns>
-        public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync()
+        /// <param name="nextid">Only return submissions with an ID lower than this one</param>
+        /// <param name="since">Only return submissions originally posted to Weasyl after this point in time</param>
+        /// <param name="count">Only return, at most, this many IDs</param>
+        /// <returns>A list of submission IDs</returns>
+        public async Task<IReadOnlyList<Post>> GetCachedSubmissionsAsync(
+            int nextid = int.MaxValue,
+            DateTimeOffset? since = null,
+            int? count = null)
         {
-            int last = int.MaxValue;
-            while (true)
-            {
-                var submissions = await Context.Submissions
-                    .Where(s => s.SubmitId < last)
-                    .OrderByDescending(s => s.SubmitId)
-                    .Take(20)
-                    .ToListAsync();
+            DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
+            int max = count ?? int.MaxValue;
 
-                foreach (var submission in submissions)
-                    yield return Domain.AsNote(submission);
+            var list = await Context.Submissions
+                .Where(s => s.SubmitId < nextid)
+                .Where(s => s.PostedAt > cutoff)
+                .OrderByDescending(s => s.PostedAt)
+                .Take(max)
+                .ToListAsync();
 
-                if (submissions.Count == 0)
-                    break;
-
-                last = submissions.Select(s => s.SubmitId).Min();
-            }
+            return list.Select(Domain.AsNote).ToList();
         }
 
         /// <summary>

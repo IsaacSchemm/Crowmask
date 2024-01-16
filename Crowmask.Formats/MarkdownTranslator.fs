@@ -194,7 +194,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
             $""
         $""
         if page.posts <> [] then
-            $"[View more posts](/api/actor/outbox/page?offset={page.offset + page.posts.Length})"
+            $"[View more posts](/api/actor/outbox/page?nextid={List.min [for p in page.posts do p.submitid]})"
         else
             "No more posts are available."
         $""

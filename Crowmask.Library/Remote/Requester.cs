@@ -101,7 +101,7 @@ namespace Crowmask.Library.Remote
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
-            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.1"));
+            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.2"));
 
             req.Headers.Add("Digest", $"SHA-256={digest}");
 

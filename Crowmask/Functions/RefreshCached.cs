@@ -1,14 +1,18 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Crowmask.Data;
 using Crowmask.Library.Cache;
+using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Functions
 {
-    public class RefreshCached(CrowmaskCache crowmaskCache)
+    public class RefreshCached(CrowmaskCache crowmaskCache, CrowmaskDbContext context)
     {
         /// <summary>
-        /// Refreshes the cache for all cached posts that Crowmask indicates
+        /// Refreshes the cache for up to 100 cached posts that Crowmask says
         /// are stale. Runs every day at four minutes before midnight.
         /// </summary>
         /// <param name="myTimer"></param>
@@ -16,13 +20,23 @@ namespace Crowmask.Functions
         [Function("RefreshCached")]
         public async Task Run([TimerTrigger("0 56 23 * * *")] TimerInfo myTimer)
         {
-            var posts = crowmaskCache.GetCachedSubmissionsAsync()
-                .Where(post => post.stale);
+            List<int> ids = [];
 
-            await foreach (var post in posts)
+            var sequence = context.Submissions
+                .OrderByDescending(s => s.PostedAt)
+                .AsAsyncEnumerable();
+
+            await foreach (var submission in sequence)
             {
-                await crowmaskCache.GetSubmissionAsync(post.submitid);
+                if (submission.Stale)
+                    ids.Add(submission.SubmitId);
+
+                if (ids.Count >= 100)
+                    break;
             }
+
+            foreach (int submitid in ids)
+                await crowmaskCache.GetSubmissionAsync(submitid);
         }
     }
 }

@@ -37,13 +37,9 @@ namespace Crowmask.Functions
 
             await crowmaskCache.GetUserAsync();
 
-            await foreach (var post in crowmaskCache.GetCachedSubmissionsAsync())
-            {
-                if (post.first_upstream < yesterday)
-                    break;
-
-                await crowmaskCache.GetSubmissionAsync(post.submitid);
-            }
+            foreach (var post in await crowmaskCache.GetCachedSubmissionsAsync(since: yesterday))
+                if (post.stale)
+                    await crowmaskCache.GetSubmissionAsync(post.submitid);
 
             await outboundActivityProcessor.ProcessOutboundActivities();
         }
