@@ -24,7 +24,7 @@ namespace Crowmask.Functions
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("ShortUpdate")]
-        public async Task Run([TimerTrigger("20 48 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo myTimer)
         {
             DateTimeOffset yesterday = DateTimeOffset.UtcNow.AddDays(-1);
 
