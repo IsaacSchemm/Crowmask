@@ -12,12 +12,4 @@ Public Interface IInteractionLookup
     ''' </summary>
     ''' <param name="activity_or_reply_id">The ID of an Announce or Like activity, or the ID of a reply to an artwork submission</param>
     Function GetRelevantSubmitIdAsync(activity_or_reply_id As String) As Task(Of Integer?)
-
-    ''' <summary>
-    ''' Given the ID of an ActivityPub boost, like, or reply, returns the
-    ''' corresponding journal ID, or returns null if the activity or
-    ''' object is not present on any submissions in Crowmask's cache.
-    ''' </summary>
-    ''' <param name="activity_or_reply_id">The ID of an Announce or Like activity, or the ID of a reply to a journal</param>
-    Function GetRelevantJournalIdAsync(activity_or_reply_id As String) As Task(Of Integer?)
 End Interface

@@ -1,5 +1,4 @@
 ﻿using Crowmask.Data;
-using Crowmask.Dependencies.Async;
 using Crowmask.Dependencies.Weasyl;
 using Crowmask.DomainModeling;
 using Crowmask.Formats;
@@ -225,188 +224,12 @@ namespace Crowmask.Library.Cache
         }
 
         /// <summary>
-        /// Pulls a journal entry from Crowmask's database, or attempts a
-        /// refresh from Weasyl if the journal entry is stale or absent. New,
-        /// updated, and deleted posts will generate new ActivityPub messages.
-        /// </summary>
-        /// <param name="journalid">The journal ID</param>
-        /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> GetJournalAsync(int journalid)
-        {
-            var cachedJournal = await Context.Journals
-                .Where(s => s.JournalId == journalid)
-                .SingleOrDefaultAsync();
-
-            if (cachedJournal != null)
-            {
-                if (!cachedJournal.Stale)
-                    return CacheResult.NewPostResult(Domain.AsArticle(cachedJournal));
-
-                cachedJournal.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
-                await Context.SaveChangesAsync();
-            }
-
-            try
-            {
-                var whoami = await weasylClient.GetMyUserAsync();
-
-                WeasylJournalDetail? weasylJournal = await weasylClient.GetMyJournalAsync(journalid);
-                if (weasylJournal != null)
-                {
-                    bool newlyCreated = false;
-
-                    if (cachedJournal == null)
-                    {
-                        newlyCreated = true;
-                        cachedJournal = new Journal
-                        {
-                            JournalId = weasylJournal.journalid,
-                            FirstCachedAt = DateTimeOffset.UtcNow
-                        };
-                        Context.Journals.Add(cachedJournal);
-                    }
-
-                    var oldJournal = Domain.AsArticle(cachedJournal);
-
-                    cachedJournal.Content = weasylJournal.content;
-                    cachedJournal.PostedAt = weasylJournal.posted_at;
-                    cachedJournal.Rating = weasylJournal.rating;
-                    cachedJournal.Title = weasylJournal.title;
-
-                    var newJournal = Domain.AsArticle(cachedJournal);
-
-                    TimeSpan age = DateTimeOffset.UtcNow - newJournal.first_upstream;
-
-                    bool changed = !oldJournal.Equals(newJournal);
-                    bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
-
-                    if (changed && !backfill)
-                    {
-                        foreach (string inbox in await GetDistinctInboxesAsync(followersOnly: newlyCreated))
-                        {
-                            Context.OutboundActivities.Add(new OutboundActivity
-                            {
-                                Id = Guid.NewGuid(),
-                                Inbox = inbox,
-                                JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    newlyCreated
-                                    ? translator.ObjectToCreate(newJournal)
-                                    : translator.ObjectToUpdate(newJournal)),
-                                StoredAt = DateTimeOffset.UtcNow
-                            });
-                        }
-                    }
-
-                    cachedJournal.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
-                    await Context.SaveChangesAsync();
-
-                    return CacheResult.NewPostResult(newJournal);
-                }
-                else
-                {
-                    if (cachedJournal != null)
-                    {
-                        Context.Journals.Remove(cachedJournal);
-
-                        foreach (string inbox in await GetDistinctInboxesAsync())
-                        {
-                            Context.OutboundActivities.Add(new OutboundActivity
-                            {
-                                Id = Guid.NewGuid(),
-                                Inbox = inbox,
-                                JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    translator.ObjectToDelete(
-                                        Domain.AsArticle(cachedJournal))),
-                                StoredAt = DateTimeOffset.UtcNow
-                            });
-                        }
-
-                        await Context.SaveChangesAsync();
-
-                        return CacheResult.Deleted;
-                    }
-                    else
-                    {
-                        return CacheResult.NotFound;
-                    }
-                }
-            }
-            catch (HttpRequestException)
-            {
-                return cachedJournal == null
-                    ? CacheResult.NotFound
-                    : CacheResult.NewPostResult(Domain.AsArticle(cachedJournal));
-            }
-        }
-
-        /// <summary>
-        /// Returns all cached journal entries in Crowmask's database, with
-        /// the newest entries (with higher journal IDs) first. 
-        /// </summary>
-        /// <returns>An asynchronous sequence of posts</returns>
-        public async IAsyncEnumerable<Post> GetCachedJournalsAsync()
-        {
-            int last = int.MaxValue;
-            while (true)
-            {
-                var journals = await Context.Journals
-                    .Where(j => j.JournalId < last)
-                    .OrderByDescending(j => j.JournalId)
-                    .Take(20)
-                    .ToListAsync();
-
-                foreach (var journal in journals)
-                    yield return Domain.AsArticle(journal);
-
-                if (journals.Count == 0)
-                    break;
-
-                last = journals.Select(j => j.JournalId).Min();
-            }
-        }
-
-        /// <summary>
-        /// Pulls a post (submission or journal entry) from Crowmask's
-        /// database, or attempts a refresh from Weasyl if the post is stale
-        /// or absent. New, updated, and deleted posts will generate new
-        /// ActivityPub messages.
-        /// </summary>
-        /// <param name="identifier">The submission or journal ID</param>
-        /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> GetCachedPostAsync(JointIdentifier identifier)
-        {
-            if (identifier.IsSubmissionIdentifier)
-                return await GetSubmissionAsync(identifier.submitid);
-            else if (identifier.IsJournalIdentifier)
-                return await GetJournalAsync(identifier.journalid);
-            else
-                return CacheResult.NotFound;
-        }
-
-        /// <summary>
-        /// Returns the current number of cached posts (submissions and
-        /// journal entries) in Crowmask's database.
+        /// Returns the current number of cached posts in Crowmask's database.
         /// </summary>
         /// <returns></returns>
-        public async Task<int> GetCachedPostCountAsync()
+        public async Task<int> GetCachedSubmissionCountAsync()
         {
-            int submissions = await Context.Submissions.CountAsync();
-            int journals = await Context.Journals.CountAsync();
-            return submissions + journals;
-        }
-
-        /// <summary>
-        /// Returns all cached posts (submissions and journal entries) in
-        /// Crowmask's database, with the newest entries  first.
-        /// </summary>
-        /// <returns>An asynchronous sequence of posts</returns>
-        public IAsyncEnumerable<Post> GetAllCachedPostsAsync()
-        {
-            return new[] {
-                GetCachedSubmissionsAsync(),
-                GetCachedJournalsAsync()
-            }
-            .MergeNewest(post => post.first_upstream);
+            return await Context.Submissions.CountAsync();
         }
 
         /// <summary>
@@ -419,10 +242,6 @@ namespace Crowmask.Library.Cache
         {
             if (await interactionLookup.GetRelevantSubmitIdAsync(activity_or_reply_id) is int submitid)
                 if (await GetSubmissionAsync(submitid) is CacheResult.PostResult r)
-                    return r;
-
-            if (await interactionLookup.GetRelevantJournalIdAsync(activity_or_reply_id) is int journalid)
-                if (await GetJournalAsync(journalid) is CacheResult.PostResult r)
                     return r;
 
             return CacheResult.NotFound;

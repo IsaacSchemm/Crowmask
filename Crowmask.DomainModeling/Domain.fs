@@ -78,18 +78,9 @@ with
         | Like l -> l.added_at
         | Reply r -> r.added_at
 
-/// An internal ID for a post (either a submission ID or a journal ID). This
-/// union is compiled to a value type and can be used inside Nullable<T>;
-/// consumers must check the type (submission or journal) before accessing the
-/// ID value.
-[<Struct>]
-type JointIdentifier =
-| SubmissionIdentifier of submitid: int
-| JournalIdentifier of journalid: int
-
-/// A post (submission or journal) to mirror to ActivityPub.
+/// A post to mirror to ActivityPub.
 type Post = {
-    identifier: JointIdentifier
+    submitid: int
     title: string
     content: string
     url: string
@@ -112,7 +103,6 @@ type Post = {
         }
         |> Seq.sortBy (fun e -> e.AddedAt)
         |> Seq.toList
-
 
 /// A result from a request to Crowmask's database cache looking for a post:
 /// either found (with a Post object), deleted, or not found. C# consumers can
@@ -182,7 +172,7 @@ module Domain =
 
     let AsNote (submission: Submission) =
         {
-            identifier = SubmissionIdentifier submission.SubmitId
+            submitid = submission.SubmitId
             title = submission.Title
             content = String.concat "\n" [
                 submission.Content
@@ -245,53 +235,6 @@ module Domain =
                     }
             ]
             stale = submission.Stale
-        }
-
-    let AsArticle (journal: Journal) =
-        {
-            identifier = JournalIdentifier journal.JournalId
-            title = journal.Title
-            content = journal.Content
-            url = journal.Link
-            first_upstream = journal.PostedAt
-            first_cached = journal.FirstCachedAt
-            attachments = []
-            thumbnails = []
-            tags = []
-            sensitivity =
-                match journal.Rating with
-                | "general" -> General
-                | "mature" -> Sensitive "Mature (18+)"
-                | "explicit" -> Sensitive "Explicit (18+)"
-                | x -> Sensitive x
-            boosts = [
-                for i in journal.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
-                    {
-                        id = i.Id
-                        actor_id = i.ActorId
-                        announce_id = i.ActivityId
-                        added_at = i.AddedAt
-                    }
-            ]
-            likes = [
-                for i in journal.Likes |> Seq.sortBy (fun x -> x.AddedAt) do
-                    {
-                        id = i.Id
-                        actor_id = i.ActorId
-                        like_id = i.ActivityId
-                        added_at = i.AddedAt
-                    }
-            ]
-            replies = [
-                for i in journal.Replies |> Seq.sortBy (fun x -> x.AddedAt) do
-                    {
-                        id = i.Id
-                        actor_id = i.ActorId
-                        object_id = i.ObjectId
-                        added_at = i.AddedAt
-                    }
-            ]
-            stale = journal.Stale
         }
 
     let AsGallery (count: int) = {

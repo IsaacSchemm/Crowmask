@@ -39,28 +39,5 @@ namespace Crowmask
 
             return null;
         }
-
-        public async Task<int?> GetRelevantJournalIdAsync(string external_activity_or_object_id)
-        {
-            IReadOnlyList<IQueryable<Journal>> queries = [
-                context.Journals.FromSqlRaw(
-                    $"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Boosts)} WHERE t.{nameof(JournalBoost.ActivityId)} = {{0}} AND c.id LIKE '{nameof(Journal)}|%'",
-                    external_activity_or_object_id),
-
-                context.Journals.FromSqlRaw(
-                    $"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Likes)} WHERE t.{nameof(JournalLike.ActivityId)} = {{0}} AND c.id LIKE '{nameof(Journal)}|%'",
-                    external_activity_or_object_id),
-
-                context.Journals.FromSqlRaw(
-                    $"SELECT VALUE c FROM c JOIN t IN c.{nameof(Journal.Replies)} WHERE t.{nameof(JournalReply.ObjectId)} = {{0}} AND c.id LIKE '{nameof(Journal)}|%'",
-                    external_activity_or_object_id),
-            ];
-
-            foreach (var query in queries)
-                await foreach (var item in query.AsAsyncEnumerable())
-                    return item.JournalId;
-
-            return null;
-        }
     }
 }

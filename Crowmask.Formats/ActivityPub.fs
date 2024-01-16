@@ -99,14 +99,14 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "object" (this.PersonToObject person key)
     ]
 
-    /// Builds a Note or Article object for a submission or journal entry.
+    /// Builds a Note or Article object for a submission.
     member _.AsObject (post: Post) = dict [
         let backdate =
             post.first_cached - post.first_upstream > TimeSpan.FromHours(24)
         let effective_date =
             if backdate then post.first_upstream else post.first_cached
 
-        let id = mapper.GetObjectId post.identifier
+        let id = mapper.GetObjectId(post.submitid)
 
         pair "id" id
         pair "url" id
@@ -114,11 +114,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "shares" $"{id}?view=shares"
         pair "comments" $"{id}?view=comments"
 
-        let ``type`` =
-            match post.identifier with
-            | SubmissionIdentifier _ -> "Note"
-            | JournalIdentifier _ -> "Article"
-        pair "type" ``type``
+        pair "type" "Note"
 
         pair "attributedTo" actor
         pair "name" post.title
@@ -153,10 +149,10 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         ]
     ]
 
-    /// Builds a Create activity for a submission or journal entry.
+    /// Builds a Create activity for a submission.
     member this.ObjectToCreate (post: Post) = dict [
         pair "type" "Create"
-        pair "id" $"{mapper.GetObjectId(post.identifier)}?view=create"
+        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=create"
         pair "actor" actor
         pair "published" post.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -164,7 +160,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "object" (this.AsObject post)
     ]
 
-    /// Builds a transient Update activity for a submission or journal entry.
+    /// Builds a transient Update activity for a submission.
     member this.ObjectToUpdate (post: Post) = dict [
         pair "type" "Update"
         pair "id" (mapper.GetTransientId())
@@ -175,7 +171,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "object" (this.AsObject post)
     ]
 
-    /// Builds a transient Delete activity for a submission or journal entry.
+    /// Builds a transient Delete activity for a submission.
     member _.ObjectToDelete (post: Post) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GetTransientId())
@@ -183,13 +179,13 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        pair "object" (mapper.GetObjectId post.identifier)
+        pair "object" (mapper.GetObjectId(post.submitid))
     ]
 
     /// Builds a Note object for a private notification to the admin actor.
     member _.AsPrivateNote (post: Post) (interaction: Interaction) = dict [
-        pair "id" (mapper.GetObjectId(post.identifier, interaction))
-        pair "url" (mapper.GetObjectId(post.identifier, interaction))
+        pair "id" (mapper.GetObjectId(post.submitid, interaction))
+        pair "url" (mapper.GetObjectId(post.submitid, interaction))
         pair "type" "Note"
 
         pair "attributedTo" actor
@@ -215,7 +211,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "actor" actor
         pair "published" interaction.AddedAt
         pair "to" adminActor.Id
-        pair "object" (mapper.GetObjectId(post.identifier, interaction))
+        pair "object" (mapper.GetObjectId(post.submitid, interaction))
     ]
 
     /// Builds a transient Accept activity to accept a follow request.
@@ -266,7 +262,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
 
     /// Builds a Collection to list the likes on a post.
     member _.AsLikesCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId post.identifier}?view=likes"
+        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=likes"
         pair "type" "Collection"
         pair "totalItems" (List.length post.likes)
         pair "items" [for o in post.likes do o.like_id]
@@ -274,7 +270,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
 
     /// Builds a Collection to list the boosts on a post.
     member _.AsSharesCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId post.identifier}?view=shares"
+        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=shares"
         pair "type" "Collection"
         pair "totalItems" (List.length post.boosts)
         pair "items" [for o in post.boosts do o.announce_id]
@@ -282,7 +278,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
 
     /// Builds a Collection to list the replies to a post, as PeerTube does.
     member _.AsCommentsCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId post.identifier}?view=comments"
+        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=comments"
         pair "type" "Collection"
         pair "totalItems" (List.length post.replies)
         pair "items" [for o in post.replies do o.object_id]

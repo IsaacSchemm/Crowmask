@@ -116,35 +116,20 @@ namespace Crowmask
         /// <summary>
         /// Adds a like to a Crowmask post.
         /// </summary>
-        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="submitid">The submission ID</param>
         /// <param name="activityId">The Like activity ID, so Undo requests can be honored</param>
         /// <param name="actor">The actor who liked the post</param>
         /// <returns></returns>
-        public async Task AddLikeAsync(JointIdentifier identifier, string activityId, RemoteActor actor)
+        public async Task AddLikeAsync(int submitid, string activityId, RemoteActor actor)
         {
-            if (identifier.IsSubmissionIdentifier)
+            var submission = await context.Submissions.FindAsync(submitid);
+            submission.Likes.Add(new SubmissionLike
             {
-                var submission = await context.Submissions.FindAsync(identifier.submitid);
-                submission.Likes.Add(new SubmissionLike
-                {
-                    Id = Guid.NewGuid(),
-                    AddedAt = DateTimeOffset.UtcNow,
-                    ActivityId = activityId,
-                    ActorId = actor.Id,
-                });
-            }
-
-            if (identifier.IsJournalIdentifier)
-            {
-                var journal = await context.Journals.FindAsync(identifier.journalid);
-                journal.Likes.Add(new JournalLike
-                {
-                    Id = Guid.NewGuid(),
-                    AddedAt = DateTimeOffset.UtcNow,
-                    ActivityId = activityId,
-                    ActorId = actor.Id,
-                });
-            }
+                Id = Guid.NewGuid(),
+                AddedAt = DateTimeOffset.UtcNow,
+                ActivityId = activityId,
+                ActorId = actor.Id,
+            });
 
             await context.SaveChangesAsync();
         }
@@ -152,34 +137,19 @@ namespace Crowmask
         /// <summary>
         /// Adds a boost to a Crowmask post.
         /// </summary>
-        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="submitid">The submission ID</param>
         /// <param name="activityId">The Announce activity ID, so Undo requests can be honored</param>
         /// <param name="actor">The actor who boosted the post</param>
-        public async Task AddBoostAsync(JointIdentifier identifier, string activityId, RemoteActor actor)
+        public async Task AddBoostAsync(int submitid, string activityId, RemoteActor actor)
         {
-            if (identifier.IsSubmissionIdentifier)
+            var submission = await context.Submissions.FindAsync(submitid);
+            submission.Boosts.Add(new SubmissionBoost
             {
-                var submission = await context.Submissions.FindAsync(identifier.submitid);
-                submission.Boosts.Add(new SubmissionBoost
-                {
-                    Id = Guid.NewGuid(),
-                    AddedAt = DateTimeOffset.UtcNow,
-                    ActivityId = activityId,
-                    ActorId = actor.Id,
-                });
-            }
-
-            if (identifier.IsJournalIdentifier)
-            {
-                var journal = await context.Journals.FindAsync(identifier.journalid);
-                journal.Boosts.Add(new JournalBoost
-                {
-                    Id = Guid.NewGuid(),
-                    AddedAt = DateTimeOffset.UtcNow,
-                    ActivityId = activityId,
-                    ActorId = actor.Id,
-                });
-            }
+                Id = Guid.NewGuid(),
+                AddedAt = DateTimeOffset.UtcNow,
+                ActivityId = activityId,
+                ActorId = actor.Id,
+            });
 
             await context.SaveChangesAsync();
         }
@@ -187,34 +157,19 @@ namespace Crowmask
         /// <summary>
         /// Adds a reply to a Crowmask post.
         /// </summary>
-        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="submitid">The submission ID</param>
         /// <param name="activityId">The ID of the reply object (Note, etc.), so Delete requests can be honored</param>
         /// <param name="actor">The actor who replied to the post</param>
-        public async Task AddReplyAsync(JointIdentifier identifier, string replyObjectId, RemoteActor actor)
+        public async Task AddReplyAsync(int submitid, string replyObjectId, RemoteActor actor)
         {
-            if (identifier.IsSubmissionIdentifier)
+            var submission = await context.Submissions.FindAsync(submitid);
+            submission.Replies.Add(new SubmissionReply
             {
-                var submission = await context.Submissions.FindAsync(identifier.submitid);
-                submission.Replies.Add(new SubmissionReply
-                {
-                    Id = Guid.NewGuid(),
-                    AddedAt = DateTimeOffset.UtcNow,
-                    ObjectId = replyObjectId,
-                    ActorId = actor.Id,
-                });
-            }
-
-            if (identifier.IsJournalIdentifier)
-            {
-                var journal = await context.Journals.FindAsync(identifier.journalid);
-                journal.Replies.Add(new JournalReply
-                {
-                    Id = Guid.NewGuid(),
-                    AddedAt = DateTimeOffset.UtcNow,
-                    ObjectId = replyObjectId,
-                    ActorId = actor.Id,
-                });
-            }
+                Id = Guid.NewGuid(),
+                AddedAt = DateTimeOffset.UtcNow,
+                ObjectId = replyObjectId,
+                ActorId = actor.Id,
+            });
 
             await context.SaveChangesAsync();
         }
@@ -222,37 +177,22 @@ namespace Crowmask
         /// <summary>
         /// Removes a like, boost, or reply from a Crowmask post.
         /// </summary>
-        /// <param name="identifier">The submission or journal ID</param>
+        /// <param name="submitid">The submission ID</param>
         /// <param name="id">The GUID associated with the interaction in Crowmask's database</param>
         /// <returns></returns>
-        public async Task RemoveInteractionAsync(JointIdentifier identifier, Guid id)
+        public async Task RemoveInteractionAsync(int submitid, Guid id)
         {
-            if (identifier.IsSubmissionIdentifier)
-            {
-                var submission = await context.Submissions.FindAsync(identifier.submitid);
-                foreach (var boost in submission.Boosts.ToList())
-                    if (boost.Id == id)
-                        submission.Boosts.Remove(boost);
-                foreach (var like in submission.Likes.ToList())
-                    if (like.Id == id)
-                        submission.Likes.Remove(like);
-                foreach (var reply in submission.Replies.ToList())
-                    if (reply.Id == id)
-                        submission.Replies.Remove(reply);
-            }
-            else if (identifier.IsJournalIdentifier)
-            {
-                var journal = await context.Journals.FindAsync(identifier.journalid);
-                foreach (var boost in journal.Boosts.ToList())
-                    if (boost.Id == id)
-                        journal.Boosts.Remove(boost);
-                foreach (var like in journal.Likes.ToList())
-                    if (like.Id == id)
-                        journal.Likes.Remove(like);
-                foreach (var reply in journal.Replies.ToList())
-                    if (reply.Id == id)
-                        journal.Replies.Remove(reply);
-            }
+            var submission = await context.Submissions.FindAsync(submitid);
+
+            foreach (var boost in submission.Boosts.ToList())
+                if (boost.Id == id)
+                    submission.Boosts.Remove(boost);
+            foreach (var like in submission.Likes.ToList())
+                if (like.Id == id)
+                    submission.Likes.Remove(like);
+            foreach (var reply in submission.Replies.ToList())
+                if (reply.Id == id)
+                    submission.Replies.Remove(reply);
 
             await context.SaveChangesAsync();
         }
