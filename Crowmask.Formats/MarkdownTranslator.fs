@@ -68,9 +68,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
             $"    @{enc handleName.PreferredUsername}@{hostname}"
         $""
-        $"[View outbox](/api/actor/outbox)"
-        $""
-        $"The outbox contains all submissions posted by {enc person.upstreamUsername}."
+        $"[View gallery](/api/actor/outbox)"
         $""
         $"[View followers](/api/actor/followers)"
         $""
@@ -156,7 +154,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"--------"
         $""
-        $"## Outbox"
+        $"## Gallery"
         $""
         $"{gallery.gallery_count} item(s)."
         $""
@@ -164,9 +162,9 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
     ]
 
-    member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Outbox"
+    member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Gallery"
 
-    member _.ToMarkdown (page: Page) = String.concat "\n" [
+    member _.ToMarkdown (page: GalleryPage) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -204,7 +202,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
     ]
 
-    member this.ToHtml (page: Page) = this.ToMarkdown page |> toHtml "Posts"
+    member this.ToHtml (page: GalleryPage) = this.ToMarkdown page |> toHtml "Gallery"
 
     member _.ToMarkdown (followerCollection: FollowerCollection) = String.concat "\n" [
         sharedHeader
