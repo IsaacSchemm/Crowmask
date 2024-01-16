@@ -231,7 +231,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     ]
 
     /// Builds an OrderedCollectionPage to represent a single page of the user's outbox.
-    member this.AsOutboxPage (id: string) (page: Page) = dict [
+    member this.AsOutboxPage (id: string) (page: GalleryPage) = dict [
         pair "id" id
         pair "type" "OrderedCollectionPage"
 

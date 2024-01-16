@@ -175,19 +175,15 @@ namespace Crowmask.Library.Cache
                         }
 
                         await Context.SaveChangesAsync();
+                    }
 
-                        return CacheResult.Deleted;
-                    }
-                    else
-                    {
-                        return CacheResult.NotFound;
-                    }
+                    return CacheResult.PostNotFound;
                 }
             }
             catch (HttpRequestException)
             {
                 return cachedSubmission == null
-                    ? CacheResult.NotFound
+                    ? CacheResult.PostNotFound
                     : CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
             }
         }
@@ -239,7 +235,7 @@ namespace Crowmask.Library.Cache
                 if (await GetSubmissionAsync(submitid) is CacheResult.PostResult r)
                     return r;
 
-            return CacheResult.NotFound;
+            return CacheResult.PostNotFound;
         }
 
         /// <summary>

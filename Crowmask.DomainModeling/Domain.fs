@@ -102,20 +102,18 @@ type Post = {
             for r in this.replies do Reply r
         }
         |> Seq.sortBy (fun e -> e.AddedAt)
-        |> Seq.toList
 
-/// A result from a request to Crowmask's database cache looking for a post:
-/// either found (with a Post object), deleted, or not found. C# consumers can
-/// perform a type check with the "is" operator to retrieve post information.
-type CacheResult = PostResult of Post: Post | Deleted | NotFound
+/// A result from a request to Crowmask's database cache looking for a post.
+/// C# consumers can perform a type check with the "is" operator to retrieve post information.
+type CacheResult = PostResult of Post: Post | PostNotFound
 
-/// The main page of the user's outbox / gallery (not the first page).
+/// The main page of the user's gallery (not the first page).
 type Gallery = {
     gallery_count: int
 }
 
-/// A single page of the user's outbox / gallery.
-type Page = {
+/// A single page of the user's gallery.
+type GalleryPage = {
     posts: Post list
     nextid: int
 }
@@ -132,125 +130,123 @@ type FollowerCollection = {
 }
 
 module Domain =
-    let AsPerson (user: User) =
-        {
-            upstreamUsername = user.Username
-            name = user.DisplayName
-            summary = user.Summary
-            url = user.Url
-            iconUrls = [for a in user.Avatars do a.Url]
-            attachments = [
-                if user.Age.HasValue then
-                    {
-                        name = "Age"
-                        value = $"{user.Age}"
-                        uri = None
-                    }
+    let AsPerson(user: User) = {
+        upstreamUsername = user.Username
+        name = user.DisplayName
+        summary = user.Summary
+        url = user.Url
+        iconUrls = [for a in user.Avatars do a.Url]
+        attachments = [
+            if user.Age.HasValue then
+                {
+                    name = "Age"
+                    value = $"{user.Age}"
+                    uri = None
+                }
 
-                if not (String.IsNullOrWhiteSpace(user.Gender)) then
-                    {
-                        name = "Gender"
-                        value = $"{user.Gender}"
-                        uri = None
-                    }
+            if not (String.IsNullOrWhiteSpace(user.Gender)) then
+                {
+                    name = "Gender"
+                    value = $"{user.Gender}"
+                    uri = None
+                }
 
-                if not (String.IsNullOrWhiteSpace(user.Location)) then
-                    {
-                        name = "Location"
-                        value = $"{user.Location}"
-                        uri = None
-                    }
+            if not (String.IsNullOrWhiteSpace(user.Location)) then
+                {
+                    name = "Location"
+                    value = $"{user.Location}"
+                    uri = None
+                }
 
-                for link in user.Links do
-                    {
-                        name = link.Site
-                        value = link.UsernameOrUrl
-                        uri = Option.ofObj link.Url
-                    }
-            ]
-        }
+            for link in user.Links do
+                {
+                    name = link.Site
+                    value = link.UsernameOrUrl
+                    uri = Option.ofObj link.Url
+                }
+        ]
+    }
 
-    let AsNote (submission: Submission) =
-        {
-            submitid = submission.SubmitId
-            title = submission.Title
-            content = String.concat "\n" [
-                submission.Content
+    let AsNote(submission: Submission) = {
+        submitid = submission.SubmitId
+        title = submission.Title
+        content = String.concat "\n" [
+            submission.Content
 
-                String.concat " " [
-                    for tag in submission.Tags do
-                        let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
-                        $"<a href='{WebUtility.HtmlEncode href}' rel='tag'>#{WebUtility.HtmlEncode tag.Tag}</a>"
-                ]
+            String.concat " " [
+                for tag in submission.Tags do
+                    let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
+                    $"<a href='{WebUtility.HtmlEncode href}' rel='tag'>#{WebUtility.HtmlEncode tag.Tag}</a>"
             ]
-            url = submission.Link
-            first_upstream = submission.PostedAt
-            first_cached = submission.FirstCachedAt
-            attachments = [
-                for media in submission.Media do
-                    Image {
-                        mediaType = media.ContentType
-                        url = media.Url
-                    }
-            ]
-            thumbnails = [
-                for thumbnail in submission.Thumbnails do
-                    {
-                        mediaType = thumbnail.ContentType
-                        url = thumbnail.Url
-                    }
-            ]
-            tags = [for t in submission.Tags do t.Tag]
-            sensitivity =
-                match submission.Rating with
-                | "general" -> General
-                | "mature" -> Sensitive "Mature (18+)"
-                | "explicit" -> Sensitive "Explicit (18+)"
-                | x -> Sensitive x
-            boosts = [
-                for i in submission.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
-                    {
-                        id = i.Id
-                        actor_id = i.ActorId
-                        announce_id = i.ActivityId
-                        added_at = i.AddedAt
-                    }
-            ]
-            likes = [
-                for i in submission.Likes |> Seq.sortBy (fun x -> x.AddedAt) do
-                    {
-                        id = i.Id
-                        actor_id = i.ActorId
-                        like_id = i.ActivityId
-                        added_at = i.AddedAt
-                    }
-            ]
-            replies = [
-                for i in submission.Replies |> Seq.sortBy (fun x -> x.AddedAt) do
-                    {
-                        id = i.Id
-                        actor_id = i.ActorId
-                        object_id = i.ObjectId
-                        added_at = i.AddedAt
-                    }
-            ]
-            stale = submission.Stale
-        }
+        ]
+        url = submission.Link
+        first_upstream = submission.PostedAt
+        first_cached = submission.FirstCachedAt
+        attachments = [
+            for media in submission.Media do
+                Image {
+                    mediaType = media.ContentType
+                    url = media.Url
+                }
+        ]
+        thumbnails = [
+            for thumbnail in submission.Thumbnails do
+                {
+                    mediaType = thumbnail.ContentType
+                    url = thumbnail.Url
+                }
+        ]
+        tags = [for t in submission.Tags do t.Tag]
+        sensitivity =
+            match submission.Rating with
+            | "general" -> General
+            | "mature" -> Sensitive "Mature (18+)"
+            | "explicit" -> Sensitive "Explicit (18+)"
+            | x -> Sensitive x
+        boosts = [
+            for i in submission.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
+                {
+                    id = i.Id
+                    actor_id = i.ActorId
+                    announce_id = i.ActivityId
+                    added_at = i.AddedAt
+                }
+        ]
+        likes = [
+            for i in submission.Likes |> Seq.sortBy (fun x -> x.AddedAt) do
+                {
+                    id = i.Id
+                    actor_id = i.ActorId
+                    like_id = i.ActivityId
+                    added_at = i.AddedAt
+                }
+        ]
+        replies = [
+            for i in submission.Replies |> Seq.sortBy (fun x -> x.AddedAt) do
+                {
+                    id = i.Id
+                    actor_id = i.ActorId
+                    object_id = i.ObjectId
+                    added_at = i.AddedAt
+                }
+        ]
+        stale = submission.Stale
+    }
 
-    let AsGallery (count: int) = {
+    let AsGallery(count: int) = {
         gallery_count = count
     }
 
-    let AsPage (posts: Post seq, nextid: int) = {
+    let AsGalleryPage(posts: Post seq, nextid: int) = {
         posts = Seq.toList posts
         nextid = nextid
     }
 
-    let AsFollowerActor (follower: Follower) = {
+    let AsFollowerActor(follower: Follower) = {
         followerId = follower.Id
         actorId = follower.ActorId
     }
 
-    let AsFollowerCollection (followers: Follower seq) = {
+    let AsFollowerCollection(followers: Follower seq) = {
         followers = [for f in followers do AsFollowerActor f]
     }

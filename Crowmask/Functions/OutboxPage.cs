@@ -31,7 +31,7 @@ namespace Crowmask.Functions
                 ? await crowmaskCache.GetCachedSubmissionsAsync(nextid: nextid, count: 20)
                 : await crowmaskCache.GetCachedSubmissionsAsync(count: 20);
 
-            var galleryPage = Domain.AsPage(posts, nextid);
+            var galleryPage = Domain.AsGalleryPage(posts, nextid);
 
             var person = await crowmaskCache.GetUserAsync();
 
