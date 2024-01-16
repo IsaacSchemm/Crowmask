@@ -3,12 +3,11 @@ using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Crowmask
 {
     /// <summary>
-    /// Provides a way to quickly look up a Crowmask post, given the ID of a
+    /// Provides a way to quickly look up Crowmask posts, given the ID of a
     /// relevant ActivityPub object (a Like, an Announce, or a reply). This
     /// implementation is specific to the Cosmos DB backend and would need to
     /// be modified (or replaced with a much less efficient implementation
@@ -17,7 +16,7 @@ namespace Crowmask
     /// <param name="context"></param>
     public class FastInteractionLookup(CrowmaskDbContext context) : IInteractionLookup
     {
-        public async Task<int?> GetRelevantSubmitIdAsync(string external_activity_or_object_id)
+        public async IAsyncEnumerable<int> GetRelevantSubmitIdsAsync(string external_activity_or_object_id)
         {
             IReadOnlyList<IQueryable<Submission>> queries = [
                 context.Submissions.FromSqlRaw(
@@ -35,9 +34,7 @@ namespace Crowmask
 
             foreach (var query in queries)
                 await foreach (var item in query.AsAsyncEnumerable())
-                    return item.SubmitId;
-
-            return null;
+                    yield return item.SubmitId;
         }
     }
 }

@@ -224,18 +224,16 @@ namespace Crowmask.Library.Cache
         }
 
         /// <summary>
-        /// Returns the post that the given like, boost, or reply is attached
+        /// Returns the posts that the given like, boost, or reply is attached
         /// to, if any.
         /// </summary>
         /// <param name="activity_or_reply_id">The activity ID of the like or boost, or the ID of the reply</param>
-        /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> GetRelevantCachedPostAsync(string activity_or_reply_id)
+        /// <returns>A sequence of posts (generally no more than a single post)</returns>
+        public async IAsyncEnumerable<Post> GetRelevantCachedPostsAsync(string activity_or_reply_id)
         {
-            if (await interactionLookup.GetRelevantSubmitIdAsync(activity_or_reply_id) is int submitid)
+            await foreach (int submitid in interactionLookup.GetRelevantSubmitIdsAsync(activity_or_reply_id))
                 if (await GetSubmissionAsync(submitid) is CacheResult.PostResult r)
-                    return r;
-
-            return CacheResult.PostNotFound;
+                    yield return r.Post;
         }
 
         /// <summary>

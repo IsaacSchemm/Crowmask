@@ -140,7 +140,7 @@ namespace Crowmask.Data
             public DateTimeOffset AddedAt { get; set; }
 
             /// <summary>
-            /// The ID of the actor who published the Announce activity.
+            /// The ID of the actor who took this action.
             /// </summary>
             [Required]
             public string ActorId { get; set; }
