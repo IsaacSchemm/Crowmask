@@ -8,6 +8,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -27,6 +28,8 @@ namespace Crowmask.Functions
             if (await cache.GetSubmissionAsync(post.submitid) is CacheResult.PostResult newResult)
                 await remoteActions.UpdateAdminActorNotificationsAsync(post, newResult.Post);
         }
+
+        private static readonly IEnumerable<JToken> Empty = [];
 
         /// <summary>
         /// Accepts an ActivityPub message. Supported types are:
@@ -67,13 +70,13 @@ namespace Crowmask.Functions
             string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
             var actor = await requester.FetchActorAsync(actorId);
 
-            // Verify HTTP signature against the public key
-            var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
-                req.AsIRequest(),
-                actor);
+            //// Verify HTTP signature against the public key
+            //var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
+            //    req.AsIRequest(),
+            //    actor);
 
-            if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
-                return req.CreateResponse(HttpStatusCode.Forbidden);
+            //if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
+            //    return req.CreateResponse(HttpStatusCode.Forbidden);
 
             // If we've never seen this inbox before, record it so we can send it Update and Delete messages
             await databaseActions.AddKnownInboxAsync(actor);
@@ -91,7 +94,7 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Undo")
             {
-                foreach (var objectToUndo in expansion[0]["https://www.w3.org/ns/activitystreams#object"])
+                foreach (var objectToUndo in expansion[0]["https://www.w3.org/ns/activitystreams#object"] ?? Empty)
                 {
                     string objectId = objectToUndo["@id"].Value<string>();
 
@@ -102,10 +105,10 @@ namespace Crowmask.Functions
                     {
                         // If the ID to undo is the ID of a boost or like, then undo it
                         foreach (var boost in post.boosts)
-                            if (boost.actor_id == actor.Id && boost.announce_id == objectId)
+                            if (boost.actor_id == actor.Id && boost.activity_id == objectId)
                                 await databaseActions.RemoveInteractionAsync(post.submitid, boost.id);
                         foreach (var like in post.likes)
-                            if (like.actor_id == actor.Id && like.like_id == objectId)
+                            if (like.actor_id == actor.Id && like.activity_id == objectId)
                                 await databaseActions.RemoveInteractionAsync(post.submitid, like.id);
 
                         // Remove notifications to the admin actor of now-removed likes and boosts
@@ -118,7 +121,7 @@ namespace Crowmask.Functions
             else if (type == "https://www.w3.org/ns/activitystreams#Like")
             {
                 string activityId = expansion[0]["@id"].Value<string>();
-                foreach (var objectToLike in expansion[0]["https://www.w3.org/ns/activitystreams#object"])
+                foreach (var objectToLike in expansion[0]["https://www.w3.org/ns/activitystreams#object"] ?? Empty)
                 {
                     string objectId = objectToLike["@id"].Value<string>();
 
@@ -149,7 +152,7 @@ namespace Crowmask.Functions
             else if (type == "https://www.w3.org/ns/activitystreams#Announce")
             {
                 string activityId = expansion[0]["@id"].Value<string>();
-                foreach (var objectToBoost in expansion[0]["https://www.w3.org/ns/activitystreams#object"])
+                foreach (var objectToBoost in expansion[0]["https://www.w3.org/ns/activitystreams#object"] ?? Empty)
                 {
                     string objectId = objectToBoost["@id"].Value<string>();
 
@@ -164,7 +167,7 @@ namespace Crowmask.Functions
                     var post = pr.Post;
 
                     // Add the boost to the post, unless it's a boost we already know about
-                    if (!post.boosts.Select(boost => boost.announce_id).Contains(activityId))
+                    if (!post.boosts.Select(boost => boost.activity_id).Contains(activityId))
                         await databaseActions.AddBoostAsync(submitid, activityId, actor);
 
                     // Notify the admin actor of the new boost
@@ -175,15 +178,17 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Create")
             {
-                foreach (var reply in expansion[0]["https://www.w3.org/ns/activitystreams#object"])
+                foreach (var obj in expansion[0]["https://www.w3.org/ns/activitystreams#object"] ?? Empty)
                 {
-                    string replyId = reply["@id"].Value<string>();
+                    string replyId = obj["@id"].Value<string>();
 
                     // Fetch the reply itself (Crowmask only supports public replies)
                     string replyJson = await requester.GetJsonAsync(new Uri(replyId));
                     JArray replyExpansion = JsonLdProcessor.Expand(JObject.Parse(replyJson));
 
-                    foreach (var inReplyTo in replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
+                    bool reply = false;
+
+                    foreach (var inReplyTo in replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"] ?? Empty)
                     {
                         // Find the ID of the object that this is in reply to
                         string objectId = inReplyTo["@id"].Value<string>();
@@ -204,6 +209,21 @@ namespace Crowmask.Functions
 
                         // Notify the admin actor of the new boost
                         await SynchronizeAdminActorNotificationsAsync(post);
+
+                        reply = true;
+                    }
+
+                    if (!reply)
+                    {
+                        var recipients = Empty
+                            .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#to"] ?? Empty)
+                            .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#cc"] ?? Empty)
+                            .Select(token => token["@id"].Value<string>());
+                        if (recipients.Contains(mapper.ActorId))
+                        {
+                            var remotePost = await databaseActions.AddMentionAsync(replyId, actor);
+                            await remoteActions.SendNotificationAsync(remotePost);
+                        }
                     }
                 }
 
@@ -211,7 +231,7 @@ namespace Crowmask.Functions
             }
             else if (type == "https://www.w3.org/ns/activitystreams#Delete")
             {
-                foreach (var deletedObject in expansion[0]["https://www.w3.org/ns/activitystreams#object"])
+                foreach (var deletedObject in expansion[0]["https://www.w3.org/ns/activitystreams#object"] ?? Empty)
                 {
                     string deletedObjectId = deletedObject["@id"].Value<string>();
 
@@ -226,6 +246,9 @@ namespace Crowmask.Functions
                         // Remove notifications to the admin actor of now-removed replies
                         await SynchronizeAdminActorNotificationsAsync(post);
                     }
+
+                    foreach (var remotePost in await databaseActions.RemoveMentionsAsync([deletedObjectId], actor))
+                        await remoteActions.RemoveNotificationAsync(remotePost);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);

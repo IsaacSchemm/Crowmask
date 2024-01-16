@@ -10,6 +10,8 @@ namespace Crowmask.Data
 
         public DbSet<KnownInbox> KnownInboxes { get; set; }
 
+        public DbSet<Mention> Mentions { get; set; }
+
         public DbSet<OutboundActivity> OutboundActivities { get; set; }
 
         public DbSet<Submission> Submissions { get; set; }
