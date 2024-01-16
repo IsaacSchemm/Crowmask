@@ -58,5 +58,12 @@ namespace Crowmask.Dependencies.Mapping
         /// <returns>An ActivityPub object ID</returns>
         public string GetObjectId(int submitid, Interaction interaction) =>
             $"{GetObjectId(submitid)}/interactions/{interaction.Id}/notification";
+
+        /// <summary>
+        /// Determines the URL for a notification post sent to the admin actor.
+        /// </summary>
+        /// <param name="remotePost">The remote mention</param>
+        public string GetObjectId(RemotePost remotePost) =>
+            $"https://{crowmaskHost.Hostname}/api/mentions/{remotePost.id}/notification";
     }
 }

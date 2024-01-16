@@ -39,24 +39,16 @@ type Link = {
     href: string
 }
 
-/// A boost (Announce activity) from another user.
-type Boost = {
+/// A boost or like (Announce or Like activity) from another user.
+type Activity = {
     id: Guid
     actor_id: string
-    announce_id: string
+    activity_id: string
     added_at: DateTimeOffset
 }
 
-/// A like (Like activity) from another user.
-type Like = {
-    id: Guid
-    actor_id: string
-    like_id: string
-    added_at: DateTimeOffset
-}
-
-/// A reply from another user.
-type Reply = {
+/// A mention or reply from another user.
+type RemotePost = {
     id: Guid
     actor_id: string
     object_id: string
@@ -65,7 +57,7 @@ type Reply = {
 
 /// An interaction with a post by another user (a boost, like, or reply), with
 /// an internal Crowmask ID and an "added at" date.
-type Interaction = Boost of Boost | Like of Like | Reply of Reply
+type Interaction = Boost of Activity | Like of Activity | Reply of RemotePost
 with
     member this.Id =
         match this with
@@ -90,9 +82,9 @@ type Post = {
     thumbnails: Image list
     sensitivity: Sensitivity
     tags: string list
-    boosts: Boost list
-    likes: Like list
-    replies: Reply list
+    boosts: Activity list
+    likes: Activity list
+    replies: RemotePost list
     stale: bool
 } with
     member this.Interactions =
@@ -208,7 +200,7 @@ module Domain =
                 {
                     id = i.Id
                     actor_id = i.ActorId
-                    announce_id = i.ActivityId
+                    activity_id = i.ActivityId
                     added_at = i.AddedAt
                 }
         ]
@@ -217,7 +209,7 @@ module Domain =
                 {
                     id = i.Id
                     actor_id = i.ActorId
-                    like_id = i.ActivityId
+                    activity_id = i.ActivityId
                     added_at = i.AddedAt
                 }
         ]
@@ -240,6 +232,13 @@ module Domain =
     let AsGalleryPage(posts: Post seq, nextid: int) = {
         posts = Seq.toList posts
         nextid = nextid
+    }
+
+    let AsRemotePost(mention: Mention) = {
+        id = mention.Id
+        actor_id = mention.ActorId
+        object_id = mention.ObjectId
+        added_at = mention.AddedAt
     }
 
     let AsFollowerActor(follower: Follower) = {

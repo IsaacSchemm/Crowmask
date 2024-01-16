@@ -26,3 +26,7 @@ type Summarizer(mapper: ActivityStreamsIdMapper) =
         | Boost i -> $"[`{enc i.actor_id}`]({i.actor_id}) boosted [{enc p.title}]({original_object_id}) ({encDate i.added_at})"
         | Like i -> $"[`{enc i.actor_id}`]({i.actor_id}) liked [{enc p.title}]({original_object_id}) ({encDate i.added_at})"
         | Reply r -> $"[`{enc r.actor_id}`]({r.actor_id}) replied to [{enc p.title}]({original_object_id}) ([{encDate r.added_at}]({r.object_id}))"
+
+    /// Creates a Markdown summary of the given mention.
+    member _.ToMarkdown(r: RemotePost) =
+        $"[`{enc r.actor_id}`]({r.actor_id}) mentioned [{enc mapper.ActorId}]({mapper.ActorId}) ([{encDate r.added_at}]({r.object_id}))"

@@ -57,5 +57,23 @@ namespace Crowmask
             foreach (var interaction in removed)
                 await SendToAdminActorAsync(translator.PrivateNoteToDelete(oldPost, interaction));
         }
+
+        /// <summary>
+        /// Notifies the admin actor of a mention recieved by Crowmask.
+        /// </summary>
+        /// <param name="remotePost">Information about the mention</param>
+        public async Task SendNotificationAsync(RemotePost remotePost)
+        {
+            await SendToAdminActorAsync(translator.PrivateNoteToCreate(remotePost));
+        }
+
+        /// <summary>
+        /// Removes a notification to the admin actor of a mention recieved by Crowmask.
+        /// </summary>
+        /// <param name="remotePost">Information about the mention</param>
+        public async Task RemoveNotificationAsync(RemotePost remotePost)
+        {
+            await SendToAdminActorAsync(translator.PrivateNoteToDelete(remotePost));
+        }
     }
 }

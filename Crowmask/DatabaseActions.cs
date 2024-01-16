@@ -196,5 +196,55 @@ namespace Crowmask
 
             await context.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Adds a remote mention to Crowmask, if it does not already exist.
+        /// </summary>
+        /// <param name="objectIds">The ID of the object (Note, etc.), so Delete requests can be honored</param>
+        /// <param name="actor">The actor who created the mention</param>
+        /// <returns>A corresponding RemotePost object with the Crowmask-generated ID</returns>
+        public async Task<RemotePost> AddMentionAsync(string objectId, RemoteActor actor)
+        {
+            var existingMention = await context.Mentions
+                .Where(m => m.ObjectId == objectId)
+                .Where(m => m.ActorId == actor.Id)
+                .FirstOrDefaultAsync();
+            if (existingMention != null)
+                return Domain.AsRemotePost(existingMention);
+
+            var newMention = new Mention
+            {
+                Id = Guid.NewGuid(),
+                AddedAt = DateTimeOffset.UtcNow,
+                ObjectId = objectId,
+                ActorId = actor.Id,
+            };
+
+            context.Mentions.Add(newMention);
+
+            await context.SaveChangesAsync();
+
+            return Domain.AsRemotePost(newMention);
+        }
+
+        /// <summary>
+        /// Removes remote mentions from Crowmask.
+        /// </summary>
+        /// <param name="objectIds">The ID(s) of the object(s) (Note, etc.)</param>
+        /// <param name="actor">The actor who created the mention</param>
+        /// <returns>A list of RemotePosts that have been removed</returns>
+        public async Task<IReadOnlyList<RemotePost>> RemoveMentionsAsync(IReadOnlyList<string> objectIds, RemoteActor actor)
+        {
+            var existingMentions = await context.Mentions
+                .Where(m => objectIds.Contains(m.ObjectId))
+                .Where(m => m.ActorId == actor.Id)
+                .ToListAsync();
+
+            context.Mentions.RemoveRange(existingMentions);
+
+            await context.SaveChangesAsync();
+
+            return existingMentions.Select(Domain.AsRemotePost).ToList();
+        }
     }
 }
