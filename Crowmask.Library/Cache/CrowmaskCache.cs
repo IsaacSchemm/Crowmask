@@ -200,8 +200,7 @@ namespace Crowmask.Library.Cache
 
         /// <summary>
         /// Returns all cached submissions in Crowmask's database, with the
-        /// newest submissions (with higher submission IDs) first. Stale posts
-        /// will not be refreshed.
+        /// newest submissions (with higher submission IDs) first.
         /// </summary>
         /// <returns>An asynchronous sequence of posts</returns>
         public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync()
@@ -342,8 +341,7 @@ namespace Crowmask.Library.Cache
 
         /// <summary>
         /// Returns all cached journal entries in Crowmask's database, with
-        /// the newest entries (with higher journal IDs) first. Stale posts
-        /// will not be refreshed.
+        /// the newest entries (with higher journal IDs) first. 
         /// </summary>
         /// <returns>An asynchronous sequence of posts</returns>
         public async IAsyncEnumerable<Post> GetCachedJournalsAsync()
@@ -399,8 +397,7 @@ namespace Crowmask.Library.Cache
 
         /// <summary>
         /// Returns all cached posts (submissions and journal entries) in
-        /// Crowmask's database, with the newest entries  first. Stale posts
-        /// will not be refreshed.
+        /// Crowmask's database, with the newest entries  first.
         /// </summary>
         /// <returns>An asynchronous sequence of posts</returns>
         public IAsyncEnumerable<Post> GetAllCachedPostsAsync()
