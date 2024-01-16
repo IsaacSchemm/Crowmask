@@ -20,7 +20,7 @@ type Summarizer(mapper: ActivityStreamsIdMapper) =
 
     /// Creates a Markdown summary of the given interaction to the given post.
     member _.ToMarkdown(p: Post, e: Interaction) =
-        let original_object_id = mapper.GetObjectId p.identifier
+        let original_object_id = mapper.GetObjectId(p.submitid)
 
         match e with
         | Boost i -> $"[`{enc i.actor_id}`]({i.actor_id}) boosted [{enc p.title}]({original_object_id}) ({encDate i.added_at})"

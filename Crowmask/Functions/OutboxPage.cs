@@ -19,10 +19,9 @@ namespace Crowmask.Functions
         ContentNegotiator negotiator)
     {
         /// <summary>
-        /// Returns up to 20 of the user's posts (submissions and journals)
-        /// mirrored from Weasyl and cached in Crowmask's database. Posts are
-        /// rendered in reverse chronological order (newest first) by
-        /// combining submission and journal streams from Crowmask's cache.
+        /// Returns up to 20 of the user's posts mirrored from Weasyl and
+        /// cached in Crowmask's database. Posts are rendered in reverse
+        /// chronological order (newest first).
         /// </summary>
         /// <param name="req"></param>
         /// <returns>An ActivityStreams OrderedCollectionPage or a Markdown or HTML response, depending on the user agent's Accept header.</returns>
@@ -32,7 +31,7 @@ namespace Crowmask.Functions
         {
             int offset = int.TryParse(req.Query["offset"], out int n) ? n : 0;
 
-            var posts = await crowmaskCache.GetAllCachedPostsAsync()
+            var posts = await crowmaskCache.GetCachedSubmissionsAsync()
                 .Skip(offset)
                 .Take(20)
                 .ToListAsync();

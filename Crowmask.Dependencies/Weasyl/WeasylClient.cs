@@ -85,32 +85,5 @@
                 }
             }
         }
-
-        /// <summary>
-        /// Returns the IDs of all journals posted by the logged-in user.
-        /// </summary>
-        /// <returns>An asynchronous sequence of all journal IDs</returns>
-        public async IAsyncEnumerable<int> GetMyJournalIdsAsync()
-        {
-            var user = await GetMyUserAsync();
-            await foreach (var uri in weasylClient.GetJournalIdsAsync(user.login_name))
-                yield return uri;
-        }
-
-        /// <summary>
-        /// Returns journal entry information for the given ID, or null if it
-        /// doesn't exist, wasn't posted by the logged-in user, or is set to
-        /// friends only.
-        /// </summary>
-        /// <param name="journalid">The journal ID</param>
-        /// <returns>A journal entry object</returns>
-        public async Task<WeasylJournalDetail?> GetMyJournalAsync(int journalid)
-        {
-            var whoami = await WhoamiAsync();
-            var journal = await weasylClient.GetJournalAsync(journalid);
-            return journal != null && journal.owner == whoami.login && !journal.friends_only
-                ? journal
-                : null;
-        }
     }
 }

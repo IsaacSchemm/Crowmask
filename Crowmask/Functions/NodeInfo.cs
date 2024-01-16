@@ -23,7 +23,7 @@ namespace Crowmask.Functions
         {
             var user = await crowmaskCache.GetUserAsync();
 
-            int postCount = await crowmaskCache.GetCachedPostCountAsync();
+            int postCount = await crowmaskCache.GetCachedSubmissionCountAsync();
 
             var resp = req.CreateResponse(HttpStatusCode.OK);
             resp.Headers.Add("Content-Type", $"application/json; charset=utf-8");
@@ -33,7 +33,7 @@ namespace Crowmask.Functions
                 instance = new
                 {
                     name = $"@{handleName.PreferredUsername}@{handleHost.Hostname}",
-                    description = $"An ActivityPub mirror of artwork and journals posted to Weasyl by {user.upstreamUsername}"
+                    description = $"An ActivityPub mirror of artwork posted to Weasyl by {user.upstreamUsername}"
                 },
                 software = new
                 {

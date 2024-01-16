@@ -14,7 +14,6 @@ namespace Crowmask.Functions
         /// Refreshes the cache for stale items that are among the following:
         /// <list type="bullet">
         /// <item>The most recent submission on Weasyl, plus any additional submissions within the past day</item>
-        /// <item>The most recent journal on Weasyl, plus any additional journals within the past day</item>
         /// <item>The user profile</item>
         /// <item>Any cached posts in Crowmask that were posted to Weasyl within the past day</item>
         /// </list>
@@ -36,24 +35,14 @@ namespace Crowmask.Functions
                     break;
             }
 
-            await foreach (int journalid in weasylClient.GetMyJournalIdsAsync())
-            {
-                var cacheResult = await crowmaskCache.GetJournalAsync(journalid);
-                if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
-                    break;
-            }
-
             await crowmaskCache.GetUserAsync();
 
-            await foreach (var post in crowmaskCache.GetAllCachedPostsAsync())
+            await foreach (var post in crowmaskCache.GetCachedSubmissionsAsync())
             {
                 if (post.first_upstream < yesterday)
                     break;
 
-                if (post.identifier.IsSubmissionIdentifier)
-                    await crowmaskCache.GetSubmissionAsync(post.identifier.submitid);
-                if (post.identifier.IsJournalIdentifier)
-                    await crowmaskCache.GetJournalAsync(post.identifier.journalid);
+                await crowmaskCache.GetSubmissionAsync(post.submitid);
             }
 
             await outboundActivityProcessor.ProcessOutboundActivities();

@@ -16,7 +16,7 @@ namespace Crowmask.Library.Feed
         /// <summary>
         /// Generates an HTML rendition of the post, including image(s), description, and outgoing link(s).
         /// </summary>
-        /// <param name="post">The submission or journal entry to render</param>
+        /// <param name="post">The submission to render</param>
         /// <returns>A sequence of HTML strings that should be concatenated</returns>
         private static IEnumerable<string> GetHtml(Post post)
         {
@@ -37,20 +37,20 @@ namespace Crowmask.Library.Feed
         /// <summary>
         /// Creates a feed item for a post.
         /// </summary>
-        /// <param name="post">The submission or journal entry to render</param>
+        /// <param name="post">The submission to render</param>
         /// <returns>A feed item</returns>
         private SyndicationItem ToSyndicationItem(Post post)
         {
             var item = new SyndicationItem
             {
-                Id = mapper.GetObjectId(post.identifier),
+                Id = mapper.GetObjectId(post.submitid),
                 Title = new TextSyndicationContent(post.title, TextSyndicationContentKind.Plaintext),
                 PublishDate = post.first_upstream,
                 LastUpdatedTime = post.first_upstream,
                 Content = new TextSyndicationContent(string.Join(" ", GetHtml(post)), TextSyndicationContentKind.Html)
             };
 
-            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.identifier)), "text/html"));
+            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.submitid)), "text/html"));
 
             return item;
         }
@@ -59,7 +59,7 @@ namespace Crowmask.Library.Feed
         /// Creates a feed for a list of posts.
         /// </summary>
         /// <param name="person">The author of the posts</param>
-        /// <param name="posts">A sequence of submissions and/or journal entries</param>
+        /// <param name="posts">A sequence of submissions</param>
         /// <returns>A feed object</returns>
         private SyndicationFeed ToSyndicationFeed(Person person, IEnumerable<Post> posts)
         {
@@ -68,7 +68,7 @@ namespace Crowmask.Library.Feed
             {
                 Id = uri,
                 Title = new TextSyndicationContent($"@{handleName.PreferredUsername}@{handleHost.Hostname}", TextSyndicationContentKind.Plaintext),
-                Description = new TextSyndicationContent($"Submissions and journals posted to Weasyl by {person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
+                Description = new TextSyndicationContent($"Submissions posted to Weasyl by {person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
                 Copyright = new TextSyndicationContent($"{person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
                 LastUpdatedTime = posts.Select(x => x.first_upstream).Max(),
                 ImageUrl = person.iconUrls.Select(str => new Uri(str)).FirstOrDefault(),
@@ -91,7 +91,7 @@ namespace Crowmask.Library.Feed
         /// Generates an RSS feed for a list of posts.
         /// </summary>
         /// <param name="person">The author of the posts</param>
-        /// <param name="posts">A sequence of submissions and/or journal entries</param>
+        /// <param name="posts">A sequence of submissions</param>
         /// <returns>An RSS feed (should be serialized as UTF-8)</returns>
         public string ToRssFeed(Person person, IEnumerable<Post> posts)
         {
@@ -111,7 +111,7 @@ namespace Crowmask.Library.Feed
         /// Generates an Atom feed for a list of posts.
         /// </summary>
         /// <param name="person">The author of the posts</param>
-        /// <param name="posts">A sequence of submissions and/or journal entries</param>
+        /// <param name="posts">A sequence of submissions</param>
         /// <returns>An Atom feed (should be serialized as UTF-8)</returns>
         public string ToAtomFeed(Person person, IEnumerable<Post> posts)
         {

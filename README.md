@@ -16,9 +16,7 @@ automated user account, using the name, info, avatar, and submissions of the
 Weasyl user who created the API key. This user account can be followed by
 users on Mastodon, Pixelfed, and microblog.pub, among others.
 
-Submissions (retrieved from the Weasyl API) are mapped to `Note` objects, and
-journals (scraped from the website using the Weasyl API key as authentication)
-are mapped to `Article` objects.
+Submissions (retrieved from the Weasyl API) are mapped to `Note` objects.
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 Crowmask will send a private message to the "admin actor" defined in its
@@ -109,11 +107,6 @@ HTTP endpoints:
     * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
     * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
 * `/api/submissions/{submitid}/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
-* `/api/journals/{journalid}`: returns the resulting `Article` object
-    * With `?view=comments`: returns a `Collection` with object IDs for all replies (not paginated)
-    * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
-    * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
-* `/api/journals/{journalid}/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
 
 Timed functions:
 

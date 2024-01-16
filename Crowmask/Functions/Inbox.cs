@@ -24,7 +24,7 @@ namespace Crowmask.Functions
         /// </summary>
         /// <param name="post">The post, before any changes; the same post will be re-read from the cache</param>
         private async Task SynchronizeAdminActorNotificationsAsync(Post post) {
-            if (await cache.GetCachedPostAsync(post.identifier) is CacheResult.PostResult newResult)
+            if (await cache.GetSubmissionAsync(post.submitid) is CacheResult.PostResult newResult)
                 await remoteActions.UpdateAdminActorNotificationsAsync(post, newResult.Post);
         }
 
@@ -105,10 +105,10 @@ namespace Crowmask.Functions
                         // If the ID to undo is the ID of a boost or like, then undo it
                         foreach (var boost in post.boosts)
                             if (boost.actor_id == actor.Id && boost.announce_id == objectId)
-                                await databaseActions.RemoveInteractionAsync(post.identifier, boost.id);
+                                await databaseActions.RemoveInteractionAsync(post.submitid, boost.id);
                         foreach (var like in post.likes)
                             if (like.actor_id == actor.Id && like.like_id == objectId)
-                                await databaseActions.RemoveInteractionAsync(post.identifier, like.id);
+                                await databaseActions.RemoveInteractionAsync(post.submitid, like.id);
 
                         // Remove notifications to the admin actor of now-removed likes and boosts
                         await SynchronizeAdminActorNotificationsAsync(post);
@@ -125,11 +125,11 @@ namespace Crowmask.Functions
                     string objectId = objectToLike["@id"].Value<string>();
 
                     // Parse the Crowmask ID from the object ID / URL, if any
-                    if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                    if (mapper.GetJointIdentifier(objectId) is not int submitid)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr)
+                    if (await cache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     var post = pr.Post;
@@ -137,10 +137,10 @@ namespace Crowmask.Functions
                     // Remove any previous likes on this post by this actor
                     foreach (var like in post.likes)
                         if (like.actor_id == actor.Id)
-                            await databaseActions.RemoveInteractionAsync(identifier, like.id);
+                            await databaseActions.RemoveInteractionAsync(submitid, like.id);
 
                     // Add the new like
-                    await databaseActions.AddLikeAsync(identifier, activityId, actor);
+                    await databaseActions.AddLikeAsync(submitid, activityId, actor);
 
                     // Notify the admin actor of the new like
                     await SynchronizeAdminActorNotificationsAsync(post);
@@ -156,18 +156,18 @@ namespace Crowmask.Functions
                     string objectId = objectToBoost["@id"].Value<string>();
 
                     // Parse the Crowmask ID from the object ID / URL, if any
-                    if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                    if (mapper.GetJointIdentifier(objectId) is not int submitid)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr)
+                    if (await cache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     var post = pr.Post;
 
                     // Add the boost to the post, unless it's a boost we already know about
                     if (!post.boosts.Select(boost => boost.announce_id).Contains(activityId))
-                        await databaseActions.AddBoostAsync(identifier, activityId, actor);
+                        await databaseActions.AddBoostAsync(submitid, activityId, actor);
 
                     // Notify the admin actor of the new boost
                     await SynchronizeAdminActorNotificationsAsync(post);
@@ -191,18 +191,18 @@ namespace Crowmask.Functions
                         string objectId = inReplyTo["@id"].Value<string>();
 
                         // Parse the Crowmask ID from the object ID / URL, if any
-                        if (mapper.GetJointIdentifier(objectId) is not JointIdentifier identifier)
+                        if (mapper.GetJointIdentifier(objectId) is not int submitid)
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         // Get the cached post that corresponds to this ID, if any
-                        if (await cache.GetCachedPostAsync(identifier) is not CacheResult.PostResult pr)
+                        if (await cache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         var post = pr.Post;
 
                         // Add the reply to the post, unless it's a reply we already know about
                         if (!post.replies.Select(reply => reply.object_id).Contains(replyId))
-                            await databaseActions.AddReplyAsync(identifier, replyId, actor);
+                            await databaseActions.AddReplyAsync(submitid, replyId, actor);
 
                         // Notify the admin actor of the new boost
                         await SynchronizeAdminActorNotificationsAsync(post);
@@ -225,7 +225,7 @@ namespace Crowmask.Functions
                         // If the actor who sent the Delete request was the actor who originally posted the reply, then delete it from our cache
                         foreach (var reply in post.replies)
                             if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)
-                                await databaseActions.RemoveInteractionAsync(post.identifier, reply.id);
+                                await databaseActions.RemoveInteractionAsync(post.submitid, reply.id);
 
                         // Remove notifications to the admin actor of now-removed replies
                         await SynchronizeAdminActorNotificationsAsync(post);

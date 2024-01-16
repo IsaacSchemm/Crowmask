@@ -15,8 +15,7 @@ namespace Crowmask.Functions
         ContentNegotiator negotiator)
     {
         /// <summary>
-        /// Returns the size of the user's outbox (which contains artwork
-        /// submissions and journals) and a link to the first page.
+        /// Returns the size of the user's outbox and a link to the first page.
         /// </summary>
         /// <param name="req"></param>
         /// <returns>An ActivityStreams OrderedCollection or a Markdown or HTML response, depending on the user agent's Accept header.</returns>
@@ -24,7 +23,7 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
-            int count = await crowmaskCache.GetCachedPostCountAsync();
+            int count = await crowmaskCache.GetCachedSubmissionCountAsync();
 
             var gallery = Domain.AsGallery(count: count);
 

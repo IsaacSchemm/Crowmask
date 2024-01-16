@@ -52,17 +52,6 @@ namespace Crowmask.Dependencies.Weasyl
         int submitid,
         string description);
 
-    public record WeasylJournalDetail(
-        string link,
-        string owner,
-        DateTime posted_at,
-        string rating,
-        string title,
-        bool friends_only,
-        FSharpSet<string> tags,
-        int journalid,
-        string content);
-
     public record WeasylGallery(
         FSharpList<WeasylGallerySubmission> submissions,
         int? backid,
