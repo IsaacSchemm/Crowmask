@@ -98,10 +98,8 @@ namespace Crowmask.Functions
                     await databaseActions.RemoveFollowAsync(objectId);
 
                     // Figure out which post the ID belongs to (if any)
-                    if (await cache.GetRelevantCachedPostAsync(objectId) is CacheResult.PostResult result)
+                    await foreach (var post in cache.GetRelevantCachedPostsAsync(objectId))
                     {
-                        var post = result.Post;
-
                         // If the ID to undo is the ID of a boost or like, then undo it
                         foreach (var boost in post.boosts)
                             if (boost.actor_id == actor.Id && boost.announce_id == objectId)
@@ -125,7 +123,7 @@ namespace Crowmask.Functions
                     string objectId = objectToLike["@id"].Value<string>();
 
                     // Parse the Crowmask ID from the object ID / URL, if any
-                    if (mapper.GetJointIdentifier(objectId) is not int submitid)
+                    if (mapper.GetSubmitId(objectId) is not int submitid)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
@@ -156,7 +154,7 @@ namespace Crowmask.Functions
                     string objectId = objectToBoost["@id"].Value<string>();
 
                     // Parse the Crowmask ID from the object ID / URL, if any
-                    if (mapper.GetJointIdentifier(objectId) is not int submitid)
+                    if (mapper.GetSubmitId(objectId) is not int submitid)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
@@ -191,7 +189,7 @@ namespace Crowmask.Functions
                         string objectId = inReplyTo["@id"].Value<string>();
 
                         // Parse the Crowmask ID from the object ID / URL, if any
-                        if (mapper.GetJointIdentifier(objectId) is not int submitid)
+                        if (mapper.GetSubmitId(objectId) is not int submitid)
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         // Get the cached post that corresponds to this ID, if any
@@ -218,10 +216,8 @@ namespace Crowmask.Functions
                     string deletedObjectId = deletedObject["@id"].Value<string>();
 
                     // Figure out which post the deleted post was in reply to (if any)
-                    if (await cache.GetRelevantCachedPostAsync(deletedObjectId) is CacheResult.PostResult result)
+                    await foreach (var post in cache.GetRelevantCachedPostsAsync(deletedObjectId))
                     {
-                        var post = result.Post;
-
                         // If the actor who sent the Delete request was the actor who originally posted the reply, then delete it from our cache
                         foreach (var reply in post.replies)
                             if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)

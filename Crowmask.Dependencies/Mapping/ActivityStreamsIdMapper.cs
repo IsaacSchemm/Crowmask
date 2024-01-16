@@ -41,7 +41,7 @@ namespace Crowmask.Dependencies.Mapping
         /// </summary>
         /// <param name="objectId">The ActivityPub ID / URL for a Crowmask post</param>
         /// <returns>A submission ID, or null</returns>
-        public int? GetJointIdentifier(string objectId)
+        public int? GetSubmitId(string objectId)
         {
             return Uri.TryCreate(objectId, UriKind.Absolute, out Uri? uri)
                 && int.TryParse(uri.AbsolutePath.Split('/').Last(), out int candidate)
