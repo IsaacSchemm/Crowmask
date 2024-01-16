@@ -50,6 +50,8 @@ var host = new HostBuilder()
         if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost)
             services.AddSingleton<IKeyVaultHost>(new Host(keyVaultHost));
 
+        services.AddSingleton<ICrowmaskVersion>(new Version("1.2"));
+
         if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
             services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
 
@@ -83,5 +85,7 @@ record ContentNegotiationConfiguration(bool ReturnHTML, bool ReturnMarkdown, boo
 record Host(string Hostname) : ICrowmaskHost, IHandleHost, IKeyVaultHost;
 
 record HandleName(string PreferredUsername) : IHandleName;
+
+record Version(string VersionNumber) : ICrowmaskVersion;
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

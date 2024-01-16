@@ -12,7 +12,7 @@ namespace Crowmask.Library.Remote
     /// <summary>
     /// Performs requests to other ActivityPub servers.
     /// </summary>
-    public class Requester(ActivityStreamsIdMapper mapper, ICrowmaskKeyProvider keyProvider, IHttpClientFactory httpClientFactory)
+    public class Requester(ActivityStreamsIdMapper mapper, ICrowmaskKeyProvider keyProvider, ICrowmaskVersion version, IHttpClientFactory httpClientFactory)
     {
         /// <summary>
         /// Fetches and returns an actor.
@@ -101,7 +101,7 @@ namespace Crowmask.Library.Remote
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
-            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.2"));
+            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", version.VersionNumber));
 
             req.Headers.Add("Digest", $"SHA-256={digest}");
 
