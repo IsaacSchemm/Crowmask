@@ -28,9 +28,46 @@ namespace Crowmask.Data
         public string Link { get; set; }
 
         /// <summary>
+        /// Media (an image or another item) attached to a Weasyl submission.
+        /// </summary>
+        public class SubmissionMedia
+        {
+            /// <summary>
+            /// The Weasyl-hosted URL of the image or other item.
+            /// </summary>
+            [Required]
+            public string Url { get; set; } = "";
+
+            /// <summary>
+            /// The media type of the URL, detected by Crowmask with a HEAD request.
+            /// </summary>
+            [Required]
+            public string ContentType { get; set; } = "";
+        }
+
+        /// <summary>
         /// A list of media (i.e. images) associated with the submission.
         /// </summary>
         public List<SubmissionMedia> Media { get; set; } = [];
+
+        /// <summary>
+        /// A thumbnail attached to a Weasyl submission, used in the HTML view of
+        /// the outbox.
+        /// </summary>
+        public class SubmissionThumbnail
+        {
+            /// <summary>
+            /// The Weasyl-hosted URL of the image.
+            /// </summary>
+            [Required]
+            public string Url { get; set; } = "";
+
+            /// <summary>
+            /// The media type of the URL, detected by Crowmask with a HEAD request.
+            /// </summary>
+            [Required]
+            public string ContentType { get; set; } = "";
+        }
 
         /// <summary>
         /// A list of thumbnails associated with the submission.
@@ -47,6 +84,18 @@ namespace Crowmask.Data
         /// Crowmask will mark anything other than "general" as sensitive on the ActivityPub side.
         /// </summary>
         public string Rating { get; set; }
+
+        /// <summary>
+        /// A tag associated with a particular submission on Weasyl.
+        /// </summary>
+        public class SubmissionTag
+        {
+            /// <summary>
+            /// The tag string from the Weasyl API.
+            /// </summary>
+            [Required]
+            public string Tag { get; set; } = "";
+        }
 
         /// <summary>
         /// A list of tags associated with the submission on Weasyl.
@@ -74,6 +123,65 @@ namespace Crowmask.Data
         /// object. (It may not have changed.)
         /// </summary>
         public DateTimeOffset CacheRefreshSucceededAt { get; set; }
+
+        /// <summary>
+        /// Another user's interaction with a post.
+        /// </summary>
+        public abstract class Interaction
+        {
+            /// <summary>
+            /// The Crowmask internal ID for this interaction. Used to construct the object ID of the notification.
+            /// </summary>
+            public Guid Id { get; set; }
+
+            /// <summary>
+            /// The date/time when this interaction was recieved by Crowmask.
+            /// </summary>
+            public DateTimeOffset AddedAt { get; set; }
+
+            /// <summary>
+            /// The ID of the actor who published the Announce activity.
+            /// </summary>
+            [Required]
+            public string ActorId { get; set; }
+        }
+
+        /// <summary>
+        /// A boost (Announce activity) made by another user to share this
+        /// submission with their followers.
+        /// </summary>
+        public class SubmissionBoost : Interaction
+        {
+            /// <summary>
+            /// The Announce activity's ID.
+            /// </summary>
+            [Required]
+            public string ActivityId { get; set; }
+        }
+
+        /// <summary>
+        /// A record of another ActivityPub user's "like" of this submission.
+        /// </summary>
+        public class SubmissionLike : Interaction
+        {
+            /// <summary>
+            /// The Like activity's ID.
+            /// </summary>
+            [Required]
+            public string ActivityId { get; set; }
+        }
+
+        /// <summary>
+        /// A record of another ActivityPub user's reply to this submission.
+        /// </summary>
+        public class SubmissionReply : Interaction
+        {
+            /// <summary>
+            /// The ID of the external post that was made in reply to this one.
+            /// </summary>
+            [Required]
+            public string ObjectId { get; set; }
+        }
 
         /// <summary>
         /// A list of boosts (Announce activities) recieved for this object.

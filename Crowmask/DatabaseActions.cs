@@ -123,7 +123,7 @@ namespace Crowmask
         public async Task AddLikeAsync(int submitid, string activityId, RemoteActor actor)
         {
             var submission = await context.Submissions.FindAsync(submitid);
-            submission.Likes.Add(new SubmissionLike
+            submission.Likes.Add(new Submission.SubmissionLike
             {
                 Id = Guid.NewGuid(),
                 AddedAt = DateTimeOffset.UtcNow,
@@ -143,7 +143,7 @@ namespace Crowmask
         public async Task AddBoostAsync(int submitid, string activityId, RemoteActor actor)
         {
             var submission = await context.Submissions.FindAsync(submitid);
-            submission.Boosts.Add(new SubmissionBoost
+            submission.Boosts.Add(new Submission.SubmissionBoost
             {
                 Id = Guid.NewGuid(),
                 AddedAt = DateTimeOffset.UtcNow,
@@ -163,7 +163,7 @@ namespace Crowmask
         public async Task AddReplyAsync(int submitid, string replyObjectId, RemoteActor actor)
         {
             var submission = await context.Submissions.FindAsync(submitid);
-            submission.Replies.Add(new SubmissionReply
+            submission.Replies.Add(new Submission.SubmissionReply
             {
                 Id = Guid.NewGuid(),
                 AddedAt = DateTimeOffset.UtcNow,

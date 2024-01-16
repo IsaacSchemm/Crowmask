@@ -101,18 +101,16 @@ namespace Crowmask.Library.Cache
                     cachedSubmission.Description = weasylSubmission.description;
                     cachedSubmission.Media = await weasylSubmission.media.submission
                         .ToAsyncEnumerable()
-                        .SelectAwait(async s => new SubmissionMedia
+                        .SelectAwait(async s => new Submission.SubmissionMedia
                         {
-                            Id = Guid.NewGuid(),
                             Url = s.url,
                             ContentType = await GetContentTypeAsync(s.url)
                         })
                         .ToListAsync();
                     cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
                         .ToAsyncEnumerable()
-                        .SelectAwait(async s => new SubmissionThumbnail
+                        .SelectAwait(async s => new Submission.SubmissionThumbnail
                         {
-                            Id = Guid.NewGuid(),
                             Url = s.url,
                             ContentType = await GetContentTypeAsync(s.url)
                         })
@@ -120,9 +118,8 @@ namespace Crowmask.Library.Cache
                     cachedSubmission.PostedAt = weasylSubmission.posted_at;
                     cachedSubmission.Rating = weasylSubmission.rating;
                     cachedSubmission.Tags = weasylSubmission.tags
-                        .Select(t => new SubmissionTag
+                        .Select(t => new Submission.SubmissionTag
                         {
-                            Id = Guid.NewGuid(),
                             Tag = t
                         })
                         .ToList();
