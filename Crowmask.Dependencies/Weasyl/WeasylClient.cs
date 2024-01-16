@@ -1,11 +1,13 @@
-﻿namespace Crowmask.Dependencies.Weasyl
+﻿using Crowmask.Interfaces;
+
+namespace Crowmask.Dependencies.Weasyl
 {
     /// <summary>
     /// Allows access to Weasyl data using an API key.
     /// </summary>
-    public class WeasylClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
+    public class WeasylClient(ICrowmaskVersion version, IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
-        private readonly WeasylApiClient weasylClient = new(httpClientFactory, apiKeyProvider);
+        private readonly WeasylApiClient weasylClient = new(version, httpClientFactory, apiKeyProvider);
 
         private WeasylWhoami? _whoami = null;
         private WeasylUserProfile? _userProfile = null;

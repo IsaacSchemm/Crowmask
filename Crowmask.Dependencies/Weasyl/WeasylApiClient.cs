@@ -1,14 +1,15 @@
-﻿using System.Net.Http.Headers;
+﻿using Crowmask.Interfaces;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace Crowmask.Dependencies.Weasyl
 {
-    internal class WeasylApiClient(IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
+    internal class WeasylApiClient(ICrowmaskVersion version, IHttpClientFactory httpClientFactory, IWeasylApiKeyProvider apiKeyProvider)
     {
         private async Task<HttpResponseMessage> GetAsync(string uri, CancellationToken cancellationToken)
         {
             using var httpClient = httpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.2"));
+            httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", version.VersionNumber));
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             httpClient.DefaultRequestHeaders.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey);
 
