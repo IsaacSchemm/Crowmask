@@ -8,7 +8,7 @@ using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshUpstream(CrowmaskCache crowmaskCache, OutboundActivityProcessor outboundActivityProcessor, WeasylClient weasylClient)
+    public class RefreshUpstream(CrowmaskCache crowmaskCache, WeasylClient weasylClient)
     {
         /// <summary>
         /// Refreshes the cache for stale items that are among the following:
@@ -18,8 +18,7 @@ namespace Crowmask.Functions
         /// <item>Any cached posts in Crowmask that were posted to Weasyl within the past day</item>
         /// </list>
         /// This function handles new post discovery, updates, and deletions
-        /// in the short term, and is responsible for sending outbound
-        /// activities. Runs every ten minutes.
+        /// in the short term. Runs every ten minutes.
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>
@@ -40,8 +39,6 @@ namespace Crowmask.Functions
             foreach (var post in await crowmaskCache.GetCachedSubmissionsAsync(since: yesterday))
                 if (post.stale)
                     await crowmaskCache.GetSubmissionAsync(post.submitid);
-
-            await outboundActivityProcessor.ProcessOutboundActivities();
         }
     }
 }
