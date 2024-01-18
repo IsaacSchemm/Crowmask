@@ -1,7 +1,7 @@
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Formats;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Crowmask.Functions
 {
     public class Submissions(
-        CrowmaskCache crowmaskCache,
+        SubmissionCache cache,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
         ActivityPubTranslator translator)
@@ -26,7 +26,7 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequestData req,
             int submitid)
         {
-            if (await crowmaskCache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
+            if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                 return req.CreateResponse(HttpStatusCode.NotFound);
 
             var submission = pr.Post;

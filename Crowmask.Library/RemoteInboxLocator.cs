@@ -7,7 +7,11 @@ namespace Crowmask.Library
 {
     public class RemoteInboxLocator(CrowmaskDbContext context, IAdminActor adminActor, Requester requester)
     {
-        private readonly Lazy<Task<string>> _inboxTask = new(async () =>
+        /// <summary>
+        /// Gets the URL of the admin actor's inbox.
+        /// </summary>
+        /// <returns>The inbox URL</returns>
+        public async Task<string> GetAdminActorInboxAsync()
         {
             var follower = await context.Followers
                 .Where(f => f.ActorId == adminActor.Id)
@@ -19,8 +23,27 @@ namespace Crowmask.Library
 
             var adminActorDetails = await requester.FetchActorAsync(adminActor.Id);
             return adminActorDetails.Inbox;
-        });
+        }
 
-        public Task<string> GetAdminActorInboxAsync() => _inboxTask.Value;
+        /// <summary>
+        /// Gets the URLs of known inboxes.
+        /// </summary>
+        /// <param name="followersOnly">Whether to limit the set to only followers' servers. If false, Crowmask will include all known inboxes.</param>
+        /// <returns>A set of inbox URLs</returns>
+        public async Task<IReadOnlySet<string>> GetDistinctInboxesAsync(bool followersOnly = false)
+        {
+            HashSet<string> inboxes = [];
+
+            // Go through follower inboxes first - prefer shared inbox if present
+            await foreach (var follower in context.Followers.AsAsyncEnumerable())
+                inboxes.Add(follower.SharedInbox ?? follower.Inbox);
+
+            // Then include all other known inboxes, if enabled
+            if (!followersOnly)
+                await foreach (var known in context.KnownInboxes.AsAsyncEnumerable())
+                    inboxes.Add(known.Inbox);
+
+            return inboxes;
+        }
     }
 }

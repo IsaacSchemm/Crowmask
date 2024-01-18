@@ -84,13 +84,13 @@ Layers:
       objects to LD-JSON (by manually adding the `@context`), and creates
       private messages to the admin actor.
 * **Crowmask.Library**:
-    * **Cache**: Retrieves new user or submission information from Weasyl when
-      necessary, and creates ActivityPub `Update` activities when the
-      ActivityPub representation of a user or submission changes.
     * **Signatures**: HTTP signature validation, adapted from
       [Letterbook](https://github.com/Letterbook/Letterbook).
     * **Remote**: Talks to other ActivityPub servers.
     * **Feed**: Implements RSS and Atom feeds.
+    * **RemoteInboxLocator**: Collects inbox URLs for the admin actor, followers, and other known servers.
+    * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
+    * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
 * **Crowmask**: The main Azure Functions project, responsible for handling
   HTTP requests and running timed functions.
 

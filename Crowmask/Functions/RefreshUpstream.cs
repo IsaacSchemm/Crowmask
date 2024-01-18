@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Crowmask.Dependencies.Weasyl;
 using Crowmask.DomainModeling;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshUpstream(CrowmaskCache crowmaskCache, WeasylClient weasylClient)
+    public class RefreshUpstream(SubmissionCache cache, WeasylClient weasylClient)
     {
         /// <summary>
         /// Refreshes the cache for stale items that are among the following:
@@ -27,14 +27,14 @@ namespace Crowmask.Functions
 
             await foreach (var submission in weasylClient.GetMyGallerySubmissionsAsync())
             {
-                var cacheResult = await crowmaskCache.GetSubmissionAsync(submission.submitid);
+                var cacheResult = await cache.RefreshSubmissionAsync(submission.submitid);
                 if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
                     break;
             }
 
-            foreach (var post in await crowmaskCache.GetCachedSubmissionsAsync(since: yesterday))
+            foreach (var post in await cache.GetCachedSubmissionsAsync(since: yesterday))
                 if (post.stale)
-                    await crowmaskCache.GetSubmissionAsync(post.submitid);
+                    await cache.RefreshSubmissionAsync(post.submitid);
         }
     }
 }

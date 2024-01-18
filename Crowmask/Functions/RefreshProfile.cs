@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshProfile(CrowmaskCache crowmaskCache)
+    public class RefreshProfile(UserCache userCache)
     {
         /// <summary>
         /// Refreshes user profile data (name, avatar, etc.) Runs every hour.
@@ -14,7 +14,7 @@ namespace Crowmask.Functions
         [Function("RefreshProfile")]
         public async Task Run([TimerTrigger("0 5 * * * *")] TimerInfo myTimer)
         {
-            await crowmaskCache.GetUserAsync();
+            await userCache.GetUserAsync();
         }
     }
 }

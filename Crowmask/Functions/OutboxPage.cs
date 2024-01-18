@@ -1,6 +1,6 @@
 using Crowmask.DomainModeling;
 using Crowmask.Formats;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Crowmask.Library.Feed;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -10,11 +10,12 @@ using System.Threading.Tasks;
 namespace Crowmask.Functions
 {
     public class OutboxPage(
-        CrowmaskCache crowmaskCache,
+        SubmissionCache cache,
         FeedBuilder feedBuilder,
         ActivityPubTranslator translator,
         MarkdownTranslator markdownTranslator,
-        ContentNegotiator negotiator)
+        ContentNegotiator negotiator,
+        UserCache userCache)
     {
         /// <summary>
         /// Returns up to 20 of the user's posts mirrored from Weasyl and
@@ -28,12 +29,12 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)
         {
             var posts = int.TryParse(req.Query["nextid"], out int nextid)
-                ? await crowmaskCache.GetCachedSubmissionsAsync(nextid: nextid, count: 20)
-                : await crowmaskCache.GetCachedSubmissionsAsync(count: 20);
+                ? await cache.GetCachedSubmissionsAsync(nextid: nextid, count: 20)
+                : await cache.GetCachedSubmissionsAsync(count: 20);
 
             var galleryPage = Domain.AsGalleryPage(posts, nextid);
 
-            var person = await crowmaskCache.GetUserAsync();
+            var person = await userCache.GetUserAsync();
 
             var acceptableFormats =
                 req.Query["format"] == "rss" ? [negotiator.RSS]
