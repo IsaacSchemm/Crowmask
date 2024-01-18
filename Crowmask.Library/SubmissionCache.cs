@@ -51,7 +51,7 @@ namespace Crowmask.Library
             if (cachedSubmission != null)
             {
                 if (!cachedSubmission.Stale)
-                    return CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
+                    return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -75,7 +75,7 @@ namespace Crowmask.Library
                         Context.Submissions.Add(cachedSubmission);
                     }
 
-                    var oldSubmission = Domain.AsNote(cachedSubmission);
+                    var oldSubmission = Domain.AsPost(cachedSubmission);
 
                     cachedSubmission.Description = weasylSubmission.description;
                     cachedSubmission.Media = await weasylSubmission.media.submission
@@ -96,6 +96,7 @@ namespace Crowmask.Library
                         .ToListAsync();
                     cachedSubmission.PostedAt = weasylSubmission.posted_at;
                     cachedSubmission.Rating = weasylSubmission.rating;
+                    cachedSubmission.Subtype = weasylSubmission.subtype;
                     cachedSubmission.Tags = weasylSubmission.tags
                         .Select(t => new Submission.SubmissionTag
                         {
@@ -103,9 +104,10 @@ namespace Crowmask.Library
                         })
                         .ToList();
                     cachedSubmission.Title = weasylSubmission.title;
+
                     cachedSubmission.Link = weasylSubmission.link;
 
-                    var newSubmission = Domain.AsNote(cachedSubmission);
+                    var newSubmission = Domain.AsPost(cachedSubmission);
 
                     TimeSpan age = DateTimeOffset.UtcNow - newSubmission.first_upstream;
 
@@ -140,7 +142,7 @@ namespace Crowmask.Library
                     {
                         Context.Submissions.Remove(cachedSubmission);
 
-                        var post = Domain.AsNote(cachedSubmission);
+                        var post = Domain.AsPost(cachedSubmission);
 
                         foreach (string inbox in await inboxLocator.GetDistinctInboxesAsync())
                         {
@@ -176,7 +178,7 @@ namespace Crowmask.Library
             {
                 return cachedSubmission == null
                     ? CacheResult.PostNotFound
-                    : CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
+                    : CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
             }
         }
 
@@ -193,7 +195,7 @@ namespace Crowmask.Library
                 .Where(s => s.SubmitId == submitid)
                 .SingleOrDefaultAsync();
             return cachedSubmission != null
-                ? CacheResult.NewPostResult(Domain.AsNote(cachedSubmission))
+                ? CacheResult.NewPostResult(Domain.AsPost(cachedSubmission))
                 : CacheResult.PostNotFound;
         }
 
@@ -220,7 +222,7 @@ namespace Crowmask.Library
                 .Take(max)
                 .ToListAsync();
 
-            return list.Select(Domain.AsNote).ToList();
+            return list.Select(Domain.AsPost).ToList();
         }
 
         /// <summary>

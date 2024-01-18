@@ -112,9 +112,8 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         match post.sensitivity with
         | General ->
-            for attachment in post.attachments do
-                match attachment with Image image ->
-                    $"[![]({image.url})]({image.url})"
+            for image in post.images do
+                $"[![]({image.url})]({image.url})"
             $""
             post.content
         | Sensitive message ->

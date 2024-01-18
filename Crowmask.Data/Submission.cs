@@ -86,6 +86,11 @@ namespace Crowmask.Data
         public string Rating { get; set; }
 
         /// <summary>
+        /// The submission type (visual, literary, etc.)
+        /// </summary>
+        public string Subtype { get; set; }
+
+        /// <summary>
         /// A tag associated with a particular submission on Weasyl.
         /// </summary>
         public class SubmissionTag
@@ -202,6 +207,11 @@ namespace Crowmask.Data
         /// The HTML content to use in ActivityPub for this post.
         /// </summary>
         public string Content => Description ?? "";
+
+        /// <summary>
+        /// Whether this is considered an artwork submission.
+        /// </summary>
+        public bool Visual => Subtype == "visual" || Subtype == null;
 
         /// <summary>
         /// Whether Crowmask considers the cached submission "stale".

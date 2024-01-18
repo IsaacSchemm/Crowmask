@@ -144,7 +144,7 @@ namespace Crowmask
                 ActorId = actor.Id,
             });
 
-            var newPost = Domain.AsNote(submission);
+            var newPost = Domain.AsPost(submission);
 
             foreach (var interaction in newPost.Interactions)
             {
@@ -185,7 +185,7 @@ namespace Crowmask
                 ActorId = actor.Id,
             });
 
-            var newPost = Domain.AsNote(submission);
+            var newPost = Domain.AsPost(submission);
 
             foreach (var interaction in newPost.Interactions)
             {
@@ -226,7 +226,7 @@ namespace Crowmask
                 ActorId = actor.Id,
             });
 
-            var newPost = Domain.AsNote(submission);
+            var newPost = Domain.AsPost(submission);
 
             foreach (var interaction in newPost.Interactions)
             {
@@ -257,7 +257,7 @@ namespace Crowmask
         public async Task RemoveInteractionAsync(int submitid, Guid id)
         {
             var submission = await context.Submissions.FindAsync(submitid);
-            var oldPost = Domain.AsNote(submission);
+            var oldPost = Domain.AsPost(submission);
 
             foreach (var boost in submission.Boosts.ToList())
                 if (boost.Id == id)

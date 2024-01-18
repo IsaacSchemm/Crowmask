@@ -72,6 +72,7 @@ var host = new HostBuilder()
         services.AddScoped<RemoteInboxLocator>();
         services.AddScoped<Requester>();
         services.AddScoped<Summarizer>();
+        services.AddScoped<UserCache>();
         services.AddScoped<WeasylClient>();
     })
     .Build();

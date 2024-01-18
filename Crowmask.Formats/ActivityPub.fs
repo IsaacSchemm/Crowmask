@@ -114,7 +114,9 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "shares" $"{id}?view=shares"
         pair "comments" $"{id}?view=comments"
 
-        pair "type" "Note"
+        match post.images with
+        | _::_ -> pair "type" "Note"
+        | [] -> pair "type" "Page"
 
         pair "attributedTo" actor
         pair "name" post.title
@@ -139,13 +141,11 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
             pair "summary" warning
             pair "sensitive" true
         pair "attachment" [
-            for attachment in post.attachments do
-                match attachment with
-                | Image image -> dict [
-                    pair "type" "Document"
-                    pair "mediaType" image.mediaType
-                    pair "url" image.url
-                ]
+            for image in post.images do dict [
+                pair "type" "Document"
+                pair "mediaType" image.mediaType
+                pair "url" image.url
+            ]
         ]
     ]
 
