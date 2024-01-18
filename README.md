@@ -6,8 +6,8 @@ using Azure Functions and Azure Cosmos DB. It is intended for users who:
 * post artwork to Weasyl
 * have an ActivityPub account elsewhere (e.g. Mastodon) but want to keep
   artwork on a separate account
-* have an Azure account, are familiar with deploying .NET web apps, and are
-  comfortable setting things up in the portal
+* have an Azure account, are familiar with deploying .NET web apps from Visual
+ Studio, and are comfortable setting things up in the Azure portal
 
 Crowmask is written mostly in C# with some parts in F#.
 
@@ -16,15 +16,18 @@ automated user account, using the name, info, avatar, and submissions of the
 Weasyl user who created the API key. This user account can be followed by
 users on Mastodon, Pixelfed, and microblog.pub, among others.
 
-Submissions (retrieved from the Weasyl API) are mapped to `Note` objects.
+Submissions (retrieved from the Weasyl API) are mapped to `Note` objects. A
+future version of Crowmask will add specialized support for non-visual
+submisisions, and may map them to another object type.
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 Crowmask will send a private message to the "admin actor" defined in its
 configuration variables and shown on its profile page.
 
-Outgoing calls (like "accept follow" or "create new post") are processed every
-five minutes. Weasyl profile data and recent submissions are updated hourly;
-older submissions are updated daily.
+Outgoing activities (like "accept follow" or "create new post") are processed
+every minute. Submissions are updated periodically, ranging from every ten
+minutes (for submissions less than an hour old) to every 28 days (for those
+over 28 days old). User profile data is updated hourly.
 
 ## Browsing
 
@@ -110,9 +113,10 @@ HTTP endpoints:
 
 Timed functions:
 
-* `RefreshUpstream`: Checks Weasyl for recent posts (stopping when a post is more than a day old), updating cache as needed, then sends outbound activities (every ten minutes)
-* `RefreshCached`: Attempts cache refresh for all stale cached posts (every day at 23:56)
-* `OutboundActivityCleanup`: Remove any unsent `OutboundActivity` objects more than 7 days old (every hour)
+* `RefreshCached` (every day at 23:56)
+* `RefreshProfile` (every hour at :05)
+* `RefreshUpstream` (every ten minutes)
+* `SendOutbound` (every hour at :02)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
