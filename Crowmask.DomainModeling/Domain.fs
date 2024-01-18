@@ -27,9 +27,6 @@ type Image = {
     url: string
 }
 
-/// An attachment to a post.
-type Attachment = Image of Image
-
 /// A sensitivity level for a post - either general, or with a specific warning.
 type Sensitivity = General | Sensitive of warning: string
 
@@ -78,7 +75,7 @@ type Post = {
     url: string
     first_upstream: DateTimeOffset
     first_cached: DateTimeOffset
-    attachments: Attachment list
+    images: Image list
     thumbnails: Image list
     sensitivity: Sensitivity
     tags: string list
@@ -159,7 +156,7 @@ module Domain =
         ]
     }
 
-    let AsNote(submission: Submission) = {
+    let AsPost(submission: Submission) = {
         submitid = submission.SubmitId
         title = submission.Title
         content = String.concat "\n" [
@@ -170,16 +167,19 @@ module Domain =
                     let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
                     $"<a href='{WebUtility.HtmlEncode href}' rel='tag'>#{WebUtility.HtmlEncode tag.Tag}</a>"
             ]
+
+            // TODO: add "View on Weasyl" link for new posts
         ]
         url = submission.Link
         first_upstream = submission.PostedAt
         first_cached = submission.FirstCachedAt
-        attachments = [
-            for media in submission.Media do
-                Image {
-                    mediaType = media.ContentType
-                    url = media.Url
-                }
+        images = [
+            if submission.Visual then
+                for media in submission.Media do
+                    {
+                        mediaType = media.ContentType
+                        url = media.Url
+                    }
         ]
         thumbnails = [
             for thumbnail in submission.Thumbnails do

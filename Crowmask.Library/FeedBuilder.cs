@@ -22,8 +22,8 @@ namespace Crowmask.Library.Feed
         {
             if (post.sensitivity.IsGeneral)
             {
-                foreach (var attachment in post.attachments)
-                    yield return $"<p><img src='{attachment.Item.url}' height='250' /></p>";
+                foreach (var image in post.images)
+                    yield return $"<p><img src='{image.url}' height='250' /></p>";
                 yield return post.content;
             }
             else if (post.sensitivity is Sensitivity.Sensitive s)

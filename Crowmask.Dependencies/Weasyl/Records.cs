@@ -50,6 +50,7 @@ namespace Crowmask.Dependencies.Weasyl
         bool friends_only,
         FSharpSet<string> tags,
         int submitid,
+        string subtype,
         string description);
 
     public record WeasylGallery(

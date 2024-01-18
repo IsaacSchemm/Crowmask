@@ -16,9 +16,9 @@ automated user account, using the name, info, avatar, and submissions of the
 Weasyl user who created the API key. This user account can be followed by
 users on Mastodon, Pixelfed, and microblog.pub, among others.
 
-Submissions (retrieved from the Weasyl API) are mapped to `Note` objects. A
-future version of Crowmask will add specialized support for non-visual
-submisisions, and may map them to another object type.
+Submissions (retrieved from the Weasyl API) are mapped to `Note` objects (if
+the submission type is Visual and there is at least one image attached), or
+`Page` objects (in other cases).
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 Crowmask will send a private message to the "admin actor" defined in its
