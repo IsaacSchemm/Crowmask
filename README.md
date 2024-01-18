@@ -87,7 +87,7 @@ Layers:
     * **Signatures**: HTTP signature validation, adapted from
       [Letterbook](https://github.com/Letterbook/Letterbook).
     * **Remote**: Talks to other ActivityPub servers.
-    * **Feed**: Implements RSS and Atom feeds.
+    * **FeedBuilder**: Implements RSS and Atom feeds.
     * **RemoteInboxLocator**: Collects inbox URLs for the admin actor, followers, and other known servers.
     * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
     * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
