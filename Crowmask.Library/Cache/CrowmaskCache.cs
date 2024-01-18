@@ -163,15 +163,28 @@ namespace Crowmask.Library.Cache
 
                         foreach (string inbox in await GetDistinctInboxesAsync())
                         {
+                            var post = Domain.AsNote(cachedSubmission);
+
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox,
                                 JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    translator.ObjectToDelete(
-                                        Domain.AsNote(cachedSubmission))),
+                                    translator.ObjectToDelete(post)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
+
+                            foreach (var interaction in post.Interactions)
+                            {
+                                Context.OutboundActivities.Add(new OutboundActivity
+                                {
+                                    Id = Guid.NewGuid(),
+                                    Inbox = inbox,
+                                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                        translator.PrivateNoteToDelete(post, interaction)),
+                                    StoredAt = DateTimeOffset.UtcNow
+                                });
+                            }
                         }
 
                         await Context.SaveChangesAsync();
