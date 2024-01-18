@@ -17,18 +17,13 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(ActivityStreamsIdMapper mapper, CrowmaskCache cache, DatabaseActions databaseActions, MastodonVerifier mastodonVerifier, RemoteActions remoteActions, Requester requester)
+    public class Inbox(
+        ActivityStreamsIdMapper mapper,
+        CrowmaskCache cache,
+        InboxHandler inboxHandler,
+        MastodonVerifier mastodonVerifier,
+        Requester requester)
     {
-        /// <summary>
-        /// Sends messages to the admin actor to add or remove private
-        /// notifications as appropriate.
-        /// </summary>
-        /// <param name="post">The post, before any changes; the same post will be re-read from the cache</param>
-        private async Task SynchronizeAdminActorNotificationsAsync(Post post) {
-            if (await cache.GetSubmissionAsync(post.submitid) is CacheResult.PostResult newResult)
-                await remoteActions.UpdateAdminActorNotificationsAsync(post, newResult.Post);
-        }
-
         private static readonly IEnumerable<JToken> Empty = [];
 
         /// <summary>
@@ -70,16 +65,16 @@ namespace Crowmask.Functions
             string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
             var actor = await requester.FetchActorAsync(actorId);
 
-            //// Verify HTTP signature against the public key
-            //var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
-            //    req.AsIRequest(),
-            //    actor);
+            // Verify HTTP signature against the public key
+            var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
+                req.AsIRequest(),
+                actor);
 
-            //if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
-            //    return req.CreateResponse(HttpStatusCode.Forbidden);
+            if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
+                return req.CreateResponse(HttpStatusCode.Forbidden);
 
             // If we've never seen this inbox before, record it so we can send it Update and Delete messages
-            await databaseActions.AddKnownInboxAsync(actor);
+            await inboxHandler.AddKnownInboxAsync(actor);
 
             string type = expansion[0]["@type"].Single().Value<string>();
 
@@ -87,8 +82,7 @@ namespace Crowmask.Functions
             {
                 string objectId = expansion[0]["@id"].Value<string>();
 
-                await databaseActions.AddFollowAsync(objectId, actor);
-                await remoteActions.AcceptFollowAsync(objectId, actor);
+                await inboxHandler.AddFollowAsync(objectId, actor);
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
             }
@@ -98,7 +92,7 @@ namespace Crowmask.Functions
                 {
                     string objectId = objectToUndo["@id"].Value<string>();
 
-                    await databaseActions.RemoveFollowAsync(objectId);
+                    await inboxHandler.RemoveFollowAsync(objectId);
 
                     // Figure out which post the ID belongs to (if any)
                     await foreach (var post in cache.GetRelevantCachedPostsAsync(objectId))
@@ -106,13 +100,10 @@ namespace Crowmask.Functions
                         // If the ID to undo is the ID of a boost or like, then undo it
                         foreach (var boost in post.boosts)
                             if (boost.actor_id == actor.Id && boost.activity_id == objectId)
-                                await databaseActions.RemoveInteractionAsync(post.submitid, boost.id);
+                                await inboxHandler.RemoveInteractionAsync(post.submitid, boost.id);
                         foreach (var like in post.likes)
                             if (like.actor_id == actor.Id && like.activity_id == objectId)
-                                await databaseActions.RemoveInteractionAsync(post.submitid, like.id);
-
-                        // Remove notifications to the admin actor of now-removed likes and boosts
-                        await SynchronizeAdminActorNotificationsAsync(post);
+                                await inboxHandler.RemoveInteractionAsync(post.submitid, like.id);
                     }
                 }
 
@@ -138,13 +129,10 @@ namespace Crowmask.Functions
                     // Remove any previous likes on this post by this actor
                     foreach (var like in post.likes)
                         if (like.actor_id == actor.Id)
-                            await databaseActions.RemoveInteractionAsync(submitid, like.id);
+                            await inboxHandler.RemoveInteractionAsync(submitid, like.id);
 
                     // Add the new like
-                    await databaseActions.AddLikeAsync(submitid, activityId, actor);
-
-                    // Notify the admin actor of the new like
-                    await SynchronizeAdminActorNotificationsAsync(post);
+                    await inboxHandler.AddLikeAsync(submitid, activityId, actor);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -168,10 +156,7 @@ namespace Crowmask.Functions
 
                     // Add the boost to the post, unless it's a boost we already know about
                     if (!post.boosts.Select(boost => boost.activity_id).Contains(activityId))
-                        await databaseActions.AddBoostAsync(submitid, activityId, actor);
-
-                    // Notify the admin actor of the new boost
-                    await SynchronizeAdminActorNotificationsAsync(post);
+                        await inboxHandler.AddBoostAsync(submitid, activityId, actor);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -205,10 +190,7 @@ namespace Crowmask.Functions
 
                         // Add the reply to the post, unless it's a reply we already know about
                         if (!post.replies.Select(reply => reply.object_id).Contains(replyId))
-                            await databaseActions.AddReplyAsync(submitid, replyId, actor);
-
-                        // Notify the admin actor of the new boost
-                        await SynchronizeAdminActorNotificationsAsync(post);
+                            await inboxHandler.AddReplyAsync(submitid, replyId, actor);
 
                         reply = true;
                     }
@@ -221,8 +203,7 @@ namespace Crowmask.Functions
                             .Select(token => token["@id"].Value<string>());
                         if (recipients.Contains(mapper.ActorId))
                         {
-                            var remotePost = await databaseActions.AddMentionAsync(replyId, actor);
-                            await remoteActions.SendNotificationAsync(remotePost);
+                            await inboxHandler.AddMentionAsync(replyId, actor);
                         }
                     }
                 }
@@ -241,14 +222,10 @@ namespace Crowmask.Functions
                         // If the actor who sent the Delete request was the actor who originally posted the reply, then delete it from our cache
                         foreach (var reply in post.replies)
                             if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)
-                                await databaseActions.RemoveInteractionAsync(post.submitid, reply.id);
-
-                        // Remove notifications to the admin actor of now-removed replies
-                        await SynchronizeAdminActorNotificationsAsync(post);
+                                await inboxHandler.RemoveInteractionAsync(post.submitid, reply.id);
                     }
 
-                    foreach (var remotePost in await databaseActions.RemoveMentionsAsync([deletedObjectId], actor))
-                        await remoteActions.RemoveNotificationAsync(remotePost);
+                    await inboxHandler.RemoveMentionsAsync([deletedObjectId], actor);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);

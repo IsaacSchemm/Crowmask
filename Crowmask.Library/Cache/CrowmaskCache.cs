@@ -12,7 +12,14 @@ namespace Crowmask.Library.Cache
     /// Accesses cached posts and user information from the Crowmask database,
     /// and refreshes cached information from Weasyl when stale or missing.
     /// </summary>
-    public class CrowmaskCache(CrowmaskDbContext Context, IHttpClientFactory httpClientFactory, IInteractionLookup interactionLookup, ICrowmaskKeyProvider KeyProvider, ActivityPubTranslator translator, WeasylClient weasylClient)
+    public class CrowmaskCache(
+        ActivityPubTranslator translator,
+        CrowmaskDbContext Context,
+        ICrowmaskKeyProvider KeyProvider,
+        IHttpClientFactory httpClientFactory,
+        IInteractionLookup interactionLookup,
+        RemoteInboxLocator inboxLocator,
+        WeasylClient weasylClient)
     {
         /// <summary>
         /// Finds the Content-Type of a remote URL.
@@ -161,10 +168,10 @@ namespace Crowmask.Library.Cache
                     {
                         Context.Submissions.Remove(cachedSubmission);
 
+                        var post = Domain.AsNote(cachedSubmission);
+
                         foreach (string inbox in await GetDistinctInboxesAsync())
                         {
-                            var post = Domain.AsNote(cachedSubmission);
-
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
@@ -173,18 +180,18 @@ namespace Crowmask.Library.Cache
                                     translator.ObjectToDelete(post)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
+                        }
 
-                            foreach (var interaction in post.Interactions)
+                        foreach (var interaction in post.Interactions)
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
                             {
-                                Context.OutboundActivities.Add(new OutboundActivity
-                                {
-                                    Id = Guid.NewGuid(),
-                                    Inbox = inbox,
-                                    JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                        translator.PrivateNoteToDelete(post, interaction)),
-                                    StoredAt = DateTimeOffset.UtcNow
-                                });
-                            }
+                                Id = Guid.NewGuid(),
+                                Inbox = await inboxLocator.GetAdminActorInboxAsync(),
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                    translator.PrivateNoteToDelete(post, interaction)),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
                         }
 
                         await Context.SaveChangesAsync();
