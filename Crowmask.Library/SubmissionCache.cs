@@ -106,6 +106,7 @@ namespace Crowmask.Library
                     cachedSubmission.Title = weasylSubmission.title;
 
                     cachedSubmission.Link = weasylSubmission.link;
+                    cachedSubmission.TitleLink = true;
 
                     var newSubmission = Domain.AsPost(cachedSubmission);
 

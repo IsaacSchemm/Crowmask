@@ -40,8 +40,8 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Creates a string/object pair (F# tuple) with the given key and value.
     let pair key value = (key, value :> obj)
 
-    /// Checks whether the string is restricted to characters in the set that
-    /// Weasyl allows for tags, which is a subset of what Mastodon allows.
+    /// Checks whether the character is in the set that Weasyl allows for
+    /// tags, which is a subset of what Mastodon allows.
     let isRestrictedSet c =
         Char.IsAscii(c)
         && (Char.IsLetterOrDigit(c) || c = '_')
@@ -99,7 +99,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "object" (this.PersonToObject person key)
     ]
 
-    /// Builds a Note or Article object for a submission.
+    /// Builds a Note object for a submission.
     member _.AsObject (post: Post) = dict [
         let backdate =
             post.first_cached - post.first_upstream > TimeSpan.FromHours(24)
@@ -114,12 +114,9 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "shares" $"{id}?view=shares"
         pair "comments" $"{id}?view=comments"
 
-        match post.images with
-        | _::_ -> pair "type" "Note"
-        | [] -> pair "type" "Page"
+        pair "type" "Note"
 
         pair "attributedTo" actor
-        pair "name" post.title
         pair "content" post.content
         pair "tag" [
             for tag in post.tags do

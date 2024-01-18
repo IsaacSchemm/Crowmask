@@ -160,15 +160,16 @@ module Domain =
         submitid = submission.SubmitId
         title = submission.Title
         content = String.concat "\n" [
+            if submission.TitleLink = Nullable(true) then
+                $"<a href='{WebUtility.HtmlEncode(submission.Link)}' rel='tag'><b>{WebUtility.HtmlEncode(submission.Title)}</b></a>"
+
             submission.Content
 
             String.concat " " [
                 for tag in submission.Tags do
                     let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
-                    $"<a href='{WebUtility.HtmlEncode href}' rel='tag'>#{WebUtility.HtmlEncode tag.Tag}</a>"
+                    $"<a href='{WebUtility.HtmlEncode(href)}' rel='tag'>#{WebUtility.HtmlEncode(tag.Tag)}</a>"
             ]
-
-            // TODO: add "View on Weasyl" link for new posts
         ]
         url = submission.Link
         first_upstream = submission.PostedAt

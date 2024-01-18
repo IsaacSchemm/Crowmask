@@ -108,8 +108,6 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $"img {{ width: 640px; max-width: 100vw; height: 480px; object-fit: contain }}"
         $"</style>"
         $""
-        $"## {enc post.title}"
-        $""
         match post.sensitivity with
         | General ->
             for image in post.images do
