@@ -1,6 +1,6 @@
 using Crowmask.DomainModeling;
 using Crowmask.Formats;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Crowmask.Functions
 {
     public class Outbox(
-        CrowmaskCache crowmaskCache,
+        SubmissionCache cache,
         ActivityPubTranslator translator,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator)
@@ -23,7 +23,7 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
-            int count = await crowmaskCache.GetCachedSubmissionCountAsync();
+            int count = await cache.GetCachedSubmissionCountAsync();
 
             var gallery = Domain.AsGallery(count: count);
 

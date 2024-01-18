@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Crowmask.Data;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.Functions
 {
-    public class RefreshCached(CrowmaskCache crowmaskCache, CrowmaskDbContext context)
+    public class RefreshCached(SubmissionCache cache, CrowmaskDbContext context)
     {
         /// <summary>
         /// Refreshes the cache for up to 100 cached posts that Crowmask says
@@ -36,7 +36,7 @@ namespace Crowmask.Functions
             }
 
             foreach (int submitid in ids)
-                await crowmaskCache.GetSubmissionAsync(submitid);
+                await cache.RefreshSubmissionAsync(submitid);
         }
     }
 }

@@ -68,18 +68,6 @@ namespace Crowmask.Data
         public IEnumerable<UserLink> Links { get; set; } = new List<UserLink>(0);
 
         /// <summary>
-        /// The most recent date/time when Crowmask tried to update this
-        /// object.
-        /// </summary>
-        public DateTimeOffset CacheRefreshAttemptedAt { get; set; }
-
-        /// <summary>
-        /// The most recent date/time when Crowmask successfully updated this
-        /// object. (It may not have changed.)
-        /// </summary>
-        public DateTimeOffset CacheRefreshSucceededAt { get; set; }
-
-        /// <summary>
         /// The display name to use over ActivityPub.
         /// </summary>
         [NotMapped]
@@ -90,32 +78,5 @@ namespace Crowmask.Data
         /// </summary>
         [NotMapped]
         public string Summary => ProfileText ?? "";
-
-        /// <summary>
-        /// Whether Crowmask considers the cached user information "stale".
-        /// This is used in CrowmaskCache to decide whether to call out to
-        /// Weasyl and re-fetch the information.
-        /// </summary>
-        public bool Stale
-        {
-            get
-            {
-                var now = DateTimeOffset.UtcNow;
-
-                bool refreshed_within_1_hour =
-                    now - CacheRefreshSucceededAt < TimeSpan.FromHours(1);
-
-                bool refresh_attempted_within_4_minutes =
-                    now - CacheRefreshAttemptedAt < TimeSpan.FromMinutes(4);
-
-                if (refresh_attempted_within_4_minutes)
-                    return false;
-
-                if (refreshed_within_1_hour)
-                    return false;
-
-                return true;
-            }
-        }
     }
 }

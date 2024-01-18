@@ -6,7 +6,6 @@ using Crowmask.Dependencies.Weasyl;
 using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Crowmask.Library;
-using Crowmask.Library.Cache;
 using Crowmask.Library.Feed;
 using Crowmask.Library.Remote;
 using Crowmask.Library.Signatures;
@@ -64,7 +63,7 @@ var host = new HostBuilder()
         services.AddScoped<ActivityPubTranslator>();
         services.AddScoped<ActivityStreamsIdMapper>();
         services.AddScoped<ContentNegotiator>();
-        services.AddScoped<CrowmaskCache>();
+        services.AddScoped<SubmissionCache>();
         services.AddScoped<FeedBuilder>();
         services.AddScoped<InboxHandler>();
         services.AddScoped<MarkdownTranslator>();

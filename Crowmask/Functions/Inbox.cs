@@ -1,6 +1,6 @@
 using Crowmask.Dependencies.Mapping;
 using Crowmask.DomainModeling;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Crowmask.Library.Remote;
 using Crowmask.Library.Signatures;
 using JsonLD.Core;
@@ -19,7 +19,7 @@ namespace Crowmask.Functions
 {
     public class Inbox(
         ActivityStreamsIdMapper mapper,
-        CrowmaskCache cache,
+        SubmissionCache cache,
         InboxHandler inboxHandler,
         MastodonVerifier mastodonVerifier,
         Requester requester)
@@ -121,7 +121,7 @@ namespace Crowmask.Functions
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
+                    if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     var post = pr.Post;
@@ -149,7 +149,7 @@ namespace Crowmask.Functions
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
+                    if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     var post = pr.Post;
@@ -183,7 +183,7 @@ namespace Crowmask.Functions
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         // Get the cached post that corresponds to this ID, if any
-                        if (await cache.GetSubmissionAsync(submitid) is not CacheResult.PostResult pr)
+                        if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         var post = pr.Post;

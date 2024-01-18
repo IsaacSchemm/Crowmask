@@ -1,6 +1,6 @@
 using Crowmask.Formats;
 using Crowmask.Interfaces;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 namespace Crowmask.Functions
 {
     public class Actor(
-        CrowmaskCache crowmaskCache,
         ICrowmaskKeyProvider keyProvider,
         IHandleName handleName,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
-        ActivityPubTranslator translator)
+        ActivityPubTranslator translator,
+        UserCache userCache)
     {
         /// <summary>
         /// Returns information about the sole ActivityPub actor exposed by
@@ -26,7 +26,7 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor")] HttpRequestData req)
         {
-            var person = await crowmaskCache.GetUserAsync();
+            var person = await userCache.GetUserAsync();
 
             var key = await keyProvider.GetPublicKeyAsync();
 

@@ -6,16 +6,14 @@ using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
 
-namespace Crowmask.Library.Cache
+namespace Crowmask.Library
 {
     /// <summary>
-    /// Accesses cached posts and user information from the Crowmask database,
-    /// and refreshes cached information from Weasyl when stale or missing.
+    /// Accesses and updates cached submission information in the Crowmask database.
     /// </summary>
-    public class CrowmaskCache(
+    public class SubmissionCache(
         ActivityPubTranslator translator,
         CrowmaskDbContext Context,
-        ICrowmaskKeyProvider KeyProvider,
         IHttpClientFactory httpClientFactory,
         IInteractionLookup interactionLookup,
         RemoteInboxLocator inboxLocator,
@@ -38,41 +36,15 @@ namespace Crowmask.Library.Cache
         }
 
         /// <summary>
-        /// Gets a set of ActivityPub inboxes to send a message to.
-        /// </summary>
-        /// <param name="followersOnly">Whether to limit the message to only followers' servers. If false, Crowmask will include all known servers.</param>
-        /// <returns>A set of inbox URLs</returns>
-        private async Task<IReadOnlySet<string>> GetDistinctInboxesAsync(bool followersOnly = false)
-        {
-            HashSet<string> inboxes = [];
-
-            // Go through follower inboxes first - prefer shared inbox if present
-            await foreach (var follower in Context.Followers.AsAsyncEnumerable())
-                inboxes.Add(follower.SharedInbox ?? follower.Inbox);
-
-            // Then include all other known inboxes, if enabled
-            if (!followersOnly)
-                await foreach (var known in Context.KnownInboxes.AsAsyncEnumerable())
-                    inboxes.Add(known.Inbox);
-
-            return inboxes;
-        }
-
-        /// <summary>
-        /// Pulls a submission from Crowmask's database, or attempts a refresh
-        /// from Weasyl if the submission is stale or absent. New, updated,
-        /// and deleted posts will generate new ActivityPub messages.
+        /// Checks the information for the given submission in Crowmask's
+        /// database (if any), and fetches new information from Weasyl if the
+        /// submission is stale or absent. New, updated, and deleted postswill generate new ActivityPub messages.
         /// </summary>
         /// <param name="submitid">The submission ID</param>
         /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> GetSubmissionAsync(int submitid)
+        public async Task<CacheResult> RefreshSubmissionAsync(int submitid)
         {
             var cachedSubmission = await Context.Submissions
-                .Include(s => s.Boosts)
-                .Include(s => s.Likes)
-                .Include(s => s.Replies)
-                .Include(s => s.Media)
-                .Include(s => s.Tags)
                 .Where(s => s.SubmitId == submitid)
                 .SingleOrDefaultAsync();
 
@@ -142,7 +114,7 @@ namespace Crowmask.Library.Cache
 
                     if (changed && !backfill)
                     {
-                        foreach (string inbox in await GetDistinctInboxesAsync(followersOnly: newlyCreated))
+                        foreach (string inbox in await inboxLocator.GetDistinctInboxesAsync(followersOnly: newlyCreated))
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
@@ -170,7 +142,7 @@ namespace Crowmask.Library.Cache
 
                         var post = Domain.AsNote(cachedSubmission);
 
-                        foreach (string inbox in await GetDistinctInboxesAsync())
+                        foreach (string inbox in await inboxLocator.GetDistinctInboxesAsync())
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
@@ -206,6 +178,23 @@ namespace Crowmask.Library.Cache
                     ? CacheResult.PostNotFound
                     : CacheResult.NewPostResult(Domain.AsNote(cachedSubmission));
             }
+        }
+
+        /// <summary>
+        /// Gets cached submission information from Crowmask's database
+        /// without making an upstream call to Weasyl, even if the information
+        /// is stale or absent.
+        /// </summary>
+        /// <param name="submitid"></param>
+        /// <returns></returns>
+        public async Task<CacheResult> GetCachedSubmissionAsync(int submitid)
+        {
+            var cachedSubmission = await Context.Submissions
+                .Where(s => s.SubmitId == submitid)
+                .SingleOrDefaultAsync();
+            return cachedSubmission != null
+                ? CacheResult.NewPostResult(Domain.AsNote(cachedSubmission))
+                : CacheResult.PostNotFound;
         }
 
         /// <summary>
@@ -252,87 +241,8 @@ namespace Crowmask.Library.Cache
         public async IAsyncEnumerable<Post> GetRelevantCachedPostsAsync(string activity_or_reply_id)
         {
             await foreach (int submitid in interactionLookup.GetRelevantSubmitIdsAsync(activity_or_reply_id))
-                if (await GetSubmissionAsync(submitid) is CacheResult.PostResult r)
+                if (await GetCachedSubmissionAsync(submitid) is CacheResult.PostResult r)
                     yield return r.Post;
-        }
-
-        /// <summary>
-        /// Pulls user profile information from Crowmask's database, or
-        /// attempts a refresh from Weasyl if the information is stale or
-        /// absent. Any changes will generate new ActivityPub messages.
-        /// </summary>
-        /// <returns>A Person object</returns>
-        public async Task<Person> GetUserAsync()
-        {
-            var cachedUser = await Context.GetUserAsync();
-
-            if (!cachedUser.Stale)
-                return Domain.AsPerson(cachedUser);
-
-            cachedUser.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
-            await Context.SaveChangesAsync();
-
-            var weasylUser = await weasylClient.GetMyUserAsync();
-
-            var oldUser = Domain.AsPerson(cachedUser);
-
-            cachedUser.Username = weasylUser.username;
-            cachedUser.FullName = weasylUser.full_name;
-            cachedUser.ProfileText = weasylUser.profile_text;
-            cachedUser.Url = weasylUser.link;
-            cachedUser.Avatars = weasylUser.media.avatar
-                .Select(a => new UserAvatar
-                {
-                    Id = Guid.NewGuid(),
-                    Url = a.url
-                })
-                .ToList();
-            cachedUser.Age = weasylUser.user_info.age;
-            cachedUser.Gender = weasylUser.user_info.gender;
-            cachedUser.Location = weasylUser.user_info.location;
-
-            IEnumerable<UserLink> recreateUserLinks()
-            {
-                foreach (var pair in weasylUser!.user_info.user_links)
-                {
-                    foreach (var value in pair.Value)
-                    {
-                        yield return new UserLink
-                        {
-                            Id = Guid.NewGuid(),
-                            Site = pair.Key,
-                            UsernameOrUrl = value
-                        };
-                    }
-                }
-            }
-            cachedUser.Links = recreateUserLinks().ToList();
-
-            var newUser = Domain.AsPerson(cachedUser);
-
-            if (!oldUser.Equals(newUser))
-            {
-                var key = await KeyProvider.GetPublicKeyAsync();
-
-                foreach (string inbox in await GetDistinctInboxesAsync())
-                {
-                    Context.OutboundActivities.Add(new OutboundActivity
-                    {
-                        Id = Guid.NewGuid(),
-                        Inbox = inbox,
-                        JsonBody = ActivityPubSerializer.SerializeWithContext(
-                            translator.PersonToUpdate(
-                                newUser,
-                                key)),
-                        StoredAt = DateTimeOffset.UtcNow
-                    });
-                }
-            }
-
-            cachedUser.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
-            await Context.SaveChangesAsync();
-
-            return newUser;
         }
     }
 }

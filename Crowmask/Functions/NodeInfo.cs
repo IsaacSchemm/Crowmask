@@ -1,5 +1,5 @@
 using Crowmask.Interfaces;
-using Crowmask.Library.Cache;
+using Crowmask.Library;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class NodeInfo(CrowmaskCache crowmaskCache, IHandleHost handleHost, IHandleName handleName)
+    public class NodeInfo(SubmissionCache cache, IHandleHost handleHost, IHandleName handleName, UserCache userCache)
     {
         /// <summary>
         /// Returns a NodeInfo 2.2 response with information about the user and about Crowmask.
@@ -21,9 +21,9 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/nodeinfo")] HttpRequestData req)
         {
-            var user = await crowmaskCache.GetUserAsync();
+            var user = await userCache.GetUserAsync();
 
-            int postCount = await crowmaskCache.GetCachedSubmissionCountAsync();
+            int postCount = await cache.GetCachedSubmissionCountAsync();
 
             var resp = req.CreateResponse(HttpStatusCode.OK);
             resp.Headers.Add("Content-Type", $"application/json; charset=utf-8");
