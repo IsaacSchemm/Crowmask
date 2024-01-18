@@ -1,7 +1,9 @@
 ﻿using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Formats;
+using Crowmask.Library;
 using Crowmask.Library.Remote;
+using JsonLD.Util;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,7 +16,7 @@ namespace Crowmask
     /// Provides a way for the inbox handler to make changes in Crowmask's
     /// database, outside of what CrowmaskCache can do.
     /// </summary>
-    public class DatabaseActions(CrowmaskDbContext context)
+    public class InboxHandler(ActivityPubTranslator translator, CrowmaskDbContext context, RemoteInboxLocator locator)
     {
         /// <summary>
         /// Adds an actor's shared inbox (or personal inbox, if there is none
@@ -45,25 +47,25 @@ namespace Crowmask
             }
         }
 
-        /// <summary>
-        /// Adds a new outbound activity to the Crowmask database, addressed
-        /// to a single actor, to be sent by the RefreshUpstream function.
-        /// </summary>
-        /// <param name="obj">The object (from the Translator module) to serialize as JSON-LD</param>
-        /// <param name="remoteActor">The actor to send the object to</param>
-        /// <returns></returns>
-        public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, RemoteActor remoteActor)
-        {
-            context.OutboundActivities.Add(new OutboundActivity
-            {
-                Id = Guid.NewGuid(),
-                Inbox = remoteActor.Inbox,
-                JsonBody = ActivityPubSerializer.SerializeWithContext(obj),
-                StoredAt = DateTimeOffset.UtcNow
-            });
+        ///// <summary>
+        ///// Adds a new outbound activity to the Crowmask database, addressed
+        ///// to a single actor, to be sent by the RefreshUpstream function.
+        ///// </summary>
+        ///// <param name="obj">The object (from the Translator module) to serialize as JSON-LD</param>
+        ///// <param name="remoteActor">The actor to send the object to</param>
+        ///// <returns></returns>
+        //public async Task AddOutboundActivityAsync(IDictionary<string, object> obj, RemoteActor remoteActor)
+        //{
+        //    context.OutboundActivities.Add(new OutboundActivity
+        //    {
+        //        Id = Guid.NewGuid(),
+        //        Inbox = remoteActor.Inbox,
+        //        JsonBody = ActivityPubSerializer.SerializeWithContext(obj),
+        //        StoredAt = DateTimeOffset.UtcNow
+        //    });
 
-            await context.SaveChangesAsync();
-        }
+        //    await context.SaveChangesAsync();
+        //}
 
         /// <summary>
         /// Adds a follower to the database. If the follower already exists,
@@ -91,6 +93,15 @@ namespace Crowmask
                     MostRecentFollowId = objectId,
                     Inbox = actor.Inbox,
                     SharedInbox = actor.SharedInbox
+                });
+
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = actor.Inbox,
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.AcceptFollow(objectId)),
+                    StoredAt = DateTimeOffset.UtcNow
                 });
             }
 
@@ -122,14 +133,35 @@ namespace Crowmask
         /// <returns></returns>
         public async Task AddLikeAsync(int submitid, string activityId, RemoteActor actor)
         {
+            Guid newGuid = Guid.NewGuid();
+
             var submission = await context.Submissions.FindAsync(submitid);
             submission.Likes.Add(new Submission.SubmissionLike
             {
-                Id = Guid.NewGuid(),
+                Id = newGuid,
                 AddedAt = DateTimeOffset.UtcNow,
                 ActivityId = activityId,
                 ActorId = actor.Id,
             });
+
+            var newPost = Domain.AsNote(submission);
+
+            foreach (var interaction in newPost.Interactions)
+            {
+                if (interaction.Id != newGuid)
+                    continue;
+
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = await locator.GetAdminActorInboxAsync(),
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToCreate(
+                            newPost,
+                            interaction)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+            }
 
             await context.SaveChangesAsync();
         }
@@ -142,14 +174,35 @@ namespace Crowmask
         /// <param name="actor">The actor who boosted the post</param>
         public async Task AddBoostAsync(int submitid, string activityId, RemoteActor actor)
         {
+            Guid newGuid = Guid.NewGuid();
+
             var submission = await context.Submissions.FindAsync(submitid);
             submission.Boosts.Add(new Submission.SubmissionBoost
             {
-                Id = Guid.NewGuid(),
+                Id = newGuid,
                 AddedAt = DateTimeOffset.UtcNow,
                 ActivityId = activityId,
                 ActorId = actor.Id,
             });
+
+            var newPost = Domain.AsNote(submission);
+
+            foreach (var interaction in newPost.Interactions)
+            {
+                if (interaction.Id != newGuid)
+                    continue;
+
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = await locator.GetAdminActorInboxAsync(),
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToCreate(
+                            newPost,
+                            interaction)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+            }
 
             await context.SaveChangesAsync();
         }
@@ -162,14 +215,35 @@ namespace Crowmask
         /// <param name="actor">The actor who replied to the post</param>
         public async Task AddReplyAsync(int submitid, string replyObjectId, RemoteActor actor)
         {
+            Guid newGuid = Guid.NewGuid();
+
             var submission = await context.Submissions.FindAsync(submitid);
             submission.Replies.Add(new Submission.SubmissionReply
             {
-                Id = Guid.NewGuid(),
+                Id = newGuid,
                 AddedAt = DateTimeOffset.UtcNow,
                 ObjectId = replyObjectId,
                 ActorId = actor.Id,
             });
+
+            var newPost = Domain.AsNote(submission);
+
+            foreach (var interaction in newPost.Interactions)
+            {
+                if (interaction.Id != newGuid)
+                    continue;
+
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = await locator.GetAdminActorInboxAsync(),
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToCreate(
+                            newPost,
+                            interaction)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+            }
 
             await context.SaveChangesAsync();
         }
@@ -183,6 +257,7 @@ namespace Crowmask
         public async Task RemoveInteractionAsync(int submitid, Guid id)
         {
             var submission = await context.Submissions.FindAsync(submitid);
+            var oldPost = Domain.AsNote(submission);
 
             foreach (var boost in submission.Boosts.ToList())
                 if (boost.Id == id)
@@ -194,6 +269,23 @@ namespace Crowmask
                 if (reply.Id == id)
                     submission.Replies.Remove(reply);
 
+            foreach (var interaction in oldPost.Interactions)
+            {
+                if (interaction.Id != id)
+                    continue;
+
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = await locator.GetAdminActorInboxAsync(),
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToDelete(
+                            oldPost,
+                            interaction)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+            }
+
             await context.SaveChangesAsync();
         }
 
@@ -202,15 +294,14 @@ namespace Crowmask
         /// </summary>
         /// <param name="objectIds">The ID of the object (Note, etc.), so Delete requests can be honored</param>
         /// <param name="actor">The actor who created the mention</param>
-        /// <returns>A corresponding RemotePost object with the Crowmask-generated ID</returns>
-        public async Task<RemotePost> AddMentionAsync(string objectId, RemoteActor actor)
+        public async Task AddMentionAsync(string objectId, RemoteActor actor)
         {
             var existingMention = await context.Mentions
                 .Where(m => m.ObjectId == objectId)
                 .Where(m => m.ActorId == actor.Id)
                 .FirstOrDefaultAsync();
             if (existingMention != null)
-                return Domain.AsRemotePost(existingMention);
+                return;
 
             var newMention = new Mention
             {
@@ -222,9 +313,18 @@ namespace Crowmask
 
             context.Mentions.Add(newMention);
 
-            await context.SaveChangesAsync();
+            var remotePost = Domain.AsRemotePost(newMention);
 
-            return Domain.AsRemotePost(newMention);
+            context.OutboundActivities.Add(new OutboundActivity
+            {
+                Id = Guid.NewGuid(),
+                Inbox = await locator.GetAdminActorInboxAsync(),
+                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                    translator.PrivateNoteToCreate(remotePost)),
+                StoredAt = DateTimeOffset.UtcNow
+            });
+
+            await context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -232,19 +332,30 @@ namespace Crowmask
         /// </summary>
         /// <param name="objectIds">The ID(s) of the object(s) (Note, etc.)</param>
         /// <param name="actor">The actor who created the mention</param>
-        /// <returns>A list of RemotePosts that have been removed</returns>
-        public async Task<IReadOnlyList<RemotePost>> RemoveMentionsAsync(IReadOnlyList<string> objectIds, RemoteActor actor)
+        public async Task RemoveMentionsAsync(IReadOnlyList<string> objectIds, RemoteActor actor)
         {
             var existingMentions = await context.Mentions
                 .Where(m => objectIds.Contains(m.ObjectId))
                 .Where(m => m.ActorId == actor.Id)
                 .ToListAsync();
 
-            context.Mentions.RemoveRange(existingMentions);
+            foreach (var existingMention in existingMentions)
+            {
+                var remotePost = Domain.AsRemotePost(existingMention);
+
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = await locator.GetAdminActorInboxAsync(),
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToDelete(remotePost)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+
+                context.Mentions.Remove(existingMention);
+            }
 
             await context.SaveChangesAsync();
-
-            return existingMentions.Select(Domain.AsRemotePost).ToList();
         }
     }
 }
