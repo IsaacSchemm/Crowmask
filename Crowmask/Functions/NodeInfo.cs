@@ -1,5 +1,5 @@
-using Crowmask.Interfaces;
 using Crowmask.HighLevel;
+using Crowmask.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class NodeInfo(SubmissionCache cache, IHandleHost handleHost, IHandleName handleName, UserCache userCache)
+    public class NodeInfo(SubmissionCache cache, IHandle handle, UserCache userCache)
     {
         /// <summary>
         /// Returns a NodeInfo 2.2 response with information about the user and about Crowmask.
@@ -32,7 +32,7 @@ namespace Crowmask.Functions
                 version = "2.2",
                 instance = new
                 {
-                    name = $"@{handleName.PreferredUsername}@{handleHost.Hostname}",
+                    name = $"@{handle.PreferredUsername}@{handle.Hostname}",
                     description = $"An ActivityPub mirror of artwork posted to Weasyl by {user.upstreamUsername}"
                 },
                 software = new

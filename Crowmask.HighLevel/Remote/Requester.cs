@@ -12,7 +12,7 @@ namespace Crowmask.HighLevel.Remote
     /// <summary>
     /// Performs requests to other ActivityPub servers.
     /// </summary>
-    public class Requester(ActivityStreamsIdMapper mapper, ICrowmaskKeyProvider keyProvider, ICrowmaskVersion version, IHttpClientFactory httpClientFactory)
+    public class Requester(ActivityStreamsIdMapper mapper, IActorKeyProvider keyProvider, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory)
     {
         /// <summary>
         /// Fetches and returns an actor.
@@ -101,7 +101,7 @@ namespace Crowmask.HighLevel.Remote
             using var req = new HttpRequestMessage(HttpMethod.Post, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
-            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", version.VersionNumber));
+            req.Headers.UserAgent.ParseAdd(appInfo.UserAgent);
 
             req.Headers.Add("Digest", $"SHA-256={digest}");
 
@@ -126,7 +126,7 @@ namespace Crowmask.HighLevel.Remote
             using var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
-            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", version.VersionNumber));
+            req.Headers.UserAgent.ParseAdd(appInfo.UserAgent);
 
             await AddSignatureAsync(req);
 

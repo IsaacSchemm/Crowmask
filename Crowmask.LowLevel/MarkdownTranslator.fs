@@ -4,9 +4,9 @@ open System.Net
 open Crowmask.Interfaces
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
-/// use in the HTML web interface, or (for debugging) by other non-ActivityPub\
+/// use in the HTML web interface, or (for debugging) by other non-ActivityPub
 /// user agents.
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost, handleName: IHandleName, version: ICrowmaskVersion) =
+type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, handle: IHandle, appInfo: IApplicationInformation) =
     /// Performs HTML encoding on a string. (HTML can be inserted into
     /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode
@@ -17,7 +17,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         "<html>"
         "<head>"
         "<title>"
-        WebUtility.HtmlEncode($"{enc title} - Crowmask")
+        WebUtility.HtmlEncode($"{enc title} - {appInfo.ApplicationName}")
         "</title>"
         "<meta name='viewport' content='width=device-width, initial-scale=1' />"
         "<style type='text/css'>"
@@ -61,8 +61,8 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"## ActivityPub"
         $""
-        for hostname in List.distinct [handleHost.Hostname; crowmaskHost.Hostname] do
-            $"    @{enc handleName.PreferredUsername}@{hostname}"
+        for hostname in List.distinct [handle.Hostname; appInfo.Hostname] do
+            $"    @{enc handle.PreferredUsername}@{hostname}"
         $""
         $"[View gallery](/api/actor/outbox)"
         $""
@@ -78,9 +78,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"--------"
         $""
-        $"[Crowmask](https://github.com/IsaacSchemm/Crowmask) {enc version.VersionNumber} 🐦‍⬛🎭"
-        $""
-        $"Copyright © 2024 Isaac Schemm"
+        $"[{enc appInfo.ApplicationName} {enc appInfo.VersionNumber}]({appInfo.WebsiteUrl}) 🐦‍⬛🎭"
         $""
         $"This program is free software: you can redistribute it and/or modify"
         $"it under the terms of the GNU Affero General Public License as published"

@@ -45,14 +45,14 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         && not (Char.IsUpper(c))
 
     /// Builds a Person object for the Crowmask actor.
-    member _.PersonToObject (person: Person) (key: ICrowmaskKey) (handleName: IHandleName) = dict [
+    member _.PersonToObject (person: Person) (key: IActorKey) (handle: IHandle) = dict [
         pair "id" actor
         pair "type" "Person"
         pair "inbox" $"{actor}/inbox"
         pair "outbox" $"{actor}/outbox"
         pair "followers" $"{actor}/followers"
         pair "following" $"{actor}/following"
-        pair "preferredUsername" handleName.PreferredUsername
+        pair "preferredUsername" handle.PreferredUsername
         pair "name" person.name
         pair "summary" person.summary
         pair "url" actor
@@ -88,7 +88,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     ]
 
     /// Builds a transient Update activity for the Crowmask actor.
-    member this.PersonToUpdate (person: Person) (key: ICrowmaskKey) = dict [
+    member this.PersonToUpdate (person: Person) (key: IActorKey) = dict [
         pair "type" "Update"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor

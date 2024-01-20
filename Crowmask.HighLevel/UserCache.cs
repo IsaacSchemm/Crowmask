@@ -10,7 +10,7 @@ namespace Crowmask.HighLevel
     public class UserCache(
         ActivityPubTranslator translator,
         CrowmaskDbContext context,
-        ICrowmaskKeyProvider keyProvider,
+        IActorKeyProvider keyProvider,
         RemoteInboxLocator inboxLocator,
         WeasylClient weasylClient)
     {

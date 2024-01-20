@@ -10,7 +10,7 @@ namespace Crowmask.HighLevel.Feed
     /// <summary>
     /// Builds Atom and RSS feeds for the outbox.
     /// </summary>
-    public class FeedBuilder(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IHandleName handleName)
+    public class FeedBuilder(ActivityStreamsIdMapper mapper, IApplicationInformation appInfo, IHandle handle)
     {
         /// <summary>
         /// Generates an HTML rendition of the post, including image(s), description, and outgoing link(s).
@@ -66,7 +66,7 @@ namespace Crowmask.HighLevel.Feed
             var feed = new SyndicationFeed
             {
                 Id = uri,
-                Title = new TextSyndicationContent($"@{handleName.PreferredUsername}@{handleHost.Hostname}", TextSyndicationContentKind.Plaintext),
+                Title = new TextSyndicationContent($"@{handle.PreferredUsername}@{handle.Hostname}", TextSyndicationContentKind.Plaintext),
                 Description = new TextSyndicationContent($"Submissions posted to Weasyl by {person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
                 Copyright = new TextSyndicationContent($"{person.upstreamUsername}", TextSyndicationContentKind.Plaintext),
                 LastUpdatedTime = posts.Select(x => x.first_upstream).Max(),
@@ -74,7 +74,7 @@ namespace Crowmask.HighLevel.Feed
                 Items = posts.Select(ToSyndicationItem)
             };
             feed.Links.Add(SyndicationLink.CreateSelfLink(new Uri(uri), "application/rss+xml"));
-            feed.Links.Add(SyndicationLink.CreateAlternateLink(new Uri($"https://{crowmaskHost.Hostname}"), "text/html"));
+            feed.Links.Add(SyndicationLink.CreateAlternateLink(new Uri($"https://{appInfo.Hostname}"), "text/html"));
             return feed;
         }
 

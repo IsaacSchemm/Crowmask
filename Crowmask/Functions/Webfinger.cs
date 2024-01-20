@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(ActivityStreamsIdMapper mapper, ICrowmaskHost crowmaskHost, IHandleHost handleHost, IHandleName handleName, IAdminActor adminActor)
+    public class WebFinger(ActivityStreamsIdMapper mapper, IApplicationInformation appInfo, IHandle handleConfig, IAdminActor adminActor)
     {
         /// <summary>
         /// Points the user agent to the Crowmask actor ID, or redirects to the equivalent endpoint on the admin actor's server.
@@ -25,8 +25,8 @@ namespace Crowmask.Functions
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            string handle = $"acct:{handleName.PreferredUsername}@{handleHost.Hostname}";
-            string alternate = $"acct:{handleName.PreferredUsername}@{crowmaskHost.Hostname}";
+            string handle = $"acct:{handleConfig.PreferredUsername}@{handleConfig.Hostname}";
+            string alternate = $"acct:{handleConfig.PreferredUsername}@{appInfo.Hostname}";
 
             if (resource == handle || resource == mapper.ActorId || resource == alternate)
             {

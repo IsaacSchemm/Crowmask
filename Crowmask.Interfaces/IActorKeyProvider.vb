@@ -1,11 +1,11 @@
 ﻿''' <summary>
 ''' Provides access to Crowmask's signing key.
 ''' </summary>
-Public Interface ICrowmaskKeyProvider
+Public Interface IActorKeyProvider
     ''' <summary>
     ''' Retrieves the public key and renders it in PEM format for use in the ActivityPub actor object.
     ''' </summary>
-    Function GetPublicKeyAsync() As Task(Of ICrowmaskKey)
+    Function GetPublicKeyAsync() As Task(Of IActorKey)
 
     ''' <summary>
     ''' Creates an RSA SHA-256 signature for the given data using the private key.
