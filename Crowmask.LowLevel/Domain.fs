@@ -158,17 +158,22 @@ module Domain =
         title = submission.Title
         content = String.concat "\n" [
             if submission.Visual then
-                $"<b>{WebUtility.HtmlEncode(submission.Title)}</b>"
+                $"<p><b>{WebUtility.HtmlEncode(submission.Title)}</b></p>"
             else
-                $"<a href='{WebUtility.HtmlEncode(submission.Link)}'><b>{WebUtility.HtmlEncode(submission.Title)}</b></a>"
+                $"<p><a href='{WebUtility.HtmlEncode(submission.Link)}'><b>{WebUtility.HtmlEncode(submission.Title)}</b></a></p>"
 
             submission.Content
 
-            String.concat " " [
-                for tag in submission.Tags do
-                    let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
-                    $"<a href='{WebUtility.HtmlEncode(href)}' rel='tag'>#{WebUtility.HtmlEncode(tag.Tag)}</a>"
-            ]
+            if submission.Tags.Count > 0 then
+                String.concat "" [
+                    "<p>"
+                    String.concat " " [
+                        for tag in submission.Tags do
+                            let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
+                            $"<a href='{WebUtility.HtmlEncode(href)}' rel='tag'>#{WebUtility.HtmlEncode(tag.Tag)}</a>"
+                    ]
+                    "</p>"
+                ]
         ]
         url = submission.Link
         first_upstream = submission.PostedAt
