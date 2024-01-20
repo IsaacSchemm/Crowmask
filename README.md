@@ -62,19 +62,7 @@ Layers:
   are specific to the database schema) to more general F# records, then to
   ActivityPub objects or Markdown / HTML pages; maps Crowmask internal IDs to
   ActivityPub IDs; and talks to the Weasyl API.
-* **Crowmask.Formats**:
-    * **ContentNeogtiation**: helps perform content negotiation with the
-      `Accept` header.
-    * **Summarizer**: provides Markdown / HTML summaries of interactions with
-      posts (boosts, likes, and replies) which are shown on the post page and
-      sent in private messages to the admin actor.
-    * **MarkdownTranslator**: Implements the Markdown and HTML UIs by making
-      representations of data available through ActivityPub `GET` endpoints.
-    * **ActivityPub**: converts domain model objects to ActivityPub
-      objects (represented as `IDictionary<string, object>`); serializes these
-      objects to LD-JSON (by manually adding the `@context`), and creates
-      private messages to the admin actor.
-* **Crowmask.Library**:
+* **Crowmask.HighLevel** (C#):
     * **Signatures**: HTTP signature validation, adapted from
       [Letterbook](https://github.com/Letterbook/Letterbook).
     * **Remote**: Talks to other ActivityPub servers.
@@ -82,8 +70,8 @@ Layers:
     * **RemoteInboxLocator**: Collects inbox URLs for the admin actor, followers, and other known servers.
     * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
     * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
-* **Crowmask**: The main Azure Functions project, responsible for handling
-  HTTP requests and running timed functions.
+* **Crowmask** (C#): The main Azure Functions project, responsible for
+  handling HTTP requests and running timed functions.
 
 HTTP endpoints:
 
