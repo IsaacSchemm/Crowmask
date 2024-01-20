@@ -54,23 +54,14 @@ explicitly prefer `application/xml` over `text/html`.
 
 Layers:
 
-* **Crowmask.Interfaces**: contains interfaces used to pass configuration
+* **Crowmask.Interfaces** (VB.NET): contains interfaces used to pass config
   values between layers or to allow inner layers to call outer-layer code.
-* **Crowmask.Data**: contains the data types and and data context, which map
-  to documents in the Cosmos DB backend of EF Core.
-* **Crowmask.DomainModeling**: converts data objects like `Submission` (which
-  are specific to the database schema) to more general F# records with only
-  the properties needed to expose the information via ActivityPub, RSS / Atom,
-  or Markdown / HTML.
-* **Crowmask.Dependencies**:
-    * **Async**: code to merge the results of multiple asynchronous sequences
-      (`IAsyncEnumerable<T>`) into a single sequence by taking the newest
-      items first. Used to combine all posts into a single feed.
-    * **Weasyl**: used to connect to the Weasyl API and retrieve user and
-      submission information.
-    * **Mapping**: contains the `ActivityStreamsIdMapper`, from which other
-      code can derive the ActivityPub IDs / URIs for users, posts, and
-      interaction notifications.
+* **Crowmask.Data** (C#): contains the data types and and data context, which
+  map to documents in the Cosmos DB backend of EF Core.
+* **Crowmask.LowLevel** (F#): converts data objects like `Submission` (which
+  are specific to the database schema) to more general F# records, then to
+  ActivityPub objects or Markdown / HTML pages; maps Crowmask internal IDs to
+  ActivityPub IDs; and talks to the Weasyl API.
 * **Crowmask.Formats**:
     * **ContentNeogtiation**: helps perform content negotiation with the
       `Accept` header.

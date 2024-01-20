@@ -1,9 +1,9 @@
 ﻿using Crowmask.Data;
-using Crowmask.Dependencies.Weasyl;
-using Crowmask.DomainModeling;
 using Crowmask.Formats;
 using Crowmask.Interfaces;
+using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FSharp.Core;
 using System.Net.Http.Headers;
 
 namespace Crowmask.Library
@@ -59,8 +59,8 @@ namespace Crowmask.Library
 
             try
             {
-                WeasylSubmissionDetail? weasylSubmission = await weasylClient.GetMyPublicSubmissionAsync(submitid);
-                if (weasylSubmission != null)
+                var option = await weasylClient.GetMyPublicSubmissionAsync(submitid);
+                if (OptionModule.ToObj(option) is WeasylSubmissionDetail weasylSubmission)
                 {
                     bool newlyCreated = false;
 

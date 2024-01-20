@@ -1,8 +1,7 @@
-using Crowmask.Dependencies.Mapping;
-using Crowmask.DomainModeling;
 using Crowmask.Library;
 using Crowmask.Library.Remote;
 using Crowmask.Library.Signatures;
+using Crowmask.LowLevel;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -25,6 +24,20 @@ namespace Crowmask.Functions
         Requester requester)
     {
         private static readonly IEnumerable<JToken> Empty = [];
+
+        /// <summary>
+        /// Extracts the submission ID, if any, from an ActivityPub object ID.
+        /// </summary>
+        /// <param name="objectId">The ActivityPub ID / URL for a Crowmask post</param>
+        /// <returns>A submission ID, or null</returns>
+        private int? GetSubmitId(string objectId)
+        {
+            return Uri.TryCreate(objectId, UriKind.Absolute, out Uri uri)
+                && int.TryParse(uri.AbsolutePath.Split('/').Last(), out int candidate)
+                && mapper.GetObjectId(candidate) == objectId
+                    ? candidate
+                    : null;
+        }
 
         /// <summary>
         /// Accepts an ActivityPub message. Supported types are:
@@ -117,7 +130,7 @@ namespace Crowmask.Functions
                     string objectId = objectToLike["@id"].Value<string>();
 
                     // Parse the Crowmask ID from the object ID / URL, if any
-                    if (mapper.GetSubmitId(objectId) is not int submitid)
+                    if (GetSubmitId(objectId) is not int submitid)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
@@ -145,7 +158,7 @@ namespace Crowmask.Functions
                     string objectId = objectToBoost["@id"].Value<string>();
 
                     // Parse the Crowmask ID from the object ID / URL, if any
-                    if (mapper.GetSubmitId(objectId) is not int submitid)
+                    if (GetSubmitId(objectId) is not int submitid)
                         return req.CreateResponse(HttpStatusCode.NoContent);
 
                     // Get the cached post that corresponds to this ID, if any
@@ -179,7 +192,7 @@ namespace Crowmask.Functions
                         string objectId = inReplyTo["@id"].Value<string>();
 
                         // Parse the Crowmask ID from the object ID / URL, if any
-                        if (mapper.GetSubmitId(objectId) is not int submitid)
+                        if (GetSubmitId(objectId) is not int submitid)
                             return req.CreateResponse(HttpStatusCode.NoContent);
 
                         // Get the cached post that corresponds to this ID, if any

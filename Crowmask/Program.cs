@@ -1,14 +1,13 @@
 ﻿using Azure.Identity;
 using Crowmask;
 using Crowmask.Data;
-using Crowmask.Dependencies.Mapping;
-using Crowmask.Dependencies.Weasyl;
 using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Crowmask.Library;
 using Crowmask.Library.Feed;
 using Crowmask.Library.Remote;
 using Crowmask.Library.Signatures;
+using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -50,7 +49,7 @@ var host = new HostBuilder()
         if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost)
             services.AddSingleton<IKeyVaultHost>(new Host(keyVaultHost));
 
-        services.AddSingleton<ICrowmaskVersion>(new Version("1.2"));
+        services.AddSingleton<ICrowmaskVersion>(new Version("1.3"));
 
         if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
             services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));

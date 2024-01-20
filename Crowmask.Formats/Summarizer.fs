@@ -2,8 +2,7 @@
 
 open System
 open System.Net
-open Crowmask.DomainModeling
-open Crowmask.Dependencies.Mapping
+open Crowmask.LowLevel
 
 /// Creates Markdown summaries of interactions with a Crowmask post. These
 /// summaries are used in notifications to the admin actor and are shown on

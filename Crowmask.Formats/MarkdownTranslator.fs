@@ -1,9 +1,8 @@
 ﻿namespace Crowmask.Formats
 
 open System.Net
-open Crowmask.DomainModeling
-open Crowmask.Dependencies.Mapping
 open Crowmask.Interfaces
+open Crowmask.LowLevel
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub\
@@ -58,8 +57,6 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
                 $"* {enc metadata.name}: [{enc metadata.value}]({uri})"
             | None ->
                 $"* {enc metadata.name}: {enc metadata.value}"
-        $""
-        $"[View on Weasyl]({person.url})"
         $""
         $"----------"
         $""
