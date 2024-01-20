@@ -157,7 +157,9 @@ module Domain =
         submitid = submission.SubmitId
         title = submission.Title
         content = String.concat "\n" [
-            if submission.TitleLink = Nullable(true) then
+            if submission.Visual then
+                $"<b>{WebUtility.HtmlEncode(submission.Title)}</b>"
+            else
                 $"<a href='{WebUtility.HtmlEncode(submission.Link)}'><b>{WebUtility.HtmlEncode(submission.Title)}</b></a>"
 
             submission.Content
