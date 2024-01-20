@@ -7,7 +7,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Crowmask.Library.Remote
+namespace Crowmask.HighLevel.Remote
 {
     /// <summary>
     /// Performs requests to other ActivityPub servers.

@@ -1,6 +1,6 @@
-using Crowmask.Library;
-using Crowmask.Library.Remote;
-using Crowmask.Library.Signatures;
+using Crowmask.HighLevel;
+using Crowmask.HighLevel.Remote;
+using Crowmask.HighLevel.Signatures;
 using Crowmask.LowLevel;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;

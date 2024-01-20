@@ -1,9 +1,9 @@
 ﻿using Crowmask.Data;
 using Crowmask.Interfaces;
-using Crowmask.Library.Remote;
+using Crowmask.HighLevel.Remote;
 using Microsoft.EntityFrameworkCore;
 
-namespace Crowmask.Library
+namespace Crowmask.HighLevel
 {
     public class RemoteInboxLocator(CrowmaskDbContext context, IAdminActor adminActor, Requester requester)
     {

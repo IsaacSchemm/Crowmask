@@ -6,11 +6,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Crowmask.Interfaces;
-using Crowmask.Library.Remote;
+using Crowmask.HighLevel.Remote;
 using NSign;
 using NSign.Signatures;
 
-namespace Crowmask.Library.Signatures;
+namespace Crowmask.HighLevel.Signatures;
 
 public partial class MastodonVerifier
 {

@@ -1,8 +1,7 @@
-﻿namespace Crowmask.Formats
+﻿namespace Crowmask.LowLevel
 
 open System.Net
 open Crowmask.Interfaces
-open Crowmask.LowLevel
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub\
