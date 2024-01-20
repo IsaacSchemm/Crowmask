@@ -181,9 +181,9 @@ type WeasylClient(version: ICrowmaskVersion, httpClientFactory: IHttpClientFacto
         let mutable page = firstPage
         let mutable finished = false
         while not finished do
-            yield! firstPage.submissions
+            yield! page.submissions
 
-            match firstPage.nextid with
+            match page.nextid with
             | Some x ->
                 let! nextPage = getUserGalleryAsync whoami.login (Next x) DefaultCount
                 page <- nextPage

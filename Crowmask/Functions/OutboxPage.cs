@@ -4,6 +4,7 @@ using Crowmask.Library.Feed;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -28,9 +29,13 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)
         {
-            var posts = int.TryParse(req.Query["nextid"], out int nextid)
-                ? await cache.GetCachedSubmissionsAsync(nextid: nextid, count: 20)
-                : await cache.GetCachedSubmissionsAsync(count: 20);
+            int nextid = int.TryParse(req.Query["nextid"], out int n)
+                ? n
+                : int.MaxValue;
+
+            var posts = await cache.GetCachedSubmissionsAsync(nextid: nextid)
+                .Take(20)
+                .ToListAsync();
 
             var galleryPage = Domain.AsGalleryPage(posts, nextid);
 
