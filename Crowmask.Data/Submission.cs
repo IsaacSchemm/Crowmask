@@ -113,11 +113,6 @@ namespace Crowmask.Data
         public string Title { get; set; }
 
         /// <summary>
-        /// If true, the title will be included in the post as a link to Weasyl.
-        /// </summary>
-        public bool? TitleLink { get; set; }
-
-        /// <summary>
         /// The date/time when Crowmask first added this object to its cache.
         /// </summary>
         public DateTimeOffset FirstCachedAt { get; set; }
