@@ -12,5 +12,5 @@ Public Interface IInteractionLookup
     ''' interaction will generally be tied to just one post.
     ''' </summary>
     ''' <param name="activity_or_reply_id">The ID of an Announce or Like activity, or the ID of a reply to an artwork submission</param>
-    Function GetRelevantSubmitIdsAsync(activity_or_reply_id As String) As IAsyncEnumerable(Of Integer)
+    Function GetRelevantSubmitIdsAsync(activity_or_reply_id As String) As Task(Of IEnumerable(Of Integer))
 End Interface
