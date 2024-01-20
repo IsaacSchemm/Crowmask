@@ -14,7 +14,7 @@ namespace Crowmask.Functions
         [Function("RefreshProfile")]
         public async Task Run([TimerTrigger("0 5 * * * *")] TimerInfo myTimer)
         {
-            await userCache.GetUserAsync();
+            await userCache.UpdateUserAsync();
         }
     }
 }
