@@ -1,7 +1,6 @@
 ﻿namespace Crowmask.LowLevel
 
 open System
-open System.Threading
 open Crowmask.Interfaces
 open System.Net.Http
 open System.Net.Http.Headers
@@ -82,10 +81,8 @@ type WeasylGallery = {
 type WeasylGalleryPosition =
 | Beginning
 | Next of nextid: int
-| Back of backid: int
 
 type WeasylGalleryCount =
-| DefaultCount
 | Count of int
 
 type WeasylClient(version: ICrowmaskVersion, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
@@ -105,10 +102,8 @@ type WeasylClient(version: ICrowmaskVersion, httpClientFactory: IHttpClientFacto
             match position with
             | Beginning -> ()
             | Next x -> $"nextid={x}"
-            | Back x -> $"backid={x}"
 
             match count with
-            | DefaultCount -> ()
             | Count x -> $"count={x}"
         ]
         use! resp = getAsync $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery?{query}"
@@ -165,18 +160,11 @@ type WeasylClient(version: ICrowmaskVersion, httpClientFactory: IHttpClientFacto
             else return None
     }
 
-    /// Returns a gallery page with limited submission information
-    /// for multiple submissions posted by the logged-in user.
-    member _.GetMyGalleryAsync(parameters) = task {
-        let! whoami = whoamiLazy.Value
-        return! getUserGalleryAsync whoami.login parameters DefaultCount
-    }
-
     /// Returns all submissions, with limited information,
     /// for the logged-in user (newest to oldest).
     member _.GetMyGallerySubmissionsAsync() = taskSeq {
         let! whoami = whoamiLazy.Value
-        let! firstPage = getUserGalleryAsync whoami.login Beginning DefaultCount
+        let! firstPage = getUserGalleryAsync whoami.login Beginning (Count 5)
 
         let mutable page = firstPage
         let mutable finished = false
@@ -185,7 +173,7 @@ type WeasylClient(version: ICrowmaskVersion, httpClientFactory: IHttpClientFacto
 
             match page.nextid with
             | Some x ->
-                let! nextPage = getUserGalleryAsync whoami.login (Next x) DefaultCount
+                let! nextPage = getUserGalleryAsync whoami.login (Next x) (Count 100)
                 page <- nextPage
             | None ->
                 finished <- true

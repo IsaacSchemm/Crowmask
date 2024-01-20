@@ -210,6 +210,7 @@ namespace Crowmask.Library
         public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync(int nextid = int.MaxValue, DateTimeOffset? since = null)
         {
             DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
+            int batchSize = 5;
 
             while (true)
             {
@@ -217,7 +218,7 @@ namespace Crowmask.Library
                     .Where(s => s.SubmitId < nextid)
                     .Where(s => s.PostedAt > cutoff)
                     .OrderByDescending(s => s.SubmitId)
-                    .Take(50)
+                    .Take(batchSize)
                     .ToListAsync();
 
                 foreach (var submission in list)
@@ -227,6 +228,7 @@ namespace Crowmask.Library
                     break;
 
                 nextid = list.Last().SubmitId;
+                batchSize = 100;
             }
         }
 
