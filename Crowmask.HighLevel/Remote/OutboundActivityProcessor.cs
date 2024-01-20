@@ -1,7 +1,7 @@
 ﻿using Crowmask.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Crowmask.Library.Remote
+namespace Crowmask.HighLevel.Remote
 {
     /// <summary>
     /// Sends queued ActivityPub activities to other servers.

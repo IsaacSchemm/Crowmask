@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crowmask.Formats\Crowmask.Formats.fsproj" />
     <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
+    <ProjectReference Include="..\Crowmask.LowLevel\Crowmask.LowLevel.fsproj" />
   </ItemGroup>
 
 </Project>

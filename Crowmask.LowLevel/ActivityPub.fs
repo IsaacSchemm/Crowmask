@@ -1,12 +1,10 @@
-﻿namespace Crowmask.Formats
+﻿namespace Crowmask.LowLevel
 
 open System
 open System.Collections.Generic
 open System.Net
 open System.Text.Json
-open Crowmask.Formats
 open Crowmask.Interfaces
-open Crowmask.LowLevel
 
 /// Contains functions for JSON-LD serialization.
 module ActivityPubSerializer =

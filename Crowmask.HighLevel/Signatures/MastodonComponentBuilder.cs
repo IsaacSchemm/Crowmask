@@ -6,7 +6,7 @@ using static NSign.Constants;
 using NSign.Signatures;
 using Crowmask.Interfaces;
 
-namespace Crowmask.Library.Signatures;
+namespace Crowmask.HighLevel.Signatures;
 
 public class MastodonComponentBuilder(IRequest _message) : ISignatureComponentVisitor
 {

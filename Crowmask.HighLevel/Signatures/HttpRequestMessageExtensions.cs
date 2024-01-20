@@ -7,7 +7,7 @@ using Crowmask.Interfaces;
 using NSign.Signatures;
 using static NSign.Constants;
 
-namespace Crowmask.Library.Signatures;
+namespace Crowmask.HighLevel.Signatures;
 
 internal static class IHttpRequestExtensions
 {

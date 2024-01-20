@@ -1,4 +1,4 @@
-﻿namespace Crowmask.Formats
+﻿namespace Crowmask.LowLevel
 
 open System.Linq
 open System.Net.Http.Headers

@@ -1,9 +1,8 @@
 ﻿using Crowmask.Data;
-using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 
-namespace Crowmask.Library
+namespace Crowmask.HighLevel
 {
     /// <summary>
     /// Accesses and updates cached user information in the Crowmask database.

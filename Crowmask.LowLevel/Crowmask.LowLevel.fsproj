@@ -9,11 +9,17 @@
     <Compile Include="Domain.fs" />
     <Compile Include="IdMapper.fs" />
     <Compile Include="Weasyl.fs" />
+    <Compile Include="ContentNegotiation.fs" />
+    <Compile Include="Summarizer.fs" />
+    <Compile Include="MarkdownTranslator.fs" />
+    <Compile Include="ActivityPub.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharp.Control.TaskSeq" Version="0.3.0" />
+    <PackageReference Include="Markdig" Version="0.34.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Net.Http.Headers" Version="8.0.1" />
   </ItemGroup>
 
   <ItemGroup>

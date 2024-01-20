@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Crowmask.Library.Remote;
+using Crowmask.HighLevel.Remote;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions

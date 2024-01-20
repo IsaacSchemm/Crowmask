@@ -1,5 +1,4 @@
 using Crowmask.Data;
-using Crowmask.Formats;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;

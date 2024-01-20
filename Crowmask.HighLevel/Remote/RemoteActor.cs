@@ -1,4 +1,4 @@
-﻿namespace Crowmask.Library.Remote
+﻿namespace Crowmask.HighLevel.Remote
 {
     /// <summary>
     /// Represents an actor on a remote ActivityPub server.

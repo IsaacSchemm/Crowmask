@@ -1,12 +1,11 @@
 ﻿using Crowmask.Data;
-using Crowmask.Formats;
 using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FSharp.Core;
 using System.Net.Http.Headers;
 
-namespace Crowmask.Library
+namespace Crowmask.HighLevel
 {
     /// <summary>
     /// Accesses and updates cached submission information in the Crowmask database.

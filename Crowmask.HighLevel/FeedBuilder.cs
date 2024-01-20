@@ -5,7 +5,7 @@ using System.ServiceModel.Syndication;
 using System.Text;
 using System.Xml;
 
-namespace Crowmask.Library.Feed
+namespace Crowmask.HighLevel.Feed
 {
     /// <summary>
     /// Builds Atom and RSS feeds for the outbox.
