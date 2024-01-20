@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class NodeInfo(SubmissionCache cache, IHandle handle, UserCache userCache)
+    public class NodeInfo(SubmissionCache cache, IApplicationInformation appInfo, UserCache userCache)
     {
         /// <summary>
         /// Returns a NodeInfo 2.2 response with information about the user and about Crowmask.
@@ -32,7 +32,7 @@ namespace Crowmask.Functions
                 version = "2.2",
                 instance = new
                 {
-                    name = $"@{handle.PreferredUsername}@{handle.Hostname}",
+                    name = $"@{appInfo.Username}@{appInfo.HandleHostname}",
                     description = $"An ActivityPub mirror of artwork posted to Weasyl by {user.upstreamUsername}"
                 },
                 software = new

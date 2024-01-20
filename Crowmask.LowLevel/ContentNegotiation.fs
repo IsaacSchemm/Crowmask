@@ -12,14 +12,14 @@ type CrowmaskFormat = {
     MediaType: string
 }
 
-type ContentNegotiator(configuration: IContentNegotiationConfiguration) =
+type ContentNegotiator(appInfo: IApplicationInformation) =
     let format family mediaType = {
         Family = family
         MediaType = mediaType
     }
 
     let supported = [
-        if configuration.ReturnMarkdown then
+        if appInfo.ReturnMarkdown then
             format Markdown "text/plain"
             format Markdown "text/markdown"
 
@@ -28,10 +28,10 @@ type ContentNegotiator(configuration: IContentNegotiationConfiguration) =
         format ActivityPub "application/json"
         format ActivityPub "text/json"
 
-        if configuration.UpstreamRedirect then
+        if appInfo.UpstreamRedirect then
             format UpstreamRedirect "text/html"
 
-        if configuration.ReturnHTML then
+        if appInfo.ReturnHTML then
             format HTML "text/html"
     ]
 
