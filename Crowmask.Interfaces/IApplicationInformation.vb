@@ -17,7 +17,7 @@ Public Interface IApplicationInformation
     ''' The host / domain name used by Crowmask.
     ''' May or may not be the same as the domain in the actor's handle.
     ''' </summary>
-    ReadOnly Property Hostname As String
+    ReadOnly Property ApplicationHostname As String
 
     ''' <summary>
     ''' A URL to a website with more information about the application.
@@ -30,4 +30,40 @@ Public Interface IApplicationInformation
     ''' </summary>
     ''' <returns></returns>
     ReadOnly Property UserAgent As String
+
+    ''' <summary>
+    ''' The username of the Crowmask actor (used in the @ handle).
+    ''' </summary>
+    ReadOnly Property Username As String
+
+    ''' <summary>
+    ''' The host / domain name used in the Crowmask actor's preferred handle.
+    ''' May or may not be the same as Crowmask's domain.
+    ''' </summary>
+    ReadOnly Property HandleHostname As String
+
+    ''' <summary>
+    ''' The ActivityPub ID of the admin actor, an ActivityPub user who should
+    ''' be notified when Crowmask recieves a boost, like, reply, or mention.
+    ''' </summary>
+    ReadOnly Property AdminActorId As String
+
+    ''' <summary>
+    ''' Whether the HTML (text/html) user interface of Crowmask is enabled.
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property ReturnHTML As Boolean
+
+    ''' <summary>
+    ''' Whether the Markdown (text/plain) user interface of Crowmask is enabled.
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property ReturnMarkdown As Boolean
+
+    ''' <summary>
+    ''' Whether requests from web browsers to individual posts or to the actor
+    ''' URL should redirect to Weasyl.
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property UpstreamRedirect As Boolean
 End Interface

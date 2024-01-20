@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(ActivityStreamsIdMapper mapper, IApplicationInformation appInfo, IHandle handleConfig, IAdminActor adminActor)
+    public class WebFinger(ActivityStreamsIdMapper mapper, IApplicationInformation appInfo)
     {
         /// <summary>
         /// Points the user agent to the Crowmask actor ID, or redirects to the equivalent endpoint on the admin actor's server.
@@ -25,8 +25,8 @@ namespace Crowmask.Functions
                 return req.CreateResponse(HttpStatusCode.BadRequest);
             }
 
-            string handle = $"acct:{handleConfig.PreferredUsername}@{handleConfig.Hostname}";
-            string alternate = $"acct:{handleConfig.PreferredUsername}@{appInfo.Hostname}";
+            string handle = $"acct:{appInfo.Username}@{appInfo.HandleHostname}";
+            string alternate = $"acct:{appInfo.Username}@{appInfo.ApplicationHostname}";
 
             if (resource == handle || resource == mapper.ActorId || resource == alternate)
             {
@@ -53,7 +53,7 @@ namespace Crowmask.Functions
                 });
                 return resp;
             }
-            else if (Uri.TryCreate(adminActor.Id, UriKind.Absolute, out Uri adminActorUri))
+            else if (Uri.TryCreate(appInfo.AdminActorId, UriKind.Absolute, out Uri adminActorUri))
             {
                 var redirectUri = new Uri(adminActorUri, $"/.well-known/webfinger?resource={Uri.EscapeDataString(resource)}");
                 var resp = req.CreateResponse(HttpStatusCode.TemporaryRedirect);

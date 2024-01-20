@@ -15,10 +15,6 @@ using System;
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services => {
-        services.AddSingleton<IAdminActor>(
-            new AdminActor(
-                Environment.GetEnvironmentVariable("AdminActor")));
-
         if (Environment.GetEnvironmentVariable("CosmosDBAccountKey") is string accountKey)
             services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
                 Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
@@ -30,22 +26,17 @@ var host = new HostBuilder()
                 new DefaultAzureCredential(),
                 databaseName: "Crowmask"));
 
-        services.AddSingleton<IContentNegotiationConfiguration>(
-            new ContentNegotiationConfiguration(
-                ReturnHTML: true,
-                ReturnMarkdown: true,
-                UpstreamRedirect: false));
-
         services.AddSingleton<IApplicationInformation>(new AppInfo(
-            "Crowmask",
-            "1.4",
-            Environment.GetEnvironmentVariable("CrowmaskHost"),
-            $"https://github.com/IsaacSchemm/Crowmask/"));
-
-        services.AddSingleton<IHandle>(
-            new Handle(
-                Environment.GetEnvironmentVariable("HandleName"),
-                Environment.GetEnvironmentVariable("HandleHost")));
+            ApplicationName: "Crowmask",
+            VersionNumber: "1.4",
+            ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
+            WebsiteUrl: $"https://github.com/IsaacSchemm/Crowmask/",
+            Username: Environment.GetEnvironmentVariable("HandleName"),
+            HandleHostname: Environment.GetEnvironmentVariable("HandleHost"),
+            AdminActorId: Environment.GetEnvironmentVariable("AdminActor"),
+            ReturnHTML: true,
+            ReturnMarkdown: true,
+            UpstreamRedirect: false));
 
         services.AddSingleton<IActorKeyProvider>(
             new KeyProvider(
@@ -78,19 +69,19 @@ var host = new HostBuilder()
 
 host.Run();
 
-record AdminActor(string Id) : IAdminActor;
-
 record AppInfo(
     string ApplicationName,
     string VersionNumber,
-    string Hostname,
-    string WebsiteUrl) : IApplicationInformation
+    string ApplicationHostname,
+    string WebsiteUrl,
+    string Username,
+    string HandleHostname,
+    string AdminActorId,
+    bool ReturnHTML,
+    bool ReturnMarkdown,
+    bool UpstreamRedirect) : IApplicationInformation
 {
     string IApplicationInformation.UserAgent => $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
 }
-
-record ContentNegotiationConfiguration(bool ReturnHTML, bool ReturnMarkdown, bool UpstreamRedirect) : IContentNegotiationConfiguration;
-
-record Handle(string PreferredUsername, string Hostname) : IHandle;
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

@@ -27,7 +27,7 @@ namespace Crowmask.Functions
                     new
                     {
                         rel = "http://nodeinfo.diaspora.software/ns/schema/2.2",
-                        href = $"https://{appInfo.Hostname}/api/nodeinfo"
+                        href = $"https://{appInfo.ApplicationHostname}/api/nodeinfo"
                     }
                 }
             }), Encoding.UTF8);

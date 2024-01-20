@@ -6,7 +6,7 @@ open Crowmask.Interfaces
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub
 /// user agents.
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, handle: IHandle, appInfo: IApplicationInformation) =
+type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, appInfo: IApplicationInformation) =
     /// Performs HTML encoding on a string. (HTML can be inserted into
     /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode
@@ -33,9 +33,9 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
 
     /// A Markdown header that is included on all pages.
     let sharedHeader = String.concat "\n" [
-        $"This is an ActivityPub mirror of an external artwork gallery. The user at [{enc adminActor.Id}]({adminActor.Id}) will be notified of any likes, shares, or replies."
+        $"# [@{enc appInfo.Username}]({mapper.ActorId})"
         $""
-        $"[Return to the user profile page]({mapper.ActorId})"
+        $"ActivityPub mirror powered by [{enc appInfo.ApplicationName}]({appInfo.WebsiteUrl})"
     ]
 
     member _.ToMarkdown (person: Person) = String.concat "\n" [
@@ -61,8 +61,10 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"## ActivityPub"
         $""
-        for hostname in List.distinct [handle.Hostname; appInfo.Hostname] do
-            $"    @{enc handle.PreferredUsername}@{hostname}"
+        for hostname in List.distinct [appInfo.HandleHostname; appInfo.ApplicationHostname] do
+            $"    @{enc appInfo.Username}@{hostname}"
+        $""
+        $"Any boosts, likes, replies, or mentions will generate a notification to [{enc appInfo.AdminActorId}]({appInfo.AdminActorId})."
         $""
         $"[View gallery](/api/actor/outbox)"
         $""
@@ -78,7 +80,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"--------"
         $""
-        $"[{enc appInfo.ApplicationName} {enc appInfo.VersionNumber}]({appInfo.WebsiteUrl}) 🐦‍⬛🎭"
+        $"## [{enc appInfo.ApplicationName} {enc appInfo.VersionNumber}]({appInfo.WebsiteUrl}) 🐦‍⬛🎭"
         $""
         $"This program is free software: you can redistribute it and/or modify"
         $"it under the terms of the GNU Affero General Public License as published"

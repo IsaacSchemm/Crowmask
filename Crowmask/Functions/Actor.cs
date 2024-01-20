@@ -10,7 +10,7 @@ namespace Crowmask.Functions
 {
     public class Actor(
         IActorKeyProvider keyProvider,
-        IHandle handle,
+        IApplicationInformation appInfo,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
         ActivityPubTranslator translator,
@@ -34,7 +34,7 @@ namespace Crowmask.Functions
             {
                 if (format.Family.IsActivityPub)
                 {
-                    string json = ActivityPubSerializer.SerializeWithContext(translator.PersonToObject(person, key, handle));
+                    string json = ActivityPubSerializer.SerializeWithContext(translator.PersonToObject(person, key, appInfo));
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }

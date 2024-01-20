@@ -30,7 +30,7 @@ module ActivityPubSerializer =
 
 /// Creates ActivityPub objects (in string/object pair format) for actors,
 /// posts, and other objects tracked by Crowmask.
-type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
+type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
     /// The Crowmask actor ID.
     let actor = mapper.ActorId
 
@@ -45,14 +45,14 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         && not (Char.IsUpper(c))
 
     /// Builds a Person object for the Crowmask actor.
-    member _.PersonToObject (person: Person) (key: IActorKey) (handle: IHandle) = dict [
+    member _.PersonToObject (person: Person) (key: IActorKey) (appInfo: IApplicationInformation) = dict [
         pair "id" actor
         pair "type" "Person"
         pair "inbox" $"{actor}/inbox"
         pair "outbox" $"{actor}/outbox"
         pair "followers" $"{actor}/followers"
         pair "following" $"{actor}/following"
-        pair "preferredUsername" handle.PreferredUsername
+        pair "preferredUsername" appInfo.Username
         pair "name" person.name
         pair "summary" person.summary
         pair "url" actor
@@ -185,7 +185,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "attributedTo" actor
         pair "content" ((post, interaction) |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
         pair "published" interaction.AddedAt
-        pair "to" adminActor.Id
+        pair "to" appInfo.AdminActorId
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
@@ -194,7 +194,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" interaction.AddedAt
-        pair "to" adminActor.Id
+        pair "to" appInfo.AdminActorId
         pair "object" (this.AsPrivateNote(post, interaction))
     ]
 
@@ -204,7 +204,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
-        pair "to" adminActor.Id
+        pair "to" appInfo.AdminActorId
         pair "object" (mapper.GetObjectId(post.submitid, interaction))
     ]
 
@@ -217,7 +217,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "attributedTo" actor
         pair "content" (remotePost |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
         pair "published" remotePost.added_at
-        pair "to" adminActor.Id
+        pair "to" appInfo.AdminActorId
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
@@ -226,7 +226,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" remotePost.added_at
-        pair "to" adminActor.Id
+        pair "to" appInfo.AdminActorId
         pair "object" (this.AsPrivateNote remotePost)
     ]
 
@@ -236,7 +236,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
-        pair "to" adminActor.Id
+        pair "to" appInfo.AdminActorId
         pair "object" (mapper.GetObjectId(remotePost))
     ]
 

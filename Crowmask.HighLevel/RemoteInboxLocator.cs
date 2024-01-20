@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.HighLevel
 {
-    public class RemoteInboxLocator(CrowmaskDbContext context, IAdminActor adminActor, Requester requester)
+    public class RemoteInboxLocator(CrowmaskDbContext context, IApplicationInformation appInfo, Requester requester)
     {
         /// <summary>
         /// Gets the URL of the admin actor's inbox.
@@ -14,14 +14,14 @@ namespace Crowmask.HighLevel
         public async Task<string> GetAdminActorInboxAsync()
         {
             var follower = await context.Followers
-                .Where(f => f.ActorId == adminActor.Id)
+                .Where(f => f.ActorId == appInfo.AdminActorId)
                 .Select(f => new { f.Inbox })
                 .FirstOrDefaultAsync();
 
             if (follower != null)
                 return follower.Inbox;
 
-            var adminActorDetails = await requester.FetchActorAsync(adminActor.Id);
+            var adminActorDetails = await requester.FetchActorAsync(appInfo.AdminActorId);
             return adminActorDetails.Inbox;
         }
 

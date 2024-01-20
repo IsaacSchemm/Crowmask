@@ -7,16 +7,16 @@ open Crowmask.Interfaces
 type ActivityStreamsIdMapper(appInfo: IApplicationInformation) =
     /// The ActivityPub actor ID of the single actor hosted by this Crowmask instance.
     member _.ActorId =
-        $"https://{appInfo.Hostname}/api/actor"
+        $"https://{appInfo.ApplicationHostname}/api/actor"
 
     /// Generates a random ID that is not intended to be looked up.
     /// Used for Update and Delete activities.
     member _.GenerateTransientId() =
-        $"https://{appInfo.Hostname}#transient-{Guid.NewGuid()}"
+        $"https://{appInfo.ApplicationHostname}#transient-{Guid.NewGuid()}"
 
     /// Determines the ActivityPub object ID for a post.
     member _.GetObjectId(submitid: int) =
-        $"https://{appInfo.Hostname}/api/submissions/{submitid}"
+        $"https://{appInfo.ApplicationHostname}/api/submissions/{submitid}"
 
     /// Determines the ID to use for a Create activity for a post.
     member this.GetCreateId(submitid: int) =
@@ -28,4 +28,4 @@ type ActivityStreamsIdMapper(appInfo: IApplicationInformation) =
 
     /// Determines the URL for a notification post sent to the admin actor.
     member _.GetObjectId(remotePost: RemotePost) =
-        $"https://{appInfo.Hostname}/api/mentions/{remotePost.id}/notification"
+        $"https://{appInfo.ApplicationHostname}/api/mentions/{remotePost.id}/notification"
