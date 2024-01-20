@@ -248,7 +248,7 @@ namespace Crowmask.HighLevel
         /// <returns>A sequence of posts (generally no more than a single post)</returns>
         public async IAsyncEnumerable<Post> GetRelevantCachedPostsAsync(string activity_or_reply_id)
         {
-            await foreach (int submitid in interactionLookup.GetRelevantSubmitIdsAsync(activity_or_reply_id))
+            foreach (int submitid in await interactionLookup.GetRelevantSubmitIdsAsync(activity_or_reply_id))
                 if (await GetCachedSubmissionAsync(submitid) is CacheResult.PostResult r)
                     yield return r.Post;
         }
