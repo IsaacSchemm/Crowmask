@@ -1,8 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Crowmask.Dependencies.Weasyl;
-using Crowmask.DomainModeling;
 using Crowmask.Library;
+using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
@@ -10,13 +9,8 @@ namespace Crowmask.Functions
     public class RefreshUpstream(SubmissionCache cache, WeasylClient weasylClient)
     {
         /// <summary>
-        /// Refreshes the cache for stale items that are among the following:
-        /// <list type="bullet">
-        /// <item>The most recent submission on Weasyl, plus any additional submissions within the past day</item>
-        /// <item>Any cached posts in Crowmask that were posted to Weasyl within the past day</item>
-        /// </list>
-        /// This function handles new post discovery, updates, and deletions
-        /// in the short term. Runs every ten minutes.
+        /// Refreshes any stale or missing posts that were originally posted
+        /// within the past day. Runs every ten minutes.
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>
@@ -27,8 +21,8 @@ namespace Crowmask.Functions
 
             await foreach (var submission in weasylClient.GetMyGallerySubmissionsAsync())
             {
-                var cacheResult = await cache.RefreshSubmissionAsync(submission.submitid);
-                if (cacheResult is CacheResult.PostResult pr && pr.Post.first_upstream < yesterday)
+                await cache.RefreshSubmissionAsync(submission.submitid);
+                if (submission.posted_at < yesterday)
                     break;
             }
 

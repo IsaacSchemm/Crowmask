@@ -1,8 +1,7 @@
 ﻿using Crowmask.Data;
-using Crowmask.Dependencies.Weasyl;
-using Crowmask.DomainModeling;
 using Crowmask.Formats;
 using Crowmask.Interfaces;
+using Crowmask.LowLevel;
 
 namespace Crowmask.Library
 {

@@ -1,4 +1,4 @@
-﻿namespace Crowmask.DomainModeling
+﻿namespace Crowmask.LowLevel
 
 open System
 open System.Net
@@ -36,6 +36,13 @@ type Link = {
     href: string
 }
 
+/// An activity or object sent to Crowmask's inbox by another user.
+type RemoteAction = {
+    id: Guid
+    actor_id: string
+    added_at: DateTimeOffset
+}
+
 /// A boost or like (Announce or Like activity) from another user.
 type Activity = {
     id: Guid
@@ -67,7 +74,7 @@ with
         | Like l -> l.added_at
         | Reply r -> r.added_at
 
-/// A post to mirror to ActivityPub.
+/// A Weasyl post to mirror to ActivityPub.
 type Post = {
     submitid: int
     title: string
@@ -126,33 +133,24 @@ module Domain =
         url = user.Url
         iconUrls = [for a in user.Avatars do a.Url]
         attachments = [
+            let add n v u = {
+                name = n
+                value = string v
+                uri = u
+            }
+
             if user.Age.HasValue then
-                {
-                    name = "Age"
-                    value = $"{user.Age}"
-                    uri = None
-                }
-
+                add "Age" user.Age None
             if not (String.IsNullOrWhiteSpace(user.Gender)) then
-                {
-                    name = "Gender"
-                    value = $"{user.Gender}"
-                    uri = None
-                }
-
+                add "Gender" user.Gender None
             if not (String.IsNullOrWhiteSpace(user.Location)) then
-                {
-                    name = "Location"
-                    value = $"{user.Location}"
-                    uri = None
-                }
+                add "Location" user.Location None
 
             for link in user.Links do
-                {
-                    name = link.Site
-                    value = link.UsernameOrUrl
-                    uri = Option.ofObj link.Url
-                }
+                if link.Site <> "Crowmask" then
+                    add link.Site link.UsernameOrUrl (Option.ofObj link.Url)
+
+            add "Weasyl" user.Username (Option.ofObj user.Url)
         ]
     }
 
@@ -161,7 +159,7 @@ module Domain =
         title = submission.Title
         content = String.concat "\n" [
             if submission.TitleLink = Nullable(true) then
-                $"<a href='{WebUtility.HtmlEncode(submission.Link)}' rel='tag'><b>{WebUtility.HtmlEncode(submission.Title)}</b></a>"
+                $"<a href='{WebUtility.HtmlEncode(submission.Link)}'><b>{WebUtility.HtmlEncode(submission.Title)}</b></a>"
 
             submission.Content
 
@@ -176,18 +174,16 @@ module Domain =
         first_cached = submission.FirstCachedAt
         images = [
             if submission.Visual then
-                for media in submission.Media do
-                    {
-                        mediaType = media.ContentType
-                        url = media.Url
-                    }
+                for media in submission.Media do {
+                    mediaType = media.ContentType
+                    url = media.Url
+                }
         ]
         thumbnails = [
-            for thumbnail in submission.Thumbnails do
-                {
-                    mediaType = thumbnail.ContentType
-                    url = thumbnail.Url
-                }
+            for thumbnail in submission.Thumbnails do {
+                mediaType = thumbnail.ContentType
+                url = thumbnail.Url
+            }
         ]
         tags = [for t in submission.Tags do t.Tag]
         sensitivity =
@@ -197,31 +193,28 @@ module Domain =
             | "explicit" -> Sensitive "Explicit (18+)"
             | x -> Sensitive x
         boosts = [
-            for i in submission.Boosts |> Seq.sortBy (fun x -> x.AddedAt) do
-                {
-                    id = i.Id
-                    actor_id = i.ActorId
-                    activity_id = i.ActivityId
-                    added_at = i.AddedAt
-                }
+            for i in submission.Boosts do {
+                id = i.Id
+                actor_id = i.ActorId
+                added_at = i.AddedAt
+                activity_id = i.ActivityId
+            }
         ]
         likes = [
-            for i in submission.Likes |> Seq.sortBy (fun x -> x.AddedAt) do
-                {
-                    id = i.Id
-                    actor_id = i.ActorId
-                    activity_id = i.ActivityId
-                    added_at = i.AddedAt
-                }
+            for i in submission.Likes do {
+                id = i.Id
+                actor_id = i.ActorId
+                added_at = i.AddedAt
+                activity_id = i.ActivityId
+            }
         ]
         replies = [
-            for i in submission.Replies |> Seq.sortBy (fun x -> x.AddedAt) do
-                {
-                    id = i.Id
-                    actor_id = i.ActorId
-                    object_id = i.ObjectId
-                    added_at = i.AddedAt
-                }
+            for i in submission.Replies do {
+                id = i.Id
+                actor_id = i.ActorId
+                added_at = i.AddedAt
+                object_id = i.ObjectId
+            }
         ]
         stale = submission.Stale
     }
@@ -238,8 +231,8 @@ module Domain =
     let AsRemotePost(mention: Mention) = {
         id = mention.Id
         actor_id = mention.ActorId
-        object_id = mention.ObjectId
         added_at = mention.AddedAt
+        object_id = mention.ObjectId
     }
 
     let AsFollowerActor(follower: Follower) = {

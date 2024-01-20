@@ -18,9 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crowmask.Dependencies\Crowmask.Dependencies.csproj" />
-    <ProjectReference Include="..\Crowmask.DomainModeling\Crowmask.DomainModeling.fsproj" />
     <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
+    <ProjectReference Include="..\Crowmask.LowLevel\Crowmask.LowLevel.fsproj" />
   </ItemGroup>
 
 </Project>

@@ -4,10 +4,9 @@ open System
 open System.Collections.Generic
 open System.Net
 open System.Text.Json
-open Crowmask.DomainModeling
-open Crowmask.Dependencies.Mapping
 open Crowmask.Formats
 open Crowmask.Interfaces
+open Crowmask.LowLevel
 
 /// Contains functions for JSON-LD serialization.
 module ActivityPubSerializer =
@@ -93,7 +92,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Update activity for the Crowmask actor.
     member this.PersonToUpdate (person: Person) (key: ICrowmaskKey) = dict [
         pair "type" "Update"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "object" (this.PersonToObject person key)
@@ -160,7 +159,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Update activity for a submission.
     member this.ObjectToUpdate (post: Post) = dict [
         pair "type" "Update"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -171,7 +170,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Delete activity for a submission.
     member _.ObjectToDelete (post: Post) = dict [
         pair "type" "Delete"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -194,7 +193,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Create activity for a private notification to the admin actor.
     member this.PrivateNoteToCreate (post: Post, interaction: Interaction) = dict [
         pair "type" "Create"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" interaction.AddedAt
         pair "to" adminActor.Id
@@ -204,7 +203,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Delete activity for a private notification to the admin actor.
     member _.PrivateNoteToDelete (post: Post, interaction: Interaction) = dict [
         pair "type" "Delete"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" adminActor.Id
@@ -226,7 +225,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Create activity for a private notification to the admin actor.
     member this.PrivateNoteToCreate (remotePost: RemotePost) = dict [
         pair "type" "Create"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" remotePost.added_at
         pair "to" adminActor.Id
@@ -236,7 +235,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Delete activity for a private notification to the admin actor.
     member _.PrivateNoteToDelete (remotePost: RemotePost) = dict [
         pair "type" "Delete"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" adminActor.Id
@@ -246,7 +245,7 @@ type ActivityPubTranslator(adminActor: IAdminActor, summarizer: Summarizer, mapp
     /// Builds a transient Accept activity to accept a follow request.
     member _.AcceptFollow (followId: string) = dict [
         pair "type" "Accept"
-        pair "id" (mapper.GetTransientId())
+        pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "object" followId
     ]
