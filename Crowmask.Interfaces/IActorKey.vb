@@ -1,7 +1,7 @@
 ﻿''' <summary>
 ''' A representation of the public key component of Crowmask's signing key.
 ''' </summary>
-Public Interface ICrowmaskKey
+Public Interface IActorKey
     ''' <summary>
     ''' The public key, in PEM format.
     ''' </summary>

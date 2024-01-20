@@ -15,20 +15,20 @@ using System;
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services => {
-        if (Environment.GetEnvironmentVariable("AdminActor") is string id)
-            services.AddSingleton<IAdminActor>(new AdminActor(id));
+        services.AddSingleton<IAdminActor>(
+            new AdminActor(
+                Environment.GetEnvironmentVariable("AdminActor")));
 
-        if (Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint") is string accountEndpoint)
-            if (Environment.GetEnvironmentVariable("CosmosDBAccountKey") is string accountKey)
-                services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
-                    accountEndpoint,
-                    accountKey,
-                    databaseName: "Crowmask"));
-            else
-                services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
-                    accountEndpoint,
-                    new DefaultAzureCredential(),
-                    databaseName: "Crowmask"));
+        if (Environment.GetEnvironmentVariable("CosmosDBAccountKey") is string accountKey)
+            services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
+                Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
+                accountKey,
+                databaseName: "Crowmask"));
+        else
+            services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
+                Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
+                new DefaultAzureCredential(),
+                databaseName: "Crowmask"));
 
         services.AddSingleton<IContentNegotiationConfiguration>(
             new ContentNegotiationConfiguration(
@@ -36,26 +36,27 @@ var host = new HostBuilder()
                 ReturnMarkdown: true,
                 UpstreamRedirect: false));
 
-        if (Environment.GetEnvironmentVariable("CrowmaskHost") is string crowmaskHost)
-            services.AddSingleton<ICrowmaskHost>(new Host(crowmaskHost));
+        services.AddSingleton<IApplicationInformation>(new AppInfo(
+            "Crowmask",
+            "1.4",
+            Environment.GetEnvironmentVariable("CrowmaskHost"),
+            $"https://github.com/IsaacSchemm/Crowmask/"));
 
-        if (Environment.GetEnvironmentVariable("HandleHost") is string handleHost)
-            services.AddSingleton<IHandleHost>(new Host(handleHost));
+        services.AddSingleton<IHandle>(
+            new Handle(
+                Environment.GetEnvironmentVariable("HandleName"),
+                Environment.GetEnvironmentVariable("HandleHost")));
 
-        if (Environment.GetEnvironmentVariable("HandleName") is string handleName)
-            services.AddSingleton<IHandleName>(new HandleName(handleName));
+        services.AddSingleton<IActorKeyProvider>(
+            new KeyProvider(
+                $"https://{Environment.GetEnvironmentVariable("KeyVaultHost")}"));
 
-        if (Environment.GetEnvironmentVariable("KeyVaultHost") is string keyVaultHost)
-            services.AddSingleton<IKeyVaultHost>(new Host(keyVaultHost));
-
-        services.AddSingleton<ICrowmaskVersion>(new Version("1.3"));
-
-        if (Environment.GetEnvironmentVariable("WeasylApiKey") is string apiKey)
-            services.AddSingleton<IWeasylApiKeyProvider>(new WeasylApiKeyProvider(apiKey));
+        services.AddSingleton<IWeasylApiKeyProvider>(
+            new WeasylApiKeyProvider(
+                Environment.GetEnvironmentVariable("WeasylApiKey")));
 
         services.AddHttpClient();
 
-        services.AddScoped<ICrowmaskKeyProvider, KeyProvider>();
         services.AddScoped<IInteractionLookup, FastInteractionLookup>();
 
         services.AddScoped<ActivityPubTranslator>();
@@ -79,12 +80,17 @@ host.Run();
 
 record AdminActor(string Id) : IAdminActor;
 
+record AppInfo(
+    string ApplicationName,
+    string VersionNumber,
+    string Hostname,
+    string WebsiteUrl) : IApplicationInformation
+{
+    string IApplicationInformation.UserAgent => $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
+}
+
 record ContentNegotiationConfiguration(bool ReturnHTML, bool ReturnMarkdown, bool UpstreamRedirect) : IContentNegotiationConfiguration;
 
-record Host(string Hostname) : ICrowmaskHost, IHandleHost, IKeyVaultHost;
-
-record HandleName(string PreferredUsername) : IHandleName;
-
-record Version(string VersionNumber) : ICrowmaskVersion;
+record Handle(string PreferredUsername, string Hostname) : IHandle;
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

@@ -11,30 +11,19 @@ namespace Crowmask
     /// Provides access to an encryption key in Azure Key Vault. This key is
     /// used as the signing key for the ActivityPub actor.
     /// </summary>
-    public class KeyProvider : ICrowmaskKeyProvider
+    public class KeyProvider(string VaultUri) : IActorKeyProvider
     {
-        private record PublicKey(string Pem) : ICrowmaskKey;
-
-        private readonly KeyClient _keyClient;
-
-        /// <summary>
-        /// Creates a new KeyProvider and initializes an Azure Key Vault client.
-        /// </summary>
-        /// <param name="vaultUri">The URI of the Azure Key Vault instance</param>
-        public KeyProvider(IKeyVaultHost host)
-        {
-            var vaultUri = new Uri($"https://{host.Hostname}");
-            var tokenCredential = new DefaultAzureCredential();
-            _keyClient = new KeyClient(vaultUri, tokenCredential);
-        }
+        private record PublicKey(string Pem) : IActorKey;
 
         /// <summary>
         /// Retrieves the public key and renders it in PEM format for use in the ActivityPub actor object.
         /// </summary>
         /// <returns>An object that contains the public key in PEM format</returns>
-        public async Task<ICrowmaskKey> GetPublicKeyAsync()
+        public async Task<IActorKey> GetPublicKeyAsync()
         {
-            var key = await _keyClient.GetKeyAsync("crowmask-ap");
+            var tokenCredential = new DefaultAzureCredential();
+            var keyClient = new KeyClient(new Uri(VaultUri), tokenCredential);
+            var key = await keyClient.GetKeyAsync("crowmask-ap");
             byte[] arr = key.Value.Key.ToRSA().ExportSubjectPublicKeyInfo();
             string str = Convert.ToBase64String(arr);
             return new PublicKey($"-----BEGIN PUBLIC KEY-----\n{str}\n-----END PUBLIC KEY-----");
@@ -47,7 +36,9 @@ namespace Crowmask
         /// <returns>An RSA SHA-256 signature</returns>
         public async Task<byte[]> SignRsaSha256Async(byte[] data)
         {
-            var cryptographyClient = _keyClient.GetCryptographyClient("crowmask-ap");
+            var tokenCredential = new DefaultAzureCredential();
+            var keyClient = new KeyClient(new Uri(VaultUri), tokenCredential);
+            var cryptographyClient = keyClient.GetCryptographyClient("crowmask-ap");
             var result = await cryptographyClient.SignDataAsync(SignatureAlgorithm.RS256, data);
             return result.Signature;
         }

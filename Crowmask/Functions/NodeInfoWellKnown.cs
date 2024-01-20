@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class NodeInfoWellKnown(ICrowmaskHost host)
+    public class NodeInfoWellKnown(IApplicationInformation appInfo)
     {
         /// <summary>
         /// Points the user agent to the NodeInfo endpoint.
@@ -27,7 +27,7 @@ namespace Crowmask.Functions
                     new
                     {
                         rel = "http://nodeinfo.diaspora.software/ns/schema/2.2",
-                        href = $"https://{host.Hostname}/api/nodeinfo"
+                        href = $"https://{appInfo.Hostname}/api/nodeinfo"
                     }
                 }
             }), Encoding.UTF8);

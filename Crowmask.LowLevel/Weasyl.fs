@@ -85,12 +85,12 @@ type WeasylGalleryPosition =
 type WeasylGalleryCount =
 | Count of int
 
-type WeasylClient(version: ICrowmaskVersion, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
+type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
     let getAsync (uri: string) = task {
         use client = httpClientFactory.CreateClient()
 
         use req = new HttpRequestMessage(HttpMethod.Get, uri)
-        req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", version.VersionNumber))
+        req.Headers.UserAgent.ParseAdd(appInfo.UserAgent)
         req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"))
         req.Headers.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey)
 
