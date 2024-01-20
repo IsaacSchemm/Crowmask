@@ -147,8 +147,7 @@ module Domain =
                 add "Location" user.Location None
 
             for link in user.Links do
-                if link.Site <> "Crowmask" then
-                    add link.Site link.UsernameOrUrl (Option.ofObj link.Url)
+                add link.Site link.UsernameOrUrl (Option.ofObj link.Url)
 
             add "Weasyl" user.Username (Option.ofObj user.Url)
         ]

@@ -126,7 +126,7 @@ namespace Crowmask.HighLevel.Remote
             using var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Host = url.Host;
             req.Headers.Date = DateTime.UtcNow;
-            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", "1.0"));
+            req.Headers.UserAgent.Add(new ProductInfoHeaderValue("Crowmask", version.VersionNumber));
 
             await AddSignatureAsync(req);
 
