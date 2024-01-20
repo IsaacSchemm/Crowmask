@@ -104,9 +104,10 @@ HTTP endpoints:
 
 Timed functions:
 
-* `RefreshCached` (every day at 23:56)
+* `RefreshCache` (every day at 12:00)
 * `RefreshProfile` (every hour at :05)
-* `RefreshUpstream` (every ten minutes)
+* `RefreshRecent` (every ten minutes)
+* `RefreshUpstream` (every month on the 1st at 17:00)
 * `SendOutbound` (every hour at :02)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt

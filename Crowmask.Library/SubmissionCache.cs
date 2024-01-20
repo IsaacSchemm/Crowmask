@@ -206,24 +206,28 @@ namespace Crowmask.Library
         /// </summary>
         /// <param name="nextid">Only return submissions with an ID lower than this one</param>
         /// <param name="since">Only return submissions originally posted to Weasyl after this point in time</param>
-        /// <param name="count">Only return, at most, this many IDs</param>
         /// <returns>A list of submission IDs</returns>
-        public async Task<IReadOnlyList<Post>> GetCachedSubmissionsAsync(
-            int nextid = int.MaxValue,
-            DateTimeOffset? since = null,
-            int? count = null)
+        public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync(int nextid = int.MaxValue, DateTimeOffset? since = null)
         {
             DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
-            int max = count ?? int.MaxValue;
 
-            var list = await Context.Submissions
-                .Where(s => s.SubmitId < nextid)
-                .Where(s => s.PostedAt > cutoff)
-                .OrderByDescending(s => s.PostedAt)
-                .Take(max)
-                .ToListAsync();
+            while (true)
+            {
+                var list = await Context.Submissions
+                    .Where(s => s.SubmitId < nextid)
+                    .Where(s => s.PostedAt > cutoff)
+                    .OrderByDescending(s => s.SubmitId)
+                    .Take(50)
+                    .ToListAsync();
 
-            return list.Select(Domain.AsPost).ToList();
+                foreach (var submission in list)
+                    yield return Domain.AsPost(submission);
+
+                if (list.Count == 0)
+                    break;
+
+                nextid = list.Last().SubmitId;
+            }
         }
 
         /// <summary>
