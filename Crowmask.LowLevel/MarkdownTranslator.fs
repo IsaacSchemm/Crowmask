@@ -6,7 +6,7 @@ open Crowmask.Interfaces
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub\
 /// user agents.
-type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost, handleName: IHandleName) =
+type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer, adminActor: IAdminActor, crowmaskHost: ICrowmaskHost, handleHost: IHandleHost, handleName: IHandleName, version: ICrowmaskVersion) =
     /// Performs HTML encoding on a string. (HTML can be inserted into
     /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode
@@ -78,7 +78,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"--------"
         $""
-        $"[Crowmask](https://github.com/IsaacSchemm/Crowmask) 🐦‍⬛🎭"
+        $"[Crowmask](https://github.com/IsaacSchemm/Crowmask) {enc version.VersionNumber} 🐦‍⬛🎭"
         $""
         $"Copyright © 2024 Isaac Schemm"
         $""
