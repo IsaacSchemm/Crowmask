@@ -70,19 +70,19 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
                 url = url
             |}
         pair "attachment" [
-            for metadata in person.attachments do
-                {|
-                    ``type`` = "PropertyValue"
-                    name = metadata.name
-                    value =
-                        match metadata.uri with
-                        | Some uri -> $"<a href='{uri}'>{WebUtility.HtmlEncode(metadata.value)}</a>"
-                        | None -> WebUtility.HtmlEncode(metadata.value)
-                |}
+            for metadata in person.attachments do {|
+                ``type`` = "PropertyValue"
+                name = metadata.name
+                value =
+                    match metadata.uri with
+                    | Some uri -> $"<a href='{uri}'>{WebUtility.HtmlEncode(metadata.value)}</a>"
+                    | None -> WebUtility.HtmlEncode(metadata.value)
+            |}
+
             {|
                 ``type`` = "PropertyValue"
                 name = "Mirrored by"
-                value = $"<a href='https://github.com/IsaacSchemm/Crowmask/'>Crowmask</a> (APGLv3)"
+                value = $"<a href='{appInfo.WebsiteUrl}'>{WebUtility.HtmlEncode(appInfo.ApplicationName)}</a> (APGLv3)"
             |}
         ]
     ]
