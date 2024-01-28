@@ -12,80 +12,86 @@ type IWeasylApiKeyProvider =
     /// The Weasyl API key, created at https://www.weasyl.com/control/apikeys.
     abstract member ApiKey: string
 
-type WeasylWhoami = {
-    login: string
-    userid: int
-}
+/// .NET types that map to response types from the Weasyl API.
+module Weasyl =
+    type Whoami = {
+        login: string
+        userid: int
+    }
 
-type WeasylMediaFile = {
-    mediaid: Nullable<int>
-    url: string
-}
+    type MediaFile = {
+        mediaid: Nullable<int>
+        url: string
+    }
 
-type WeasylUserMedia = {
-    avatar: WeasylMediaFile list
-}
+    type UserMedia = {
+        avatar: MediaFile list
+    }
 
-type WeasylStatistics = {
-    submissions: int
-}
+    type Statistics = {
+        submissions: int
+    }
 
-type WeasylUserInfo = {
-    age: Nullable<int>
-    gender: string
-    location: string
-    user_links: Map<string, string list>
-}
+    type UserInfo = {
+        age: Nullable<int>
+        gender: string
+        location: string
+        user_links: Map<string, string list>
+    }
 
-type WeasylUserProfile = {
-    username: string
-    full_name: string
-    profile_text: string
-    media: WeasylUserMedia
-    login_name: string
-    statistics: WeasylStatistics
-    user_info: WeasylUserInfo
-    link: string
-}
+    type UserProfile = {
+        username: string
+        full_name: string
+        profile_text: string
+        media: UserMedia
+        login_name: string
+        statistics: Statistics
+        user_info: UserInfo
+        link: string
+    }
 
-type WeasylSubmissionMedia = {
-    submission: WeasylMediaFile list
-    thumbnail: WeasylMediaFile list
-}
+    type SubmissionMedia = {
+        submission: MediaFile list
+        thumbnail: MediaFile list
+    }
 
-type WeasylGallerySubmission = {
-    posted_at: DateTimeOffset
-    submitid: int
-}
+    type GallerySubmission = {
+        posted_at: DateTimeOffset
+        submitid: int
+    }
 
-type WeasylSubmissionDetail = {
-    link: string
-    media: WeasylSubmissionMedia
-    owner: string
-    posted_at: DateTimeOffset
-    rating: string
-    title: string
-    friends_only: bool
-    tags: string list
-    submitid: int
-    subtype: string
-    description: string
-}
+    type SubmissionDetail = {
+        link: string
+        media: SubmissionMedia
+        owner: string
+        posted_at: DateTimeOffset
+        rating: string
+        title: string
+        friends_only: bool
+        tags: string list
+        submitid: int
+        subtype: string
+        description: string
+    }
 
-type WeasylGallery = {
-    submissions: WeasylGallerySubmission list
-    backid: int option
-    nextid: int option
-}
+    type Gallery = {
+        submissions: GallerySubmission list
+        backid: int option
+        nextid: int option
+    }
 
+/// The starting point of a Weasyl gallery request.
 type WeasylGalleryPosition =
 | Beginning
 | Next of nextid: int
 
+/// Indicates the maximum number of items to return for a Weasyl gallery request.
 type WeasylGalleryCount =
 | Count of int
 
+/// An object that allows for communication with the Weasyl API.
 type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
+    /// Makes an HTTP GET request.
     let getAsync (uri: string) = task {
         use client = httpClientFactory.CreateClient()
 
@@ -97,6 +103,7 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
         return! client.SendAsync(req)
     }
 
+    /// Makes a user gallery request to Weasyl.
     let getUserGalleryAsync (username: string) (position: WeasylGalleryPosition) (count: WeasylGalleryCount) = task {
         let query = String.concat "&" [
             match position with
@@ -108,35 +115,40 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
         ]
         use! resp = getAsync $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(username)}/gallery?{query}"
         ignore (resp.EnsureSuccessStatusCode())
-        return! resp.Content.ReadFromJsonAsync<WeasylGallery>()
+        return! resp.Content.ReadFromJsonAsync<Weasyl.Gallery>()
     }
 
+    /// Gets information on a single Weasyl artwork submission.
     let getSubmissionAsync (submitid: int) = task {
         use! resp = getAsync $"https://www.weasyl.com/api/submissions/{submitid}/view"
         if resp.StatusCode = System.Net.HttpStatusCode.NotFound then
             return None
         else
             ignore (resp.EnsureSuccessStatusCode())
-            let! object = resp.Content.ReadFromJsonAsync<WeasylSubmissionDetail>()
+            let! object = resp.Content.ReadFromJsonAsync<Weasyl.SubmissionDetail>()
             return Some object
     }
 
+    /// Gets information on a single Weasyl user.
     let getUserAsync (user: string) = task {
         use! resp = getAsync $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view"
         ignore (resp.EnsureSuccessStatusCode())
-        return! resp.Content.ReadFromJsonAsync<WeasylUserProfile>()
+        return! resp.Content.ReadFromJsonAsync<Weasyl.UserProfile>()
     }
 
+    /// Gets the username and ID of the user who issued the Weasyl API key.
     let whoamiAsync () = task {
         use! resp = getAsync $"https://www.weasyl.com/api/whoami"
         ignore (resp.EnsureSuccessStatusCode())
-        return! resp.Content.ReadFromJsonAsync<WeasylWhoami>()
+        return! resp.Content.ReadFromJsonAsync<Weasyl.Whoami>()
     }
 
+    /// Gets and stores the username and ID of the user who issued the Weasyl API key.
     let whoamiLazy = lazy task {
         return! whoamiAsync ()
     }
 
+    /// Gets and stores the user profile information of the user who issued the Weasyl API key.
     let userProfileLazy = lazy task {
         let! w = whoamiLazy.Value
         return! getUserAsync w.login
@@ -147,8 +159,7 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
         return! userProfileLazy.Value
     }
 
-    /// Returns submission information for an ID, unless it doesn't exist,
-    /// wasn't posted by the logged-in user, or is set to friends only.
+    /// Returns submission information for an ID, unless it doesn't exist, wasn't posted by the logged-in user, or is set to friends only.
     member _.GetMyPublicSubmissionAsync(submitid) = task {
         let! whoami = whoamiLazy.Value
         match! getSubmissionAsync submitid with
@@ -160,8 +171,7 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
             else return None
     }
 
-    /// Returns all submissions, with limited information,
-    /// for the logged-in user (newest to oldest).
+    /// Returns all submissions, with limited information, for the logged-in user (newest to oldest).
     member _.GetMyGallerySubmissionsAsync() = taskSeq {
         let! whoami = whoamiLazy.Value
         let! firstPage = getUserGalleryAsync whoami.login Beginning (Count 5)

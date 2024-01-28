@@ -59,7 +59,7 @@ namespace Crowmask.HighLevel
             try
             {
                 var option = await weasylClient.GetMyPublicSubmissionAsync(submitid);
-                if (OptionModule.ToObj(option) is WeasylSubmissionDetail weasylSubmission)
+                if (OptionModule.ToObj(option) is Weasyl.SubmissionDetail weasylSubmission)
                 {
                     bool newlyCreated = false;
 
