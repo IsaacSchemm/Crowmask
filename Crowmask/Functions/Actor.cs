@@ -3,16 +3,19 @@ using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.FSharp.Control;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
     public class Actor(
-        IActorKeyProvider keyProvider,
         IApplicationInformation appInfo,
+        IActorKeyProvider keyProvider,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
+        SubmissionCache submissionCache,
         ActivityPubTranslator translator,
         UserCache userCache)
     {
@@ -28,23 +31,24 @@ namespace Crowmask.Functions
         {
             var person = await userCache.GetUserAsync();
 
-            var key = await keyProvider.GetPublicKeyAsync();
-
             foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
                 if (format.Family.IsActivityPub)
                 {
+                    var key = await keyProvider.GetPublicKeyAsync();
                     string json = ActivityPubSerializer.SerializeWithContext(translator.PersonToObject(person, key, appInfo));
 
                     return await req.WriteCrowmaskResponseAsync(format, json);
                 }
                 else if (format.Family.IsHTML)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(person));
+                    var recent = await submissionCache.GetCachedSubmissionsAsync().Take(3).ToListAsync();
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(person, recent));
                 }
                 else if (format.Family.IsMarkdown)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person));
+                    var recent = await submissionCache.GetCachedSubmissionsAsync().Take(3).ToListAsync();
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person, recent));
                 }
                 else if (format.Family.IsUpstreamRedirect)
                 {

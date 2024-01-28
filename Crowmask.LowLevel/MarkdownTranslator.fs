@@ -38,8 +38,12 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $"ActivityPub mirror powered by [{enc appInfo.ApplicationName}]({appInfo.WebsiteUrl})"
     ]
 
-    member _.ToMarkdown (person: Person) = String.concat "\n" [
+    member _.ToMarkdown (person: Person, recentSubmissions: Post seq) = String.concat "\n" [
         sharedHeader
+        $""
+        $"<style type='text/css'>"
+        $"table img {{ width: 250px; height: 250px; object-fit: scale-down; }}"
+        $"</style>"
         $""
         $"--------"
         $""
@@ -59,14 +63,30 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"----------"
         $""
+        $"## Gallery"
+        $""
+        $"<table><tr>"
+        for post in recentSubmissions do
+            for thumbnail in post.thumbnails do
+                $"<td><a href='{mapper.GetObjectId(post.submitid)}'>"
+                $"<img src='{thumbnail.url}' />"
+                $""
+                $"**{enc post.title}**  "
+                $"{enc (post.first_upstream.UtcDateTime.ToLongDateString())}"
+                $""
+                $"</a></td>"
+        $"</tr></table>"
+        $""
+        $"[View gallery](/api/actor/outbox/page)"
+        $""
+        $"----------"
+        $""
         $"## ActivityPub"
         $""
         for hostname in List.distinct [appInfo.HandleHostname; appInfo.ApplicationHostname] do
             $"    @{enc appInfo.Username}@{hostname}"
         $""
         $"Any boosts, likes, replies, or mentions will generate a notification to [{enc appInfo.AdminActorId}]({appInfo.AdminActorId})."
-        $""
-        $"[View gallery](/api/actor/outbox)"
         $""
         $"[View followers](/api/actor/followers)"
         $""
@@ -93,7 +113,7 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $"GNU Affero General Public License for more details."
     ]
 
-    member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
+    member this.ToHtml (person: Person, recentSubmissions: Post seq) = this.ToMarkdown (person, recentSubmissions) |> toHtml person.name
 
     member _.ToMarkdown (post: Post) = String.concat "\n" [
         sharedHeader
