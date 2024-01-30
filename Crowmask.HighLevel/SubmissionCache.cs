@@ -10,7 +10,7 @@ namespace Crowmask.HighLevel
     /// Accesses and updates cached submission information in the Crowmask database.
     /// </summary>
     public class SubmissionCache(
-        ActivityStreamsIdMapper idMapper,
+        IdMapper idMapper,
         ActivityPubTranslator translator,
         CrowmaskDbContext Context,
         IHttpClientFactory httpClientFactory,

@@ -49,7 +49,7 @@ var host = new HostBuilder()
         services.AddHttpClient();
 
         services.AddScoped<ActivityPubTranslator>();
-        services.AddScoped<ActivityStreamsIdMapper>();
+        services.AddScoped<IdMapper>();
         services.AddScoped<ContentNegotiator>();
         services.AddScoped<SubmissionCache>();
         services.AddScoped<FeedBuilder>();

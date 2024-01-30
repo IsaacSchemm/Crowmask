@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Crowmask.Functions
 {
-    public class Root(ActivityStreamsIdMapper mapper)
+    public class Root(IdMapper mapper)
     {
         /// <summary>
         /// Redirects to the actor URL.

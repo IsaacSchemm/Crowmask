@@ -30,7 +30,7 @@ module ActivityPubSerializer =
 
 /// Creates ActivityPub objects (in string/object pair format) for actors,
 /// posts, and other objects tracked by Crowmask.
-type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summarizer, mapper: ActivityStreamsIdMapper) =
+type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summarizer, mapper: IdMapper) =
     /// The Crowmask actor ID.
     let actor = mapper.ActorId
 

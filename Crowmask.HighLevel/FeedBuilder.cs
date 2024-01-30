@@ -10,7 +10,7 @@ namespace Crowmask.HighLevel.Feed
     /// <summary>
     /// Builds Atom and RSS feeds for the outbox.
     /// </summary>
-    public class FeedBuilder(ActivityStreamsIdMapper mapper, IApplicationInformation appInfo)
+    public class FeedBuilder(IdMapper mapper, IApplicationInformation appInfo)
     {
         /// <summary>
         /// Generates an HTML rendition of the post, including image(s), description, and outgoing link(s).
