@@ -48,7 +48,7 @@ namespace Crowmask.HighLevel
 
             if (cachedSubmission != null)
             {
-                if (!cachedSubmission.Stale)
+                if (!FreshnessDeterminer.IsStale(cachedSubmission))
                     return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
