@@ -27,22 +27,20 @@ namespace Crowmask.Functions
             if (interaction == null)
                 return req.CreateResponse(HttpStatusCode.NotFound);
 
-            var domainInteraction = Domain.AsRemoteInteraction(interaction);
-
             foreach (var format in negotiator.GetAcceptableFormats(req.Headers))
             {
                 if (format.Family.IsActivityPub)
                 {
-                    var objectToSerialize = translator.AsPrivateNote(domainInteraction);
+                    var objectToSerialize = translator.AsPrivateNote(interaction);
                     return await req.WriteCrowmaskResponseAsync(format, ActivityPubSerializer.SerializeWithContext(objectToSerialize));
                 }
                 else if (format.Family.IsMarkdown)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(domainInteraction));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(interaction));
                 }
                 else if (format.Family.IsHTML)
                 {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(domainInteraction));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(interaction));
                 }
             }
 

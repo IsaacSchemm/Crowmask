@@ -43,24 +43,6 @@ type RemoteAction = {
     added_at: DateTimeOffset
 }
 
-/// A boost or like (Announce or Like activity) from another user.
-type RemoteInteraction = {
-    id: Guid
-    actor_id: string
-    activity_id: string
-    activity_type: string
-    target_id: string
-    added_at: DateTimeOffset
-}
-
-/// A mention or reply from another user.
-type RemoteMention = {
-    id: Guid
-    actor_id: string
-    object_id: string
-    added_at: DateTimeOffset
-}
-
 /// A Weasyl post to mirror to ActivityPub.
 type Post = {
     submitid: int
@@ -185,22 +167,6 @@ module Domain =
     let AsGalleryPage(posts: Post seq, nextid: int) = {
         posts = Seq.toList posts
         nextid = nextid
-    }
-
-    let AsRemoteInteraction(interaction: Interaction) = {
-        id = interaction.Id
-        actor_id = interaction.ActorId
-        activity_id = interaction.ActivityId
-        activity_type = interaction.ActivityType
-        added_at = interaction.AddedAt
-        target_id = interaction.TargetId
-    }
-
-    let AsRemoteMention(mention: Mention) = {
-        id = mention.Id
-        actor_id = mention.ActorId
-        added_at = mention.AddedAt
-        object_id = mention.ObjectId
     }
 
     let AsFollowerActor(follower: Follower) = {

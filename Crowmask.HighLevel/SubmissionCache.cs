@@ -166,8 +166,7 @@ namespace Crowmask.HighLevel
                                 Inbox = await inboxLocator.GetAdminActorInboxAsync(),
                                 JsonBody = ActivityPubSerializer.SerializeWithContext(
                                     translator.PrivateNoteToDelete(
-                                        Domain.AsRemoteMention(
-                                            mention))),
+                                        mention)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -183,8 +182,7 @@ namespace Crowmask.HighLevel
                                 Inbox = await inboxLocator.GetAdminActorInboxAsync(),
                                 JsonBody = ActivityPubSerializer.SerializeWithContext(
                                     translator.PrivateNoteToDelete(
-                                        Domain.AsRemoteInteraction(
-                                            interaction))),
+                                        interaction)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
