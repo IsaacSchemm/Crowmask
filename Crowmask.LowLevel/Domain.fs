@@ -44,35 +44,22 @@ type RemoteAction = {
 }
 
 /// A boost or like (Announce or Like activity) from another user.
-type Activity = {
+type RemoteInteraction = {
     id: Guid
     actor_id: string
     activity_id: string
+    activity_type: string
+    target_id: string
     added_at: DateTimeOffset
 }
 
 /// A mention or reply from another user.
-type RemotePost = {
+type RemoteMention = {
     id: Guid
     actor_id: string
     object_id: string
     added_at: DateTimeOffset
 }
-
-/// An interaction with a post by another user (a boost, like, or reply), with
-/// an internal Crowmask ID and an "added at" date.
-type Interaction = Boost of Activity | Like of Activity | Reply of RemotePost
-with
-    member this.Id =
-        match this with
-        | Boost b -> b.id
-        | Like l -> l.id
-        | Reply r -> r.id
-    member this.AddedAt =
-        match this with
-        | Boost b -> b.added_at
-        | Like l -> l.added_at
-        | Reply r -> r.added_at
 
 /// A Weasyl post to mirror to ActivityPub.
 type Post = {
@@ -86,18 +73,8 @@ type Post = {
     thumbnails: Image list
     sensitivity: Sensitivity
     tags: string list
-    boosts: Activity list
-    likes: Activity list
-    replies: RemotePost list
     stale: bool
-} with
-    member this.Interactions =
-        seq {
-            for i in this.boosts do Boost i
-            for i in this.likes do Like i
-            for r in this.replies do Reply r
-        }
-        |> Seq.sortBy (fun e -> e.AddedAt)
+}
 
 /// A result from a request to Crowmask's database cache looking for a post.
 /// C# consumers can perform a type check with the "is" operator to retrieve post information.
@@ -198,30 +175,6 @@ module Domain =
             | "mature" -> Sensitive "Mature (18+)"
             | "explicit" -> Sensitive "Explicit (18+)"
             | x -> Sensitive x
-        boosts = [
-            for i in submission.Boosts do {
-                id = i.Id
-                actor_id = i.ActorId
-                added_at = i.AddedAt
-                activity_id = i.ActivityId
-            }
-        ]
-        likes = [
-            for i in submission.Likes do {
-                id = i.Id
-                actor_id = i.ActorId
-                added_at = i.AddedAt
-                activity_id = i.ActivityId
-            }
-        ]
-        replies = [
-            for i in submission.Replies do {
-                id = i.Id
-                actor_id = i.ActorId
-                added_at = i.AddedAt
-                object_id = i.ObjectId
-            }
-        ]
         stale = submission.Stale
     }
 
@@ -234,7 +187,16 @@ module Domain =
         nextid = nextid
     }
 
-    let AsRemotePost(mention: Mention) = {
+    let AsRemoteInteraction(interaction: Interaction) = {
+        id = interaction.Id
+        actor_id = interaction.ActorId
+        activity_id = interaction.ActivityId
+        activity_type = interaction.ActivityType
+        added_at = interaction.AddedAt
+        target_id = interaction.TargetId
+    }
+
+    let AsRemoteMention(mention: Mention) = {
         id = mention.Id
         actor_id = mention.ActorId
         added_at = mention.AddedAt

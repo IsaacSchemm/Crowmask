@@ -21,8 +21,9 @@ contain the title (as a link to Weasyl), description, and tags. Images will be
 included for visual submissions.
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
-Crowmask will send a private message to the "admin actor" defined in its
-configuration variables and shown on its profile page.
+or tags the Crowmask actor in a post, Crowmask will send a private message to
+the "admin actor" defined in its configuration variables and shown on its
+profile page.
 
 Outgoing activities (like "accept follow" or "create new post") are processed
 every minute. Submissions are updated periodically, ranging from every ten
@@ -85,10 +86,8 @@ HTTP endpoints:
 * `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
 * `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
 * `/api/submissions/{submitid}`: returns the resulting `Note` object
-    * With `?view=comments`: returns a `Collection` with object IDs for all replies (not paginated)
-    * With `?view=likes`: returns a `Collection` with activity IDs for all likes (not paginated)
-    * With `?view=shares`: returns a `Collection` with activity IDs for all boosts (not paginated)
-* `/api/submissions/{submitid}/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
+* `/api/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
+* `/api/mentions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
 
 Timed functions:
 

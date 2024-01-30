@@ -28,7 +28,7 @@ var host = new HostBuilder()
 
         services.AddSingleton<IApplicationInformation>(new AppInfo(
             ApplicationName: "Crowmask",
-            VersionNumber: "1.4",
+            VersionNumber: "1.5",
             ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             WebsiteUrl: $"https://github.com/IsaacSchemm/Crowmask/",
             Username: Environment.GetEnvironmentVariable("HandleName"),
@@ -47,8 +47,6 @@ var host = new HostBuilder()
                 Environment.GetEnvironmentVariable("WeasylApiKey")));
 
         services.AddHttpClient();
-
-        services.AddScoped<IInteractionLookup, FastInteractionLookup>();
 
         services.AddScoped<ActivityPubTranslator>();
         services.AddScoped<ActivityStreamsIdMapper>();

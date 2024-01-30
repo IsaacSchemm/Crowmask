@@ -1,6 +1,7 @@
 using Crowmask.HighLevel;
 using Crowmask.HighLevel.Remote;
 using Crowmask.HighLevel.Signatures;
+using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
@@ -17,8 +18,8 @@ using System.Threading.Tasks;
 namespace Crowmask.Functions
 {
     public class Inbox(
+        IApplicationInformation appInfo,
         ActivityStreamsIdMapper mapper,
-        SubmissionCache cache,
         InboxHandler inboxHandler,
         MastodonVerifier mastodonVerifier,
         Requester requester)
@@ -107,17 +108,7 @@ namespace Crowmask.Functions
 
                     await inboxHandler.RemoveFollowAsync(objectId);
 
-                    // Figure out which post the ID belongs to (if any)
-                    await foreach (var post in cache.GetRelevantCachedPostsAsync(objectId))
-                    {
-                        // If the ID to undo is the ID of a boost or like, then undo it
-                        foreach (var boost in post.boosts)
-                            if (boost.actor_id == actor.Id && boost.activity_id == objectId)
-                                await inboxHandler.RemoveInteractionAsync(post.submitid, boost.id);
-                        foreach (var like in post.likes)
-                            if (like.actor_id == actor.Id && like.activity_id == objectId)
-                                await inboxHandler.RemoveInteractionAsync(post.submitid, like.id);
-                    }
+                    await inboxHandler.RemoveInteractionsAsync([objectId], actor);
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -129,23 +120,11 @@ namespace Crowmask.Functions
                 {
                     string objectId = objectToLike["@id"].Value<string>();
 
-                    // Parse the Crowmask ID from the object ID / URL, if any
-                    if (GetSubmitId(objectId) is not int submitid)
-                        return req.CreateResponse(HttpStatusCode.NoContent);
-
-                    // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
-                        return req.CreateResponse(HttpStatusCode.NoContent);
-
-                    var post = pr.Post;
-
-                    // Remove any previous likes on this post by this actor
-                    foreach (var like in post.likes)
-                        if (like.actor_id == actor.Id)
-                            await inboxHandler.RemoveInteractionAsync(submitid, like.id);
-
-                    // Add the new like
-                    await inboxHandler.AddLikeAsync(submitid, activityId, actor);
+                    if (Uri.TryCreate(objectId, UriKind.Absolute, out Uri uri) && uri.Host == appInfo.ApplicationHostname)
+                    {
+                        // Add the new like
+                        await inboxHandler.AddInteractionAsync(activityId, type, objectId, actor);
+                    }
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -157,19 +136,11 @@ namespace Crowmask.Functions
                 {
                     string objectId = objectToBoost["@id"].Value<string>();
 
-                    // Parse the Crowmask ID from the object ID / URL, if any
-                    if (GetSubmitId(objectId) is not int submitid)
-                        return req.CreateResponse(HttpStatusCode.NoContent);
-
-                    // Get the cached post that corresponds to this ID, if any
-                    if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
-                        return req.CreateResponse(HttpStatusCode.NoContent);
-
-                    var post = pr.Post;
-
-                    // Add the boost to the post, unless it's a boost we already know about
-                    if (!post.boosts.Select(boost => boost.activity_id).Contains(activityId))
-                        await inboxHandler.AddBoostAsync(submitid, activityId, actor);
+                    if (Uri.TryCreate(objectId, UriKind.Absolute, out Uri uri) && uri.Host == appInfo.ApplicationHostname)
+                    {
+                        // Add the new boost
+                        await inboxHandler.AddInteractionAsync(activityId, type, objectId, actor);
+                    }
                 }
 
                 return req.CreateResponse(HttpStatusCode.Accepted);
@@ -184,40 +155,15 @@ namespace Crowmask.Functions
                     string replyJson = await requester.GetJsonAsync(new Uri(replyId));
                     JArray replyExpansion = JsonLdProcessor.Expand(JObject.Parse(replyJson));
 
-                    bool reply = false;
+                    var relevantIds = Empty
+                        .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#to"] ?? Empty)
+                        .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#cc"] ?? Empty)
+                        .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"] ?? Empty)
+                        .Select(token => token["@id"].Value<string>());
 
-                    foreach (var inReplyTo in replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"] ?? Empty)
+                    if (relevantIds.Any(id => Uri.TryCreate(id, UriKind.Absolute, out Uri uri) && uri.Host == appInfo.ApplicationHostname))
                     {
-                        // Find the ID of the object that this is in reply to
-                        string objectId = inReplyTo["@id"].Value<string>();
-
-                        // Parse the Crowmask ID from the object ID / URL, if any
-                        if (GetSubmitId(objectId) is not int submitid)
-                            return req.CreateResponse(HttpStatusCode.NoContent);
-
-                        // Get the cached post that corresponds to this ID, if any
-                        if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
-                            return req.CreateResponse(HttpStatusCode.NoContent);
-
-                        var post = pr.Post;
-
-                        // Add the reply to the post, unless it's a reply we already know about
-                        if (!post.replies.Select(reply => reply.object_id).Contains(replyId))
-                            await inboxHandler.AddReplyAsync(submitid, replyId, actor);
-
-                        reply = true;
-                    }
-
-                    if (!reply)
-                    {
-                        var recipients = Empty
-                            .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#to"] ?? Empty)
-                            .Concat(replyExpansion[0]["https://www.w3.org/ns/activitystreams#cc"] ?? Empty)
-                            .Select(token => token["@id"].Value<string>());
-                        if (recipients.Contains(mapper.ActorId))
-                        {
-                            await inboxHandler.AddMentionAsync(replyId, actor);
-                        }
+                        await inboxHandler.AddMentionAsync(replyId, actor);
                     }
                 }
 
@@ -228,15 +174,6 @@ namespace Crowmask.Functions
                 foreach (var deletedObject in expansion[0]["https://www.w3.org/ns/activitystreams#object"] ?? Empty)
                 {
                     string deletedObjectId = deletedObject["@id"].Value<string>();
-
-                    // Figure out which post the deleted post was in reply to (if any)
-                    await foreach (var post in cache.GetRelevantCachedPostsAsync(deletedObjectId))
-                    {
-                        // If the actor who sent the Delete request was the actor who originally posted the reply, then delete it from our cache
-                        foreach (var reply in post.replies)
-                            if (reply.actor_id == actor.Id && reply.object_id == deletedObjectId)
-                                await inboxHandler.RemoveInteractionAsync(post.submitid, reply.id);
-                    }
 
                     await inboxHandler.RemoveMentionsAsync([deletedObjectId], actor);
                 }
