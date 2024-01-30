@@ -2,6 +2,7 @@
 
 open System.Net
 open Crowmask.Interfaces
+open Crowmask.Data
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub
@@ -139,7 +140,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
 
-    member _.ToMarkdown (interaction: RemoteInteraction) = String.concat "\n" [
+    member _.ToMarkdown (interaction: Interaction) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -148,9 +149,9 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $""
     ]
 
-    member this.ToHtml (interaction: RemoteInteraction) = this.ToMarkdown (interaction) |> toHtml "Crowmask"
+    member this.ToHtml (interaction: Interaction) = this.ToMarkdown (interaction) |> toHtml "Crowmask"
 
-    member _.ToMarkdown (mention: RemoteMention) = String.concat "\n" [
+    member _.ToMarkdown (mention: Mention) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
@@ -159,7 +160,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $""
     ]
 
-    member this.ToHtml (mention: RemoteMention) = this.ToMarkdown (mention) |> toHtml "Crowmask"
+    member this.ToHtml (mention: Mention) = this.ToMarkdown (mention) |> toHtml "Crowmask"
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         sharedHeader

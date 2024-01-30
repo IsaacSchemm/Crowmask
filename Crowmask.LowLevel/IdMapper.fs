@@ -2,6 +2,7 @@
 
 open System
 open Crowmask.Interfaces
+open Crowmask.Data
 
 /// Provides mappings between Crowmask's internal IDs and the public ActivityPub IDs of corresponding objects.
 type IdMapper(appInfo: IApplicationInformation) =
@@ -23,9 +24,9 @@ type IdMapper(appInfo: IApplicationInformation) =
         $"{this.GetObjectId(submitid)}#create"
 
     /// Determines the URL for a notification post sent to the admin actor.
-    member _.GetObjectId(interaction: RemoteInteraction) =
-        $"https://{appInfo.ApplicationHostname}/api/interactions/{interaction.id}/notification"
+    member _.GetObjectId(interaction: Interaction) =
+        $"https://{appInfo.ApplicationHostname}/api/interactions/{interaction.Id}/notification"
 
     /// Determines the URL for a notification post sent to the admin actor.
-    member _.GetObjectId(remoteMention: RemoteMention) =
-        $"https://{appInfo.ApplicationHostname}/api/mentions/{remoteMention.id}/notification"
+    member _.GetObjectId(remoteMention: Mention) =
+        $"https://{appInfo.ApplicationHostname}/api/mentions/{remoteMention.Id}/notification"

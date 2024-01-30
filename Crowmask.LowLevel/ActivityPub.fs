@@ -5,6 +5,7 @@ open System.Collections.Generic
 open System.Net
 open System.Text.Json
 open Crowmask.Interfaces
+open Crowmask.Data
 
 /// Contains functions for JSON-LD serialization.
 module ActivityPubSerializer =
@@ -174,29 +175,29 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
     ]
 
     /// Builds a Note object for a private notification to the admin actor.
-    member _.AsPrivateNote (interaction: RemoteInteraction) = dict [
+    member _.AsPrivateNote (interaction: Interaction) = dict [
         pair "id" (mapper.GetObjectId(interaction))
         pair "url" (mapper.GetObjectId(interaction))
         pair "type" "Note"
 
         pair "attributedTo" actor
         pair "content" (interaction |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
-        pair "published" interaction.added_at
+        pair "published" interaction.AddedAt
         pair "to" appInfo.AdminActorId
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
-    member this.PrivateNoteToCreate (interaction: RemoteInteraction) = dict [
+    member this.PrivateNoteToCreate (interaction: Interaction) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
-        pair "published" interaction.added_at
+        pair "published" interaction.AddedAt
         pair "to" appInfo.AdminActorId
         pair "object" (this.AsPrivateNote(interaction))
     ]
 
     /// Builds a transient Delete activity for a private notification to the admin actor.
-    member _.PrivateNoteToDelete (interaction: RemoteInteraction) = dict [
+    member _.PrivateNoteToDelete (interaction: Interaction) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
@@ -206,29 +207,29 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
     ]
 
     /// Builds a Note object for a private notification to the admin actor.
-    member _.AsPrivateNote (mention: RemoteMention) = dict [
+    member _.AsPrivateNote (mention: Mention) = dict [
         pair "id" (mapper.GetObjectId(mention))
         pair "url" (mapper.GetObjectId(mention))
         pair "type" "Note"
 
         pair "attributedTo" actor
         pair "content" (mention |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
-        pair "published" mention.added_at
+        pair "published" mention.AddedAt
         pair "to" appInfo.AdminActorId
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
-    member this.PrivateNoteToCreate (mention: RemoteMention) = dict [
+    member this.PrivateNoteToCreate (mention: Mention) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
-        pair "published" mention.added_at
+        pair "published" mention.AddedAt
         pair "to" appInfo.AdminActorId
         pair "object" (this.AsPrivateNote mention)
     ]
 
     /// Builds a transient Delete activity for a private notification to the admin actor.
-    member _.PrivateNoteToDelete (mention: RemoteMention) = dict [
+    member _.PrivateNoteToDelete (mention: Mention) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor

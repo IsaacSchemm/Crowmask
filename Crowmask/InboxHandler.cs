@@ -146,15 +146,13 @@ namespace Crowmask
 
             context.Mentions.Add(newMention);
 
-            var remoteMention = Domain.AsRemoteMention(newMention);
-
             context.OutboundActivities.Add(new OutboundActivity
             {
                 Id = Guid.NewGuid(),
                 Inbox = await locator.GetAdminActorInboxAsync(),
                 JsonBody = ActivityPubSerializer.SerializeWithContext(
                     translator.PrivateNoteToCreate(
-                        remoteMention)),
+                        newMention)),
                 StoredAt = DateTimeOffset.UtcNow
             });
 
@@ -175,15 +173,13 @@ namespace Crowmask
 
             foreach (var existingMention in existingMentions)
             {
-                var remoteMention = Domain.AsRemoteMention(existingMention);
-
                 context.OutboundActivities.Add(new OutboundActivity
                 {
                     Id = Guid.NewGuid(),
                     Inbox = await locator.GetAdminActorInboxAsync(),
                     JsonBody = ActivityPubSerializer.SerializeWithContext(
                         translator.PrivateNoteToDelete(
-                            remoteMention)),
+                            existingMention)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
 
@@ -221,15 +217,13 @@ namespace Crowmask
 
             context.Interactions.Add(newInteraction);
 
-            var remoteInteraction = Domain.AsRemoteInteraction(newInteraction);
-
             context.OutboundActivities.Add(new OutboundActivity
             {
                 Id = Guid.NewGuid(),
                 Inbox = await locator.GetAdminActorInboxAsync(),
                 JsonBody = ActivityPubSerializer.SerializeWithContext(
                     translator.PrivateNoteToCreate(
-                        remoteInteraction)),
+                        newInteraction)),
                 StoredAt = DateTimeOffset.UtcNow
             });
 
@@ -250,15 +244,13 @@ namespace Crowmask
 
             foreach (var existingInteraction in existingInteractions)
             {
-                var remoteInteraction = Domain.AsRemoteInteraction(existingInteraction);
-
                 context.OutboundActivities.Add(new OutboundActivity
                 {
                     Id = Guid.NewGuid(),
                     Inbox = await locator.GetAdminActorInboxAsync(),
                     JsonBody = ActivityPubSerializer.SerializeWithContext(
                         translator.PrivateNoteToDelete(
-                            remoteInteraction)),
+                            existingInteraction)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
 

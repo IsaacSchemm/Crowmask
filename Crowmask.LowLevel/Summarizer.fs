@@ -2,6 +2,7 @@
 
 open System
 open System.Net
+open Crowmask.Data
 
 /// Creates Markdown summaries of interactions with a Crowmask post. These
 /// summaries are used in notifications to the admin actor and are shown on
@@ -17,9 +18,9 @@ type Summarizer() =
         dt.UtcDateTime.ToString("U") |> enc
 
     /// Creates a Markdown summary of the given interaction to the given post.
-    member _.ToMarkdown(i: RemoteInteraction) =
-        $"[`{enc i.actor_id}`]({i.actor_id}) performed {enc i.activity_type} on [a post]({i.target_id}) ({encDate i.added_at})"
+    member _.ToMarkdown(i: Interaction) =
+        $"[`{enc i.ActorId}`]({i.ActorId}) performed {enc i.ActivityType} on [a post]({i.TargetId}) ({encDate i.AddedAt})"
 
     /// Creates a Markdown summary of the given mention.
-    member _.ToMarkdown(r: RemoteMention) =
-        $"New mention/reply at ([{encDate r.added_at}]({r.object_id})) from [`{enc r.actor_id}`]({r.actor_id})"
+    member _.ToMarkdown(r: Mention) =
+        $"New mention/reply at ([{encDate r.AddedAt}]({r.ObjectId})) from [`{enc r.ActorId}`]({r.ActorId})"
