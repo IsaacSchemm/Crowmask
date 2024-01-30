@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Crowmask.Interfaces;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 #nullable disable
@@ -8,7 +9,7 @@ namespace Crowmask.Data
     /// <summary>
     /// A Weasyl artwork submission that has been cached in Crowmask.
     /// </summary>
-    public class Submission
+    public class Submission : IPerishable
     {
         /// <summary>
         /// The submission ID on Weasyl, which is also used as an internal ID by Crowmask.
@@ -51,28 +52,9 @@ namespace Crowmask.Data
         public List<SubmissionMedia> Media { get; set; } = [];
 
         /// <summary>
-        /// A thumbnail attached to a Weasyl submission, used in the HTML view of
-        /// the outbox.
-        /// </summary>
-        public class SubmissionThumbnail
-        {
-            /// <summary>
-            /// The Weasyl-hosted URL of the image.
-            /// </summary>
-            [Required]
-            public string Url { get; set; } = "";
-
-            /// <summary>
-            /// The media type of the URL, detected by Crowmask with a HEAD request.
-            /// </summary>
-            [Required]
-            public string ContentType { get; set; } = "";
-        }
-
-        /// <summary>
         /// A list of thumbnails associated with the submission.
         /// </summary>
-        public List<SubmissionThumbnail> Thumbnails { get; set; } = [];
+        public List<SubmissionMedia> Thumbnails { get; set; } = [];
 
         /// <summary>
         /// When the submission was posted to Weasyl.
@@ -138,49 +120,5 @@ namespace Crowmask.Data
         /// Whether this is considered an artwork submission.
         /// </summary>
         public bool Visual => Subtype == "visual" || Subtype == null;
-
-        /// <summary>
-        /// Whether Crowmask considers the cached submission "stale".
-        /// This is used in CrowmaskCache to decide whether to call out to
-        /// Weasyl and re-fetch the information.
-        /// </summary>
-        public bool Stale
-        {
-            get
-            {
-                var now = DateTimeOffset.UtcNow;
-
-                bool older_than_1_hour =
-                    now - PostedAt > TimeSpan.FromHours(1);
-                bool older_than_7_days =
-                    now - PostedAt > TimeSpan.FromDays(7);
-                bool older_than_28_days =
-                    now - PostedAt > TimeSpan.FromDays(28);
-
-                bool refreshed_within_1_hour =
-                    now - CacheRefreshSucceededAt < TimeSpan.FromHours(1);
-                bool refreshed_within_7_days =
-                    now - CacheRefreshSucceededAt < TimeSpan.FromDays(7);
-                bool refreshed_within_28_days =
-                    now - CacheRefreshSucceededAt < TimeSpan.FromDays(28);
-
-                bool refresh_attempted_within_4_minutes =
-                    now - CacheRefreshAttemptedAt < TimeSpan.FromMinutes(4);
-
-                if (refresh_attempted_within_4_minutes)
-                    return false;
-
-                if (older_than_1_hour && refreshed_within_1_hour)
-                    return false;
-
-                if (older_than_7_days && refreshed_within_7_days)
-                    return false;
-
-                if (older_than_28_days && refreshed_within_28_days)
-                    return false;
-
-                return true;
-            }
-        }
     }
 }
