@@ -155,38 +155,6 @@ namespace Crowmask.HighLevel
                             });
                         }
 
-                        var mentions = await Context.Mentions
-                            .Where(x => x.ObjectId == idMapper.GetObjectId(cachedSubmission.SubmitId))
-                            .ToListAsync();
-                        foreach (var mention in mentions)
-                        {
-                            Context.OutboundActivities.Add(new OutboundActivity
-                            {
-                                Id = Guid.NewGuid(),
-                                Inbox = await inboxLocator.GetAdminActorInboxAsync(),
-                                JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    translator.PrivateNoteToDelete(
-                                        mention)),
-                                StoredAt = DateTimeOffset.UtcNow
-                            });
-                        }
-
-                        var interactions = await Context.Interactions
-                            .Where(x => x.TargetId == idMapper.GetObjectId(cachedSubmission.SubmitId))
-                            .ToListAsync();
-                        foreach (var interaction in interactions)
-                        {
-                            Context.OutboundActivities.Add(new OutboundActivity
-                            {
-                                Id = Guid.NewGuid(),
-                                Inbox = await inboxLocator.GetAdminActorInboxAsync(),
-                                JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    translator.PrivateNoteToDelete(
-                                        interaction)),
-                                StoredAt = DateTimeOffset.UtcNow
-                            });
-                        }
-
                         await Context.SaveChangesAsync();
                     }
 
