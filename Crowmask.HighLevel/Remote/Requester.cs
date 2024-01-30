@@ -12,7 +12,7 @@ namespace Crowmask.HighLevel.Remote
     /// <summary>
     /// Performs requests to other ActivityPub servers.
     /// </summary>
-    public class Requester(ActivityStreamsIdMapper mapper, IActorKeyProvider keyProvider, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory)
+    public class Requester(IdMapper mapper, IActorKeyProvider keyProvider, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory)
     {
         /// <summary>
         /// Fetches and returns an actor.

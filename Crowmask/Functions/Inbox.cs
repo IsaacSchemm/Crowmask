@@ -19,7 +19,7 @@ namespace Crowmask.Functions
 {
     public class Inbox(
         IApplicationInformation appInfo,
-        ActivityStreamsIdMapper mapper,
+        IdMapper mapper,
         InboxHandler inboxHandler,
         MastodonVerifier mastodonVerifier,
         Requester requester)
