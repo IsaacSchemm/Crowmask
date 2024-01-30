@@ -135,32 +135,31 @@ type MarkdownTranslator(mapper: ActivityStreamsIdMapper, summarizer: Summarizer,
         $""
         $"[View on Weasyl]({post.url})"
         $""
-        $""
-        $"----------"
-        $""
-        $"**Boosts:** {post.boosts.Length}  "
-        $"**Likes:** {post.likes.Length}  "
-        $"**Replies:** {post.replies.Length}  "
-        $""
-
-        for i in post.Interactions do
-            $"* {summarizer.ToMarkdown(post, i)}"
-
-        $""
     ]
 
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
 
-    member _.ToMarkdown (post: Post, interaction: Interaction) = String.concat "\n" [
+    member _.ToMarkdown (interaction: RemoteInteraction) = String.concat "\n" [
         sharedHeader
         $""
         $"--------"
         $""
-        $"{summarizer.ToMarkdown(post, interaction)}"
+        $"{summarizer.ToMarkdown(interaction)}"
         $""
     ]
 
-    member this.ToHtml (post: Post, interaction: Interaction) = this.ToMarkdown (post, interaction) |> toHtml post.title
+    member this.ToHtml (interaction: RemoteInteraction) = this.ToMarkdown (interaction) |> toHtml "Crowmask"
+
+    member _.ToMarkdown (mention: RemoteMention) = String.concat "\n" [
+        sharedHeader
+        $""
+        $"--------"
+        $""
+        $"{summarizer.ToMarkdown(mention)}"
+        $""
+    ]
+
+    member this.ToHtml (mention: RemoteMention) = this.ToMarkdown (mention) |> toHtml "Crowmask"
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         sharedHeader

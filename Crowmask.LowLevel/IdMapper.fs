@@ -23,9 +23,9 @@ type ActivityStreamsIdMapper(appInfo: IApplicationInformation) =
         $"{this.GetObjectId(submitid)}#create"
 
     /// Determines the URL for a notification post sent to the admin actor.
-    member this.GetObjectId(submitid: int, interaction: Interaction) =
-        $"{this.GetObjectId(submitid)}/interactions/{interaction.Id}/notification"
+    member _.GetObjectId(interaction: RemoteInteraction) =
+        $"https://{appInfo.ApplicationHostname}/api/interactions/{interaction.id}/notification"
 
     /// Determines the URL for a notification post sent to the admin actor.
-    member _.GetObjectId(remotePost: RemotePost) =
-        $"https://{appInfo.ApplicationHostname}/api/mentions/{remotePost.id}/notification"
+    member _.GetObjectId(remoteMention: RemoteMention) =
+        $"https://{appInfo.ApplicationHostname}/api/mentions/{remoteMention.id}/notification"

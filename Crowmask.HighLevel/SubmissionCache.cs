@@ -1,5 +1,4 @@
 ﻿using Crowmask.Data;
-using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FSharp.Core;
@@ -11,10 +10,10 @@ namespace Crowmask.HighLevel
     /// Accesses and updates cached submission information in the Crowmask database.
     /// </summary>
     public class SubmissionCache(
+        ActivityStreamsIdMapper idMapper,
         ActivityPubTranslator translator,
         CrowmaskDbContext Context,
         IHttpClientFactory httpClientFactory,
-        IInteractionLookup interactionLookup,
         RemoteInboxLocator inboxLocator,
         WeasylClient weasylClient)
     {
@@ -150,19 +149,42 @@ namespace Crowmask.HighLevel
                                 Id = Guid.NewGuid(),
                                 Inbox = inbox,
                                 JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    translator.ObjectToDelete(post)),
+                                    translator.ObjectToDelete(
+                                        post)),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
 
-                        foreach (var interaction in post.Interactions)
+                        var mentions = await Context.Mentions
+                            .Where(x => x.ObjectId == idMapper.GetObjectId(cachedSubmission.SubmitId))
+                            .ToListAsync();
+                        foreach (var mention in mentions)
                         {
                             Context.OutboundActivities.Add(new OutboundActivity
                             {
                                 Id = Guid.NewGuid(),
                                 Inbox = await inboxLocator.GetAdminActorInboxAsync(),
                                 JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                    translator.PrivateNoteToDelete(post, interaction)),
+                                    translator.PrivateNoteToDelete(
+                                        Domain.AsRemoteMention(
+                                            mention))),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
+
+                        var interactions = await Context.Interactions
+                            .Where(x => x.TargetId == idMapper.GetObjectId(cachedSubmission.SubmitId))
+                            .ToListAsync();
+                        foreach (var interaction in interactions)
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = await inboxLocator.GetAdminActorInboxAsync(),
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                    translator.PrivateNoteToDelete(
+                                        Domain.AsRemoteInteraction(
+                                            interaction))),
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
@@ -237,19 +259,6 @@ namespace Crowmask.HighLevel
         public async Task<int> GetCachedSubmissionCountAsync()
         {
             return await Context.Submissions.CountAsync();
-        }
-
-        /// <summary>
-        /// Returns the posts that the given like, boost, or reply is attached
-        /// to, if any.
-        /// </summary>
-        /// <param name="activity_or_reply_id">The activity ID of the like or boost, or the ID of the reply</param>
-        /// <returns>A sequence of posts (generally no more than a single post)</returns>
-        public async IAsyncEnumerable<Post> GetRelevantCachedPostsAsync(string activity_or_reply_id)
-        {
-            foreach (int submitid in await interactionLookup.GetRelevantSubmitIdsAsync(activity_or_reply_id))
-                if (await GetCachedSubmissionAsync(submitid) is CacheResult.PostResult r)
-                    yield return r.Post;
         }
     }
 }

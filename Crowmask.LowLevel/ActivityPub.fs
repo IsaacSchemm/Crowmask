@@ -107,9 +107,6 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
 
         pair "id" id
         pair "url" id
-        pair "likes" $"{id}?view=likes"
-        pair "shares" $"{id}?view=shares"
-        pair "comments" $"{id}?view=comments"
 
         pair "type" "Note"
 
@@ -177,67 +174,67 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
     ]
 
     /// Builds a Note object for a private notification to the admin actor.
-    member _.AsPrivateNote (post: Post, interaction: Interaction) = dict [
-        pair "id" (mapper.GetObjectId(post.submitid, interaction))
-        pair "url" (mapper.GetObjectId(post.submitid, interaction))
+    member _.AsPrivateNote (interaction: RemoteInteraction) = dict [
+        pair "id" (mapper.GetObjectId(interaction))
+        pair "url" (mapper.GetObjectId(interaction))
         pair "type" "Note"
 
         pair "attributedTo" actor
-        pair "content" ((post, interaction) |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
-        pair "published" interaction.AddedAt
+        pair "content" (interaction |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
+        pair "published" interaction.added_at
         pair "to" appInfo.AdminActorId
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
-    member this.PrivateNoteToCreate (post: Post, interaction: Interaction) = dict [
+    member this.PrivateNoteToCreate (interaction: RemoteInteraction) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
-        pair "published" interaction.AddedAt
+        pair "published" interaction.added_at
         pair "to" appInfo.AdminActorId
-        pair "object" (this.AsPrivateNote(post, interaction))
+        pair "object" (this.AsPrivateNote(interaction))
     ]
 
     /// Builds a transient Delete activity for a private notification to the admin actor.
-    member _.PrivateNoteToDelete (post: Post, interaction: Interaction) = dict [
+    member _.PrivateNoteToDelete (interaction: RemoteInteraction) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" appInfo.AdminActorId
-        pair "object" (mapper.GetObjectId(post.submitid, interaction))
+        pair "object" (mapper.GetObjectId(interaction))
     ]
 
     /// Builds a Note object for a private notification to the admin actor.
-    member _.AsPrivateNote (remotePost: RemotePost) = dict [
-        pair "id" (mapper.GetObjectId(remotePost))
-        pair "url" (mapper.GetObjectId(remotePost))
+    member _.AsPrivateNote (mention: RemoteMention) = dict [
+        pair "id" (mapper.GetObjectId(mention))
+        pair "url" (mapper.GetObjectId(mention))
         pair "type" "Note"
 
         pair "attributedTo" actor
-        pair "content" (remotePost |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
-        pair "published" remotePost.added_at
+        pair "content" (mention |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
+        pair "published" mention.added_at
         pair "to" appInfo.AdminActorId
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
-    member this.PrivateNoteToCreate (remotePost: RemotePost) = dict [
+    member this.PrivateNoteToCreate (mention: RemoteMention) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
-        pair "published" remotePost.added_at
+        pair "published" mention.added_at
         pair "to" appInfo.AdminActorId
-        pair "object" (this.AsPrivateNote remotePost)
+        pair "object" (this.AsPrivateNote mention)
     ]
 
     /// Builds a transient Delete activity for a private notification to the admin actor.
-    member _.PrivateNoteToDelete (remotePost: RemotePost) = dict [
+    member _.PrivateNoteToDelete (mention: RemoteMention) = dict [
         pair "type" "Delete"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" appInfo.AdminActorId
-        pair "object" (mapper.GetObjectId(remotePost))
+        pair "object" (mapper.GetObjectId(mention))
     ]
 
     /// Builds a transient Accept activity to accept a follow request.
@@ -284,28 +281,4 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "type" "Collection"
         pair "totalItems" 0
         pair "items" []
-    ]
-
-    /// Builds a Collection to list the likes on a post.
-    member _.AsLikesCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=likes"
-        pair "type" "Collection"
-        pair "totalItems" (List.length post.likes)
-        pair "items" [for o in post.likes do o.activity_id]
-    ]
-
-    /// Builds a Collection to list the boosts on a post.
-    member _.AsSharesCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=shares"
-        pair "type" "Collection"
-        pair "totalItems" (List.length post.boosts)
-        pair "items" [for o in post.boosts do o.activity_id]
-    ]
-
-    /// Builds a Collection to list the replies to a post, as PeerTube does.
-    member _.AsCommentsCollection (post: Post) = dict [
-        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=comments"
-        pair "type" "Collection"
-        pair "totalItems" (List.length post.replies)
-        pair "items" [for o in post.replies do o.object_id]
     ]
