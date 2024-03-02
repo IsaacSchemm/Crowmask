@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\Public\.nuget\packages\fsharp.control.taskseq\0.3.0\contentFiles\any\netstandard2.1\release-notes.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="FreshnessDeterminer.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="IdMapper.fs" />
     <Compile Include="Weasyl.fs" />

@@ -157,7 +157,7 @@ module Domain =
             | "mature" -> Sensitive "Mature (18+)"
             | "explicit" -> Sensitive "Explicit (18+)"
             | x -> Sensitive x
-        stale = submission.Stale
+        stale = FreshnessDeterminer.IsStale(submission)
     }
 
     let AsGallery(count: int) = {
