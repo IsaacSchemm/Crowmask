@@ -43,10 +43,10 @@ Public Interface IApplicationInformation
     ReadOnly Property HandleHostname As String
 
     ''' <summary>
-    ''' The ActivityPub ID of the admin actor, an ActivityPub user who should
+    ''' The ActivityPub ID of the admin actors, ActivityPub users who should
     ''' be notified when Crowmask recieves a boost, like, reply, or mention.
     ''' </summary>
-    ReadOnly Property AdminActorId As String
+    ReadOnly Property AdminActorIds As IEnumerable(Of String)
 
     ''' <summary>
     ''' Whether the HTML (text/html) user interface of Crowmask is enabled.
