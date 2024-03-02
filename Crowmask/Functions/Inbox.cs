@@ -41,21 +41,9 @@ namespace Crowmask.Functions
         }
 
         /// <summary>
-        /// Accepts an ActivityPub message. Supported types are:
-        /// <list type="bullet">
-        /// <item>Follow (adds the follower and sends back an Accept message)</item>
-        /// <item>Undo (removes a follower, like, or boost)</item>
-        /// <item>Like (records a like on one of this actor's posts)</item>
-        /// <item>Announce (records a boost on one of this actor's posts)</item>
-        /// <item>Create (records the ID of a post by another actor, if it's a reply to this actor)</item>
-        /// <item>Delete (removes the ID of a post by another actor, if it was a reply to this actor)</item>
-        /// </list>
-        /// New likes, boosts, and replies also generate private Notes sent to the admin actor. Other actions are ignored.
+        /// Accepts an ActivityPub message.
         /// </summary>
-        /// <remarks>
-        /// Crowmask does not currently forward activities.
-        /// </remarks>
-        /// <param name="req"></param>
+        /// <param name="req">Azure Functions HTTP request data</param>
         /// <returns>
         /// <list type="bullet">
         /// <item>202 Accepted</item>
