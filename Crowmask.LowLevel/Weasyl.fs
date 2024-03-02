@@ -74,6 +74,36 @@ module Weasyl =
         description: string
     }
 
+    type JournalDetail = {
+        journalid: int
+        title: string
+        owner: string
+        content: string
+        tags: string list
+        link: string
+        rating: string
+        friends_only: bool
+        posted_at: DateTimeOffset
+    }
+
+    type CharacterDetail = {
+        charid: int
+        owner: string
+        posted_at: DateTimeOffset
+        title: string
+        age: string
+        gender: string
+        height: string
+        weight: string
+        species: string
+        content: string
+        rating: string
+        media: SubmissionMedia
+        tags: string list
+        friends_only: bool
+        link: string
+    }
+
     type Gallery = {
         submissions: GallerySubmission list
         backid: int option
@@ -129,6 +159,28 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
             return Some object
     }
 
+    /// Gets information on a single Weasyl journal entry.
+    let getJournalAsync (journalid: int) = task {
+        use! resp = getAsync $"https://www.weasyl.com/api/journals/{journalid}/view"
+        if resp.StatusCode = System.Net.HttpStatusCode.NotFound then
+            return None
+        else
+            ignore (resp.EnsureSuccessStatusCode())
+            let! object = resp.Content.ReadFromJsonAsync<Weasyl.JournalDetail>()
+            return Some object
+    }
+
+    /// Gets information on a single Weasyl character post.
+    let getCharacterAsync (charid: int) = task {
+        use! resp = getAsync $"https://www.weasyl.com/api/characters/{charid}/view"
+        if resp.StatusCode = System.Net.HttpStatusCode.NotFound then
+            return None
+        else
+            ignore (resp.EnsureSuccessStatusCode())
+            let! object = resp.Content.ReadFromJsonAsync<Weasyl.CharacterDetail>()
+            return Some object
+    }
+
     /// Gets information on a single Weasyl user.
     let getUserAsync (user: string) = task {
         use! resp = getAsync $"https://www.weasyl.com/api/users/{Uri.EscapeDataString(user)}/view"
@@ -163,6 +215,30 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
     member _.GetMyPublicSubmissionAsync(submitid) = task {
         let! whoami = whoamiLazy.Value
         match! getSubmissionAsync submitid with
+        | None ->
+            return None
+        | Some s ->
+            if s.owner = whoami.login && not s.friends_only
+            then return Some s
+            else return None
+    }
+
+    /// Returns journal information for an ID, unless it doesn't exist, wasn't posted by the logged-in user, or is set to friends only.
+    member _.GetMyPublicJournalAsync(journalid) = task {
+        let! whoami = whoamiLazy.Value
+        match! getJournalAsync journalid with
+        | None ->
+            return None
+        | Some s ->
+            if s.owner = whoami.login && not s.friends_only
+            then return Some s
+            else return None
+    }
+
+    /// Returns character information for an ID, unless it doesn't exist, wasn't posted by the logged-in user, or is set to friends only.
+    member _.GetMyPublicCharacterAsync(charid) = task {
+        let! whoami = whoamiLazy.Value
+        match! getCharacterAsync charid with
         | None ->
             return None
         | Some s ->
