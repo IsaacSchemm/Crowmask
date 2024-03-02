@@ -10,7 +10,6 @@ namespace Crowmask.HighLevel
     /// Accesses and updates cached submission information in the Crowmask database.
     /// </summary>
     public class SubmissionCache(
-        IdMapper idMapper,
         ActivityPubTranslator translator,
         CrowmaskDbContext Context,
         IHttpClientFactory httpClientFactory,
@@ -86,7 +85,7 @@ namespace Crowmask.HighLevel
                         .ToListAsync();
                     cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
                         .ToAsyncEnumerable()
-                        .SelectAwait(async s => new Submission.SubmissionThumbnail
+                        .SelectAwait(async s => new Submission.SubmissionMedia
                         {
                             Url = s.url,
                             ContentType = await GetContentTypeAsync(s.url)
