@@ -183,7 +183,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "attributedTo" actor
         pair "content" (interaction |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
         pair "published" interaction.AddedAt
-        pair "to" appInfo.AdminActorId
+        pair "to" [yield! appInfo.AdminActorIds]
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
@@ -192,7 +192,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" interaction.AddedAt
-        pair "to" appInfo.AdminActorId
+        pair "to" [yield! appInfo.AdminActorIds]
         pair "object" (this.AsPrivateNote(interaction))
     ]
 
@@ -202,7 +202,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
-        pair "to" appInfo.AdminActorId
+        pair "to" [yield! appInfo.AdminActorIds]
         pair "object" (mapper.GetObjectId(interaction))
     ]
 
@@ -215,7 +215,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "attributedTo" actor
         pair "content" (mention |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
         pair "published" mention.AddedAt
-        pair "to" appInfo.AdminActorId
+        pair "to" [yield! appInfo.AdminActorIds]
     ]
 
     /// Builds a transient Create activity for a private notification to the admin actor.
@@ -224,7 +224,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" mention.AddedAt
-        pair "to" appInfo.AdminActorId
+        pair "to" [yield! appInfo.AdminActorIds]
         pair "object" (this.AsPrivateNote mention)
     ]
 
@@ -234,7 +234,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
-        pair "to" appInfo.AdminActorId
+        pair "to" [yield! appInfo.AdminActorIds]
         pair "object" (mapper.GetObjectId(mention))
     ]
 

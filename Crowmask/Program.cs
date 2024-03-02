@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -79,7 +81,12 @@ record AppInfo(
     bool ReturnMarkdown,
     bool UpstreamRedirect) : IApplicationInformation
 {
-    string IApplicationInformation.UserAgent => $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
+    string IApplicationInformation.UserAgent =>
+        $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
+
+    IEnumerable<string> IApplicationInformation.AdminActorIds =>
+        new[] { AdminActorId }
+        .Where(str => !string.IsNullOrEmpty(str));
 }
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

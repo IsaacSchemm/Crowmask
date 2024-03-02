@@ -146,15 +146,18 @@ namespace Crowmask
 
             context.Mentions.Add(newMention);
 
-            context.OutboundActivities.Add(new OutboundActivity
+            await foreach (string inbox in locator.GetAdminActorInboxesAsync())
             {
-                Id = Guid.NewGuid(),
-                Inbox = await locator.GetAdminActorInboxAsync(),
-                JsonBody = ActivityPubSerializer.SerializeWithContext(
-                    translator.PrivateNoteToCreate(
-                        newMention)),
-                StoredAt = DateTimeOffset.UtcNow
-            });
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = inbox,
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToCreate(
+                            newMention)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+            }
 
             await context.SaveChangesAsync();
         }
@@ -173,15 +176,18 @@ namespace Crowmask
 
             foreach (var existingMention in existingMentions)
             {
-                context.OutboundActivities.Add(new OutboundActivity
+                await foreach (string inbox in locator.GetAdminActorInboxesAsync())
                 {
-                    Id = Guid.NewGuid(),
-                    Inbox = await locator.GetAdminActorInboxAsync(),
-                    JsonBody = ActivityPubSerializer.SerializeWithContext(
-                        translator.PrivateNoteToDelete(
-                            existingMention)),
-                    StoredAt = DateTimeOffset.UtcNow
-                });
+                    context.OutboundActivities.Add(new OutboundActivity
+                    {
+                        Id = Guid.NewGuid(),
+                        Inbox = inbox,
+                        JsonBody = ActivityPubSerializer.SerializeWithContext(
+                            translator.PrivateNoteToDelete(
+                                existingMention)),
+                        StoredAt = DateTimeOffset.UtcNow
+                    });
+                }
 
                 context.Mentions.Remove(existingMention);
             }
@@ -217,15 +223,18 @@ namespace Crowmask
 
             context.Interactions.Add(newInteraction);
 
-            context.OutboundActivities.Add(new OutboundActivity
+            await foreach (string inbox in locator.GetAdminActorInboxesAsync())
             {
-                Id = Guid.NewGuid(),
-                Inbox = await locator.GetAdminActorInboxAsync(),
-                JsonBody = ActivityPubSerializer.SerializeWithContext(
-                    translator.PrivateNoteToCreate(
-                        newInteraction)),
-                StoredAt = DateTimeOffset.UtcNow
-            });
+                context.OutboundActivities.Add(new OutboundActivity
+                {
+                    Id = Guid.NewGuid(),
+                    Inbox = inbox,
+                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                        translator.PrivateNoteToCreate(
+                            newInteraction)),
+                    StoredAt = DateTimeOffset.UtcNow
+                });
+            }
 
             await context.SaveChangesAsync();
         }
@@ -244,15 +253,18 @@ namespace Crowmask
 
             foreach (var existingInteraction in existingInteractions)
             {
-                context.OutboundActivities.Add(new OutboundActivity
+                await foreach (string inbox in locator.GetAdminActorInboxesAsync())
                 {
-                    Id = Guid.NewGuid(),
-                    Inbox = await locator.GetAdminActorInboxAsync(),
-                    JsonBody = ActivityPubSerializer.SerializeWithContext(
+                    context.OutboundActivities.Add(new OutboundActivity
+                    {
+                        Id = Guid.NewGuid(),
+                        Inbox = inbox,
+                        JsonBody = ActivityPubSerializer.SerializeWithContext(
                         translator.PrivateNoteToDelete(
                             existingInteraction)),
-                    StoredAt = DateTimeOffset.UtcNow
-                });
+                        StoredAt = DateTimeOffset.UtcNow
+                    });
+                }
 
                 context.Interactions.Remove(existingInteraction);
             }

@@ -11,18 +11,25 @@ namespace Crowmask.HighLevel
         /// Gets the URL of the admin actor's inbox.
         /// </summary>
         /// <returns>The inbox URL</returns>
-        public async Task<string> GetAdminActorInboxAsync()
+        public async IAsyncEnumerable<string> GetAdminActorInboxesAsync()
         {
-            var follower = await context.Followers
-                .Where(f => f.ActorId == appInfo.AdminActorId)
-                .Select(f => new { f.Inbox })
-                .FirstOrDefaultAsync();
+            foreach (string adminActorId in appInfo.AdminActorIds)
+            {
+                var follower = await context.Followers
+                    .Where(f => f.ActorId == adminActorId)
+                    .Select(f => new { f.Inbox })
+                    .FirstOrDefaultAsync();
 
-            if (follower != null)
-                return follower.Inbox;
-
-            var adminActorDetails = await requester.FetchActorAsync(appInfo.AdminActorId);
-            return adminActorDetails.Inbox;
+                if (follower != null)
+                {
+                    yield return follower.Inbox;
+                }
+                else
+                {
+                    var adminActorDetails = await requester.FetchActorAsync(adminActorId);
+                    yield return adminActorDetails.Inbox;
+                }
+            }
         }
 
         /// <summary>

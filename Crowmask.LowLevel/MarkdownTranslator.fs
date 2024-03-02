@@ -87,8 +87,11 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         for hostname in List.distinct [appInfo.HandleHostname; appInfo.ApplicationHostname] do
             $"    @{enc appInfo.Username}@{hostname}"
         $""
-        $"Any boosts, likes, replies, or mentions will generate a notification to [{enc appInfo.AdminActorId}]({appInfo.AdminActorId})."
-        $""
+        if not (Seq.isEmpty appInfo.AdminActorIds) then
+            $"Any boosts, likes, replies, or mentions will generate a notification to:"
+            for adminActorId in appInfo.AdminActorIds do
+                $"* [{enc adminActorId}]({adminActorId})"
+            $""
         $"[View followers](/api/actor/followers)"
         $""
         $"--------"

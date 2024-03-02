@@ -22,7 +22,7 @@ included for visual submissions.
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 or tags the Crowmask actor in a post, Crowmask will send a private message to
-the "admin actor" defined in its configuration variables and shown on its
+the "admin actors" defined in its configuration variables and shown on its
 profile page.
 
 Outgoing activities (like "accept follow" or "create new post") are processed
@@ -68,7 +68,7 @@ Layers:
       [Letterbook](https://github.com/Letterbook/Letterbook).
     * **Remote**: Talks to other ActivityPub servers.
     * **FeedBuilder**: Implements RSS and Atom feeds.
-    * **RemoteInboxLocator**: Collects inbox URLs for the admin actor, followers, and other known servers.
+    * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
     * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
     * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
 * **Crowmask** (C#): The main Azure Functions project, responsible for
@@ -77,7 +77,7 @@ Layers:
 HTTP endpoints:
 
 * `/.well-known/nodeinfo`: returns the location of the NodeInfo endpoint
-* `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the admin actor's domain
+* `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the domain of the first admin actor
 * `/api/actor`: returns the `Person` object
 * `/api/actor/followers`: contains the IDs of all followers (not paginated)
 * `/api/actor/following`: an empty list
@@ -86,8 +86,8 @@ HTTP endpoints:
 * `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
 * `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
 * `/api/submissions/{submitid}`: returns the resulting `Note` object
-* `/api/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
-* `/api/mentions/{guid}/notification`: shows the (unlisted) notification sent to the admin actor
+* `/api/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actors
+* `/api/mentions/{guid}/notification`: shows the (unlisted) notification sent to the admin actors
 
 Timed functions:
 
