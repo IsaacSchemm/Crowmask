@@ -16,9 +16,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.Data", "Crowmask.D
 EndProject
 Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "Crowmask.Interfaces", "Crowmask.Interfaces\Crowmask.Interfaces.vbproj", "{A0022FDE-13CA-4861-B2A8-22235D91C7C0}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Crowmask.LowLevel", "Crowmask.LowLevel\Crowmask.LowLevel.fsproj", "{E718FCA4-0D09-43BA-AA09-7503C3ED1B7A}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.LowLevel", "Crowmask.LowLevel\Crowmask.LowLevel.fsproj", "{E718FCA4-0D09-43BA-AA09-7503C3ED1B7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crowmask.HighLevel", "Crowmask.HighLevel\Crowmask.HighLevel.csproj", "{C2C579AE-A496-443F-89A7-A4E8EB7DB07B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.HighLevel", "Crowmask.HighLevel\Crowmask.HighLevel.csproj", "{C2C579AE-A496-443F-89A7-A4E8EB7DB07B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.ATProto.Example", "Crowmask.ATProto.Example\Crowmask.ATProto.Example.csproj", "{7F81BFC4-238E-48B0-9F7F-FF2CF4156E9D}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Crowmask.ATProto", "Crowmask.ATProto\Crowmask.ATProto.fsproj", "{6E595F40-969E-41CA-B91A-AF5990EDF911}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +50,14 @@ Global
 		{C2C579AE-A496-443F-89A7-A4E8EB7DB07B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2C579AE-A496-443F-89A7-A4E8EB7DB07B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2C579AE-A496-443F-89A7-A4E8EB7DB07B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F81BFC4-238E-48B0-9F7F-FF2CF4156E9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F81BFC4-238E-48B0-9F7F-FF2CF4156E9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F81BFC4-238E-48B0-9F7F-FF2CF4156E9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F81BFC4-238E-48B0-9F7F-FF2CF4156E9D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
