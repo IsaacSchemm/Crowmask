@@ -35,7 +35,7 @@ namespace Crowmask.HighLevel
         /// <summary>
         /// Checks the information for the given submission in Crowmask's
         /// database (if any), and fetches new information from Weasyl if the
-        /// submission is stale or absent. New, updated, and deleted postswill generate new ActivityPub messages.
+        /// submission is stale or absent. New, updated, and deleted posts will generate new ActivityPub messages.
         /// </summary>
         /// <param name="submitid">The submission ID</param>
         /// <returns>A CacheResult union, with the found post if any</returns>
@@ -111,6 +111,9 @@ namespace Crowmask.HighLevel
                     bool changed = !oldSubmission.Equals(newSubmission);
                     bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
 
+                    // Notify ActivityPub servers of updates to posts Crowmask
+                    // has seen before, and of posts that are new to Crowmask
+                    // that are less than 12 hours old.
                     if (changed && !backfill)
                     {
                         foreach (string inbox in await inboxLocator.GetDistinctInboxesAsync(followersOnly: newlyCreated))
@@ -130,6 +133,14 @@ namespace Crowmask.HighLevel
 
                     cachedSubmission.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
                     await Context.SaveChangesAsync();
+
+                    if (changed)
+                    {
+                        // TODO: try to delete any existing atproto posts attached to this submission
+                        // TODO: create a new backdated atproto post for each attached atproto account that does not have a corresponding post
+                        //       (must first upload blob from image)
+                        //       https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/post.json
+                    }
 
                     return CacheResult.NewPostResult(newSubmission);
                 }
@@ -153,6 +164,8 @@ namespace Crowmask.HighLevel
                                 StoredAt = DateTimeOffset.UtcNow
                             });
                         }
+
+                        // TODO: try to delete any existing atproto posts attached to this submission
 
                         await Context.SaveChangesAsync();
                     }
