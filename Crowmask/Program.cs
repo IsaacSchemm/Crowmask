@@ -97,8 +97,6 @@ record AppInfo(
         {
             if (!string.IsNullOrEmpty(AdminActorId))
                 yield return AdminActorId;
-
-            yield return "https://activitypub.academy/users/bagulia_aeldaed";
         }
     }
 
