@@ -1,10 +1,11 @@
 ﻿# Crowmask 🐦‍⬛🎭
 
-**Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented
-using Azure Functions and Azure Cosmos DB. It is intended for users who:
+**Crowmask** is a single-user ActivityPub bridge and Bluesky bot for Weasyl,
+implemented using Azure Functions and Azure Cosmos DB. It is intended for
+users who:
 
 * already post artwork to Weasyl
-* have an ActivityPub account elsewhere (e.g. Mastodon) not used for art
+* already have an ActivityPub account elsewhere (e.g. Mastodon)
 * know how to deploy a C# Azure Functions app to Azure
 
 Crowmask is written mostly in C# with some parts in F#.
@@ -30,7 +31,10 @@ over 28 days old). User profile data is updated hourly.
 
 Crowmask can also use atproto to act as a Bluesky bot, if so configured.
 Bluesky notifications are also checked every six hours and summarized in a
-private `Note` sent to the admin actors.
+private `Note` sent to the admin actors. (Crowmask does not integrate into
+the atproto network directly as a PDS, because doing so properly would require
+implementing WebSockets, and Crowmask is designed to operate over HTTP and
+timed functions only.)
 
 ## Browsing
 
@@ -59,14 +63,14 @@ Layers:
 
 * **Crowmask.Interfaces** (VB.NET): contains interfaces used to pass config
   values between layers or to allow inner layers to call outer-layer code.
-* **Crowmask.ATProto** (F#): a minimalist API client for communicating with an
-  atproto PDS like `bsky.social`.
 * **Crowmask.Data** (C#): contains the data types and and data context, which
   map to documents in the Cosmos DB backend of EF Core.
 * **Crowmask.LowLevel** (F#): converts data objects like `Submission` (which
   are specific to the database schema) to more general F# records, then to
   ActivityPub objects or Markdown / HTML pages; maps Crowmask internal IDs to
   ActivityPub IDs; and talks to the Weasyl API.
+* **Crowmask.ATProto** (F#): a small API client for communicating with Bluesky
+  or a similar atproto PDS. Only implements NSIDs used by Crowmask.
 * **Crowmask.HighLevel** (C#):
     * **Signatures**: HTTP signature validation, adapted from
       [Letterbook](https://github.com/Letterbook/Letterbook).
@@ -97,7 +101,7 @@ Timed functions:
 * `RefreshCache` (every day at 12:00)
 * `RefreshProfile` (every hour at :05)
 * `RefreshRecent` (every ten minutes)
-* `RefreshUpstream` (every month on the 1st at 17:00)
+* `RefreshUpstream` (every month on the 5th at 17:00)
 * `SendOutbound` (every hour at :02)
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt

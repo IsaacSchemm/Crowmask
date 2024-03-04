@@ -11,11 +11,16 @@ using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
-using NN = Crowmask.ATProto.Notifications;
 
 namespace Crowmask.Functions
 {
-    public class CheckBlueskyNotifications(ActivityPubTranslator translator, CrowmaskDbContext context, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory, RemoteInboxLocator locator)
+    public class CheckBlueskyNotifications(
+        ActivityPubTranslator translator,
+        BlueskyClient blueskyClient,
+        CrowmaskDbContext context,
+        IApplicationInformation appInfo,
+        IHttpClientFactory httpClientFactory,
+        RemoteInboxLocator locator)
     {
         /// <summary>
         /// Checks the atproto PDS for any notifications since the last check,
@@ -40,11 +45,7 @@ namespace Crowmask.Functions
 
                     if (account.Identifier != null && account.Password != null)
                     {
-                        var tokens = await Auth.createSessionAsync(
-                            client,
-                            account.PDS,
-                            account.Identifier,
-                            account.Password);
+                        var tokens = await blueskyClient.CreateSessionAsync(account);
 
                         if (tokens.did != account.DID)
                             continue;
@@ -67,9 +68,7 @@ namespace Crowmask.Functions
 
                     var wrapper = new TokenWrapper(context, session);
 
-                    var mostRecent = await NN.listNotificationsAsync(
-                        client,
-                        account.PDS,
+                    var mostRecent = await blueskyClient.ListNotificationsAsync(
                         wrapper,
                         limit: Limit.DefaultLimit,
                         cursor: Cursor.FromStart);

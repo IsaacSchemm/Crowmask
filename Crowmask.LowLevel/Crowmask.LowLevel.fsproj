@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Crowmask.ATProto\Crowmask.ATProto.fsproj" />
     <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
     <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
   </ItemGroup>
