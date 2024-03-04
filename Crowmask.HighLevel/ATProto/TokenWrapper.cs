@@ -16,7 +16,7 @@ namespace Crowmask.HighLevel.ATProto
             RefreshToken = newCredentials.RefreshToken;
 
             var dbRecord = await context.ATProtoSessions
-                .Where(a => a.DID == session.DID)
+                .Where(a => a.Handle == session.Handle)
                 .SingleOrDefaultAsync();
 
             if (dbRecord != null)

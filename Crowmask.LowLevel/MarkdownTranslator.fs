@@ -82,7 +82,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $""
         $"----------"
         $""
-        $"## ActivityPub"
+        $"## ActivityPub (e.g. Mastodon)"
         $""
         for hostname in List.distinct [appInfo.HandleHostname; appInfo.ApplicationHostname] do
             $"    @{enc appInfo.Username}@{hostname}"
@@ -90,19 +90,19 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         if not (Seq.isEmpty appInfo.AdminActorIds) then
             $"Any boosts, likes, replies, or mentions will generate a notification to:"
             for adminActorId in appInfo.AdminActorIds do
-                $"* [{enc adminActorId}]({adminActorId})"
+                $"* [`{enc adminActorId}`]({adminActorId})"
             $""
         $"[View followers](/api/actor/followers)"
         $""
         $"--------"
         $""
         if not (Seq.isEmpty appInfo.AdminActorIds) then
-            $"## atproto"
+            $"## atproto (e.g. Bluesky)"
             $""
             $"This server operates a bot account on:"
             $""
             for account in appInfo.ATProtoBotAccounts do
-                $"* `{enc account.DID}`"
+                $"* `@{enc account.Handle}`"
             $""
         $"--------"
         $""

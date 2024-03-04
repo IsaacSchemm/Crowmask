@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -40,7 +39,7 @@ var host = new HostBuilder()
             ReturnMarkdown: true,
             UpstreamRedirect: false,
             ATProtoPDS: Environment.GetEnvironmentVariable("ATProtoPDS"),
-            ATProtoDID: Environment.GetEnvironmentVariable("ATProtoDID"),
+            ATProtoHandle: Environment.GetEnvironmentVariable("ATProtoHandle"),
             ATProtoIdentifier: Environment.GetEnvironmentVariable("ATProtoIdentifier"),
             ATProtoPassword: Environment.GetEnvironmentVariable("ATProtoPassword")));
 
@@ -85,7 +84,7 @@ record AppInfo(
     bool ReturnMarkdown,
     bool UpstreamRedirect,
     string ATProtoPDS,
-    string ATProtoDID,
+    string ATProtoHandle,
     string ATProtoIdentifier,
     string ATProtoPassword) : IApplicationInformation, IATProtoAccount
 {
@@ -98,20 +97,22 @@ record AppInfo(
         {
             if (!string.IsNullOrEmpty(AdminActorId))
                 yield return AdminActorId;
+
+            yield return "https://activitypub.academy/users/bagulia_aeldaed";
         }
     }
 
     IEnumerable<IATProtoAccount> IApplicationInformation.ATProtoBotAccounts {
         get
         {
-            if (!string.IsNullOrEmpty(ATProtoPDS) && !string.IsNullOrEmpty(ATProtoDID))
+            if (!string.IsNullOrEmpty(ATProtoPDS) && !string.IsNullOrEmpty(ATProtoHandle))
                 yield return this;
         }
     }
 
     string IATProtoAccount.Hostname => ATProtoPDS;
 
-    string IATProtoAccount.DID => ATProtoDID;
+    string IATProtoAccount.Handle => ATProtoHandle;
 
     string IATProtoAccount.Identifier => ATProtoIdentifier;
 
