@@ -139,9 +139,9 @@ namespace Crowmask.HighLevel
                     if (changed)
                     {
                         await blueskyAgent.TryDeleteBlueskyPostsAsync(cachedSubmission);
-                        await blueskyAgent.TryCreateBlueskyPostsAsync(cachedSubmission);
-                        await Context.SaveChangesAsync();
                     }
+                    await blueskyAgent.TryCreateBlueskyPostsAsync(cachedSubmission);
+                    await Context.SaveChangesAsync();
 
                     return CacheResult.NewPostResult(newSubmission);
                 }
