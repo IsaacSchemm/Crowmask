@@ -29,7 +29,7 @@ var host = new HostBuilder()
 
         services.AddSingleton<IApplicationInformation>(new AppInfo(
             ApplicationName: "Crowmask",
-            VersionNumber: "1.5.1",
+            VersionNumber: "1.6",
             ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             WebsiteUrl: $"https://github.com/IsaacSchemm/Crowmask/",
             Username: Environment.GetEnvironmentVariable("HandleName"),
@@ -38,10 +38,10 @@ var host = new HostBuilder()
             ReturnHTML: true,
             ReturnMarkdown: true,
             UpstreamRedirect: false,
-            ATProtoPDS: Environment.GetEnvironmentVariable("ATProtoPDS"),
-            ATProtoHandle: Environment.GetEnvironmentVariable("ATProtoHandle"),
-            ATProtoIdentifier: Environment.GetEnvironmentVariable("ATProtoIdentifier"),
-            ATProtoPassword: Environment.GetEnvironmentVariable("ATProtoPassword")));
+            BlueskyPDS: Environment.GetEnvironmentVariable("BlueskyPDS"),
+            BlueskyDID: Environment.GetEnvironmentVariable("BlueskyDID"),
+            BlueskyIdentifier: Environment.GetEnvironmentVariable("BlueskyIdentifier"),
+            BlueskyPassword: Environment.GetEnvironmentVariable("BlueskyPassword")));
 
         services.AddSingleton<IActorKeyProvider>(
             new KeyProvider(
@@ -83,10 +83,10 @@ record AppInfo(
     bool ReturnHTML,
     bool ReturnMarkdown,
     bool UpstreamRedirect,
-    string ATProtoPDS,
-    string ATProtoHandle,
-    string ATProtoIdentifier,
-    string ATProtoPassword) : IApplicationInformation, IATProtoAccount
+    string BlueskyPDS,
+    string BlueskyDID,
+    string BlueskyIdentifier,
+    string BlueskyPassword) : IApplicationInformation, IBlueskyAccount
 {
     string IApplicationInformation.UserAgent =>
         $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
@@ -100,21 +100,18 @@ record AppInfo(
         }
     }
 
-    IEnumerable<IATProtoAccount> IApplicationInformation.ATProtoBotAccounts {
+    IEnumerable<IBlueskyAccount> IApplicationInformation.BlueskyBotAccounts {
         get
         {
-            if (!string.IsNullOrEmpty(ATProtoPDS) && !string.IsNullOrEmpty(ATProtoHandle))
+            if (!string.IsNullOrEmpty(BlueskyPDS) && !string.IsNullOrEmpty(BlueskyDID))
                 yield return this;
         }
     }
 
-    string IATProtoAccount.Hostname => ATProtoPDS;
-
-    string IATProtoAccount.Handle => ATProtoHandle;
-
-    string IATProtoAccount.Identifier => ATProtoIdentifier;
-
-    string IATProtoAccount.Password => ATProtoPassword;
+    string IBlueskyAccount.PDS => BlueskyPDS;
+    string IBlueskyAccount.DID => BlueskyDID;
+    string IBlueskyAccount.Identifier => BlueskyIdentifier;
+    string IBlueskyAccount.Password => BlueskyPassword;
 }
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

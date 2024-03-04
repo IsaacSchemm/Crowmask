@@ -99,11 +99,9 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         if not (Seq.isEmpty appInfo.AdminActorIds) then
             $"## atproto (e.g. Bluesky)"
             $""
-            $"This server operates a bot account on:"
-            $""
-            for account in appInfo.ATProtoBotAccounts do
-                $"* `@{enc account.Handle}`"
-            $""
+            for account in appInfo.BlueskyBotAccounts do
+                $"This server operates a bot account at [`{enc account.DID}`](https://bsky.app/profile/{enc account.DID}) on `{enc account.PDS}`."
+                $""
         $"--------"
         $""
         $"## Atom/RSS"

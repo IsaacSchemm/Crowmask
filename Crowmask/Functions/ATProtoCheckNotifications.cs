@@ -32,32 +32,32 @@ namespace Crowmask.Functions
 
             var exceptions = new List<Exception>(0);
 
-            foreach (var account in appInfo.ATProtoBotAccounts)
+            foreach (var account in appInfo.BlueskyBotAccounts)
             {
                 try
                 {
-                    var session = await context.ATProtoSessions
-                        .Where(s => s.Handle == account.Handle)
+                    var session = await context.BlueskySessions
+                        .Where(s => s.DID == account.DID)
                         .SingleOrDefaultAsync();
 
                     if (account.Identifier != null && account.Password != null)
                     {
                         var tokens = await Auth.createSessionAsync(
                             client,
-                            account.Hostname,
+                            account.PDS,
                             account.Identifier,
                             account.Password);
 
-                        if (tokens.handle != account.Handle)
+                        if (tokens.did != account.DID)
                             continue;
 
                         if (session == null)
                         {
-                            session = new ATProtoSession
+                            session = new BlueskySession
                             {
-                                Handle = account.Handle
+                                DID = account.DID
                             };
-                            context.ATProtoSessions.Add(session);
+                            context.BlueskySessions.Add(session);
                         }
 
                         session.AccessToken = tokens.accessJwt;
@@ -71,7 +71,7 @@ namespace Crowmask.Functions
 
                     var mostRecent = await NN.listNotificationsAsync(
                         client,
-                        account.Hostname,
+                        account.PDS,
                         wrapper,
                         limit: Limit.DefaultLimit,
                         cursor: Cursor.FromStart);
@@ -87,7 +87,7 @@ namespace Crowmask.Functions
 
                     IEnumerable<string> buildContent()
                     {
-                        yield return $"{countStr} Bluesky notification(s) for @{account.Handle}";
+                        yield return $"{countStr} Bluesky notification(s) for [`{Uri.EscapeDataString(account.DID)}`](https://bsky.app/profile/{Uri.EscapeDataString(account.DID)})";
                         yield return $"";
 
                         foreach (var group in mostRecentNotifications.GroupBy(n => n.reason))

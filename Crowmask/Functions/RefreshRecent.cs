@@ -15,7 +15,7 @@ namespace Crowmask.Functions
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("RefreshRecent")]
-        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("15 53 * * * *")] TimerInfo myTimer)
         {
             DateTimeOffset yesterday = DateTimeOffset.UtcNow.AddDays(-1);
 
@@ -27,7 +27,7 @@ namespace Crowmask.Functions
             }
 
             await foreach (var post in cache.GetCachedSubmissionsAsync(since: yesterday))
-                if (post.stale)
+                //if (post.stale)
                     await cache.RefreshSubmissionAsync(post.submitid);
         }
     }

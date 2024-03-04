@@ -1,4 +1,6 @@
 ﻿using Crowmask.Data;
+using Crowmask.HighLevel.ATProto;
+using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FSharp.Core;
@@ -12,6 +14,7 @@ namespace Crowmask.HighLevel
     public class SubmissionCache(
         ActivityPubTranslator translator,
         CrowmaskDbContext Context,
+        IApplicationInformation appInfo,
         IHttpClientFactory httpClientFactory,
         RemoteInboxLocator inboxLocator,
         WeasylClient weasylClient)
@@ -32,6 +35,109 @@ namespace Crowmask.HighLevel
             return val?.MediaType ?? "application/octet-stream";
         }
 
+        private async Task TryDeleteAllBlueskyPosts(Submission submission)
+        {
+            if (submission.BlueskyPosts.Count == 0)
+                return;
+
+            using var httpClient = httpClientFactory.CreateClient();
+
+            foreach (var mirrorPost in submission.BlueskyPosts.ToList())
+            {
+                try
+                {
+                    var session = await Context.BlueskySessions
+                        .Where(a => a.DID == mirrorPost.DID)
+                        .SingleOrDefaultAsync();
+
+                    var account = appInfo.BlueskyBotAccounts
+                        .Where(a => a.DID == mirrorPost.DID)
+                        .SingleOrDefault();
+
+                    if (session == null || account == null)
+                        continue;
+
+                    var wrapper = new TokenWrapper(Context, session);
+                    await Crowmask.ATProto.Repo.deleteRecordAsync(
+                        httpClient,
+                        account.PDS,
+                        wrapper,
+                        mirrorPost.RecordKey);
+
+                    submission.BlueskyPosts.Remove(mirrorPost);
+                }
+                catch (Exception) { }
+            }
+
+            await Context.SaveChangesAsync();
+        }
+
+        private async Task TryCreateAllBlueskyPosts(Submission submission)
+        {
+            if (!appInfo.BlueskyBotAccounts.Any())
+                return;
+
+            using var httpClient = httpClientFactory.CreateClient();
+
+            async IAsyncEnumerable<(byte[] data, string contentType)> downloadImagesAsync()
+            {
+                foreach (var image in submission.Media)
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Get, image.Url);
+                    using var resp = await httpClient.SendAsync(req);
+                    byte[] data = await resp.Content.ReadAsByteArrayAsync();
+                    string mediaType = resp.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+                    yield return (data, mediaType);
+                }
+            }
+
+            var allImages = await downloadImagesAsync().ToListAsync();
+
+            foreach (var account in appInfo.BlueskyBotAccounts)
+            {
+                try
+                {
+                    if (submission.BlueskyPosts.Any(m => m.DID == account.DID))
+                        continue;
+
+                    var session = await Context.BlueskySessions
+                        .Where(a => a.DID == account.DID)
+                        .SingleOrDefaultAsync();
+
+                    if (session == null)
+                        continue;
+
+                    var wrapper = new TokenWrapper(Context, session);
+                    var blobResponses = await allImages
+                        .ToAsyncEnumerable()
+                        .SelectAwait(async image => await Crowmask.ATProto.Repo.uploadBlobAsync(
+                            httpClient,
+                            account.PDS,
+                            wrapper,
+                            image.data,
+                            image.contentType))
+                        .ToListAsync();
+                    var post = await Crowmask.ATProto.Repo.createRecordAsync(
+                        httpClient,
+                        account.PDS,
+                        wrapper,
+                        new Crowmask.ATProto.Repo.Post(
+                            text: submission.Description,
+                            createdAt: submission.PostedAt,
+                            images: blobResponses));
+
+                    submission.BlueskyPosts.Add(new Submission.BlueskyPost
+                    {
+                        DID = account.DID,
+                        RecordKey = post.RecordKey
+                    });
+                }
+                catch (Exception) { }
+            }
+
+            await Context.SaveChangesAsync();
+        }
+
         /// <summary>
         /// Checks the information for the given submission in Crowmask's
         /// database (if any), and fetches new information from Weasyl if the
@@ -47,8 +153,8 @@ namespace Crowmask.HighLevel
 
             if (cachedSubmission != null)
             {
-                if (!FreshnessDeterminer.IsStale(cachedSubmission))
-                    return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
+                //if (!FreshnessDeterminer.IsStale(cachedSubmission))
+                //    return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -136,10 +242,8 @@ namespace Crowmask.HighLevel
 
                     if (changed)
                     {
-                        // TODO: try to delete any existing atproto posts attached to this submission
-                        // TODO: create a new backdated atproto post for each attached atproto account that does not have a corresponding post
-                        //       (must first upload blob from image)
-                        //       https://github.com/bluesky-social/atproto/blob/main/lexicons/app/bsky/feed/post.json
+                        await TryDeleteAllBlueskyPosts(cachedSubmission);
+                        await TryCreateAllBlueskyPosts(cachedSubmission);
                     }
 
                     return CacheResult.NewPostResult(newSubmission);
@@ -165,7 +269,7 @@ namespace Crowmask.HighLevel
                             });
                         }
 
-                        // TODO: try to delete any existing atproto posts attached to this submission
+                        await TryDeleteAllBlueskyPosts(cachedSubmission);
 
                         await Context.SaveChangesAsync();
                     }

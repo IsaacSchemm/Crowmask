@@ -1,15 +1,18 @@
-﻿Public Interface IATProtoAccount
+﻿''' <summary>
+''' An account on Bluesky or a compatible atproto app.
+''' </summary>
+Public Interface IBlueskyAccount
     ''' <summary>
     ''' The hostname of the PDS (e.g. bluesky.social).
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property Hostname As String
+    ReadOnly Property PDS As String
 
     ''' <summary>
-    ''' The user's handle (e.g. example.bsky.social).
+    ''' The user's DID (e.g. did:plc:xxxxxxxxxxxxxxxxxxxxxxxx).
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property Handle As String
+    ReadOnly Property DID As String
 
     ''' <summary>
     ''' The login username, if available.
