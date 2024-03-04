@@ -15,7 +15,7 @@ using NN = Crowmask.ATProto.Notifications;
 
 namespace Crowmask.Functions
 {
-    public class ATProtoCheckNotifications(ActivityPubTranslator translator, CrowmaskDbContext context, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory, RemoteInboxLocator locator)
+    public class CheckBlueskyNotifications(ActivityPubTranslator translator, CrowmaskDbContext context, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory, RemoteInboxLocator locator)
     {
         /// <summary>
         /// Checks the atproto PDS for any notifications since the last check,
@@ -24,13 +24,11 @@ namespace Crowmask.Functions
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>
-        [Function("ATProtoCheckNotifications")]
+        [Function("CheckBlueskyNotifications")]
         public async Task Run([TimerTrigger("0 0 */6 * * *")] TimerInfo myTimer)
         {
             var client = httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
-
-            var exceptions = new List<Exception>(0);
 
             foreach (var account in appInfo.BlueskyBotAccounts)
             {
@@ -118,15 +116,7 @@ namespace Crowmask.Functions
 
                     await context.SaveChangesAsync();
                 }
-                catch (Exception ex)
-                {
-                    exceptions.Add(ex);
-                }
-            }
-
-            if (exceptions.Count > 0)
-            {
-                throw new AggregateException("Could not check Bluesky notifications", exceptions);
+                catch (Exception) { }
             }
         }
     }
