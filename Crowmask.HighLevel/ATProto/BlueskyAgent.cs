@@ -1,10 +1,12 @@
-﻿using Crowmask.Data;
+﻿using Crowmask.ATProto;
+using Crowmask.Data;
 using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.HighLevel.ATProto
 {
     public class BlueskyAgent(
+        BlueskyClient blueskyClient,
         CrowmaskDbContext context,
         IApplicationInformation appInfo,
         IHttpClientFactory httpClientFactory)
@@ -32,9 +34,7 @@ namespace Crowmask.HighLevel.ATProto
                         continue;
 
                     var wrapper = new TokenWrapper(context, session);
-                    await Crowmask.ATProto.Repo.deleteRecordAsync(
-                        httpClient,
-                        account.PDS,
+                    await blueskyClient.DeleteRecordAsync(
                         wrapper,
                         mirrorPost.RecordKey);
 
@@ -65,6 +65,8 @@ namespace Crowmask.HighLevel.ATProto
 
             var allImages = await downloadImagesAsync().ToListAsync();
 
+            var converter = new Textify.HtmlToTextConverter();
+
             foreach (var account in appInfo.BlueskyBotAccounts)
             {
                 try
@@ -82,19 +84,15 @@ namespace Crowmask.HighLevel.ATProto
                     var wrapper = new TokenWrapper(context, session);
                     var blobResponses = await allImages
                         .ToAsyncEnumerable()
-                        .SelectAwait(async image => await Crowmask.ATProto.Repo.uploadBlobAsync(
-                            httpClient,
-                            account.PDS,
+                        .SelectAwait(async image => await blueskyClient.UploadBlobAsync(
                             wrapper,
                             image.data,
                             image.contentType))
                         .ToListAsync();
-                    var post = await Crowmask.ATProto.Repo.createRecordAsync(
-                        httpClient,
-                        account.PDS,
+                    var post = await blueskyClient.CreateRecordAsync(
                         wrapper,
-                        new Crowmask.ATProto.Repo.Post(
-                            text: new Textify.HtmlToTextConverter().Convert(submission.Content),
+                        new Modules.Repo.Post(
+                            text: converter.Convert(submission.Content),
                             createdAt: submission.PostedAt,
                             images: blobResponses));
 
