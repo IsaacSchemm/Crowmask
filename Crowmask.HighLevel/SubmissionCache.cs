@@ -122,7 +122,7 @@ namespace Crowmask.HighLevel
                         account.PDS,
                         wrapper,
                         new Crowmask.ATProto.Repo.Post(
-                            text: submission.Description,
+                            text: new Textify.HtmlToTextConverter().Convert(submission.Content),
                             createdAt: submission.PostedAt,
                             images: blobResponses));
 
