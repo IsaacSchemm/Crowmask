@@ -174,62 +174,8 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "object" (mapper.GetObjectId(post.submitid))
     ]
 
-    /// Builds a Note object for a private notification to the admin actor.
-    member _.AsPrivateNote (interaction: Interaction) = dict [
-        pair "id" (mapper.GetObjectId(interaction))
-        pair "url" (mapper.GetObjectId(interaction))
-        pair "type" "Note"
-
-        pair "attributedTo" actor
-        pair "content" (interaction |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
-        pair "published" interaction.AddedAt
-        pair "to" [yield! appInfo.AdminActorIds]
-    ]
-
-    /// Builds a transient Create activity for a private notification to the admin actor.
-    member this.PrivateNoteToCreate (interaction: Interaction) = dict [
-        pair "type" "Create"
-        pair "id" (mapper.GenerateTransientId())
-        pair "actor" actor
-        pair "published" interaction.AddedAt
-        pair "to" [yield! appInfo.AdminActorIds]
-        pair "object" (this.AsPrivateNote(interaction))
-    ]
-
-    /// Builds a transient Delete activity for a private notification to the admin actor.
-    member _.PrivateNoteToDelete (interaction: Interaction) = dict [
-        pair "type" "Delete"
-        pair "id" (mapper.GenerateTransientId())
-        pair "actor" actor
-        pair "published" DateTimeOffset.UtcNow
-        pair "to" [yield! appInfo.AdminActorIds]
-        pair "object" (mapper.GetObjectId(interaction))
-    ]
-
-    /// Builds a Note object for a private notification to the admin actor.
-    member _.AsPrivateNote (mention: Mention) = dict [
-        pair "id" (mapper.GetObjectId(mention))
-        pair "url" (mapper.GetObjectId(mention))
-        pair "type" "Note"
-
-        pair "attributedTo" actor
-        pair "content" (mention |> summarizer.ToMarkdown |> Markdig.Markdown.ToHtml)
-        pair "published" mention.AddedAt
-        pair "to" [yield! appInfo.AdminActorIds]
-    ]
-
-    /// Builds a transient Create activity for a private notification to the admin actor.
-    member this.PrivateNoteToCreate (mention: Mention) = dict [
-        pair "type" "Create"
-        pair "id" (mapper.GenerateTransientId())
-        pair "actor" actor
-        pair "published" mention.AddedAt
-        pair "to" [yield! appInfo.AdminActorIds]
-        pair "object" (this.AsPrivateNote mention)
-    ]
-
     /// Builds a transient Create activity for a transient Note sent to the admin actor.
-    member _.CreateTransientPrivateNote (description: string) = dict [
+    member _.CreateTransientPrivateNote (markdown_content: string) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
@@ -243,21 +189,19 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
             pair "type" "Note"
 
             pair "attributedTo" actor
-            pair "content" (Markdig.Markdown.ToHtml description)
+            pair "content" (Markdig.Markdown.ToHtml markdown_content)
             pair "published" DateTimeOffset.UtcNow
             pair "to" [yield! appInfo.AdminActorIds]
         ])
     ]
 
-    /// Builds a transient Delete activity for a private notification to the admin actor.
-    member _.PrivateNoteToDelete (mention: Mention) = dict [
-        pair "type" "Delete"
-        pair "id" (mapper.GenerateTransientId())
-        pair "actor" actor
-        pair "published" DateTimeOffset.UtcNow
-        pair "to" [yield! appInfo.AdminActorIds]
-        pair "object" (mapper.GetObjectId(mention))
-    ]
+    /// Builds a transient Create activity for a transient Note sent to the admin actor.
+    member this.CreateTransientPrivateNote (interaction: Interaction) =
+        this.CreateTransientPrivateNote (summarizer.ToMarkdown interaction)
+
+    /// Builds a transient Create activity for a transient Note sent to the admin actor.
+    member this.CreateTransientPrivateNote (mention: Mention) =
+        this.CreateTransientPrivateNote (summarizer.ToMarkdown mention)
 
     /// Builds a transient Accept activity to accept a follow request.
     member _.AcceptFollow (followId: string) = dict [
