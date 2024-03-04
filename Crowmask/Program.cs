@@ -30,7 +30,7 @@ var host = new HostBuilder()
 
         services.AddSingleton<IApplicationInformation>(new AppInfo(
             ApplicationName: "Crowmask",
-            VersionNumber: "1.5",
+            VersionNumber: "1.5.1",
             ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             WebsiteUrl: $"https://github.com/IsaacSchemm/Crowmask/",
             Username: Environment.GetEnvironmentVariable("HandleName"),
@@ -38,7 +38,11 @@ var host = new HostBuilder()
             AdminActorId: Environment.GetEnvironmentVariable("AdminActor"),
             ReturnHTML: true,
             ReturnMarkdown: true,
-            UpstreamRedirect: false));
+            UpstreamRedirect: false,
+            ATProtoPDS: Environment.GetEnvironmentVariable("ATProtoPDS"),
+            ATProtoDID: Environment.GetEnvironmentVariable("ATProtoDID"),
+            ATProtoIdentifier: Environment.GetEnvironmentVariable("ATProtoIdentifier"),
+            ATProtoPassword: Environment.GetEnvironmentVariable("ATProtoPassword")));
 
         services.AddSingleton<IActorKeyProvider>(
             new KeyProvider(
@@ -79,14 +83,39 @@ record AppInfo(
     string AdminActorId,
     bool ReturnHTML,
     bool ReturnMarkdown,
-    bool UpstreamRedirect) : IApplicationInformation
+    bool UpstreamRedirect,
+    string ATProtoPDS,
+    string ATProtoDID,
+    string ATProtoIdentifier,
+    string ATProtoPassword) : IApplicationInformation, IATProtoAccount
 {
     string IApplicationInformation.UserAgent =>
         $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
 
-    IEnumerable<string> IApplicationInformation.AdminActorIds =>
-        new[] { AdminActorId }
-        .Where(str => !string.IsNullOrEmpty(str));
+    IEnumerable<string> IApplicationInformation.AdminActorIds
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(AdminActorId))
+                yield return AdminActorId;
+        }
+    }
+
+    IEnumerable<IATProtoAccount> IApplicationInformation.ATProtoBotAccounts {
+        get
+        {
+            if (!string.IsNullOrEmpty(ATProtoPDS) && !string.IsNullOrEmpty(ATProtoDID))
+                yield return this;
+        }
+    }
+
+    string IATProtoAccount.Hostname => ATProtoPDS;
+
+    string IATProtoAccount.DID => ATProtoDID;
+
+    string IATProtoAccount.Identifier => ATProtoIdentifier;
+
+    string IATProtoAccount.Password => ATProtoPassword;
 }
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

@@ -44,6 +44,16 @@ module Requester =
         body = None
     }
 
+    let addQueryParameters (parameters: (string * string) list) (req: Request) =
+        let qs = String.concat "&" [
+            for key, value in parameters do
+                $"{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}"
+        ]
+
+        {
+            req with uri = new Uri($"{req.uri.GetLeftPart(UriPartial.Path)}?{qs}")
+        }
+
     let addJsonBody (body: (string * obj) list) (req: Request) = {
         req with body = Some body
     }
@@ -131,27 +141,34 @@ module Notifications =
         displayName: string option
     }
 
-    type Record = {
-        createdAt: DateTimeOffset option
-    }
-
     type Notification = {
         uri: string
         cid: string
         author: Author
         reason: string
-        record: Record
         isRead: bool
+        indexedAt: DateTimeOffset
     }
 
     type NotificationList = {
-        cursor: string option
+        cursor: string
         notifications: Notification list
-        seenAt: DateTimeOffset option
     }
 
-    let listNotificationsAsync httpClient hostname credentials = task {
+    type NotificationParameters = {
+        limit: Nullable<int>
+        cursor: string
+    }
+
+    let listNotificationsAsync httpClient hostname credentials (ps: NotificationParameters) = task {
         return!
             Requester.build hostname HttpMethod.Get "app.bsky.notification.listNotifications"
+            |> Requester.addQueryParameters [
+                if ps.limit.HasValue then
+                    "limit", $"{ps.limit.Value}"
+
+                if not (isNull ps.cursor) then
+                    "cursor", ps.cursor
+            ]
             |> AutoRefresh.sendAsync<NotificationList> httpClient credentials
     }

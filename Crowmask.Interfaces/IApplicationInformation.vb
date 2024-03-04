@@ -66,4 +66,11 @@ Public Interface IApplicationInformation
     ''' </summary>
     ''' <returns></returns>
     ReadOnly Property UpstreamRedirect As Boolean
+
+    ''' <summary>
+    ''' A list of atproto accounts that Crowmask should create and delete
+    ''' posts on (mirroring its ActivityPub posts).
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property ATProtoBotAccounts As IEnumerable(Of IATProtoAccount)
 End Interface
