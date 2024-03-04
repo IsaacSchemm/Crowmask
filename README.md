@@ -12,8 +12,7 @@ Crowmask is written mostly in C# with some parts in F#.
 The Crowmask server is configured with a Weasyl API key and generates a single
 automated user account, using the name, info, avatar, and submissions of the
 Weasyl user who created the API key. This user account can be followed by
-users on Mastodon, Pixelfed, and microblog.pub, among others. (Crowmask can
-also use atproto to act as a Bluesky bot, if so configured.)
+users on Mastodon, Pixelfed, and microblog.pub, among others.
 
 Submissions (retrieved from the Weasyl API) are mapped to `Note` objects that
 contain the title (as a link to Weasyl), description, and tags. Images will be
@@ -22,13 +21,16 @@ included for visual submissions.
 When a user likes, replies to, or shares/boosts one of this account's posts,
 or tags the Crowmask actor in a post, Crowmask will send a private `Note` to
 the "admin actors" defined in its configuration variables and shown on its
-profile page. (Bluesky notifications are also checked every six hours and
-summarized in a private `Article`.)
+profile page.
 
 Outgoing activities (like "accept follow" or "create new post") are processed
 every minute. Submissions are updated periodically, ranging from every ten
 minutes (for submissions less than an hour old) to every 28 days (for those
 over 28 days old). User profile data is updated hourly.
+
+Crowmask can also use atproto to act as a Bluesky bot, if so configured.
+Bluesky notifications are also checked every six hours and summarized in a
+private `Note` sent to the admin actors.
 
 ## Browsing
 
@@ -88,8 +90,6 @@ HTTP endpoints:
 * `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
 * `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
 * `/api/submissions/{submitid}`: returns the resulting `Note` object
-* `/api/interactions/{guid}/notification`: shows the (unlisted) notification sent to the admin actors
-* `/api/mentions/{guid}/notification`: shows the (unlisted) notification sent to the admin actors
 
 Timed functions:
 

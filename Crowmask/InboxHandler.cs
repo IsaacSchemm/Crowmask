@@ -153,7 +153,7 @@ namespace Crowmask
                     Id = Guid.NewGuid(),
                     Inbox = inbox,
                     JsonBody = ActivityPubSerializer.SerializeWithContext(
-                        translator.PrivateNoteToCreate(
+                        translator.CreateTransientPrivateNote(
                             newMention)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
@@ -176,19 +176,6 @@ namespace Crowmask
 
             foreach (var existingMention in existingMentions)
             {
-                await foreach (string inbox in locator.GetAdminActorInboxesAsync())
-                {
-                    context.OutboundActivities.Add(new OutboundActivity
-                    {
-                        Id = Guid.NewGuid(),
-                        Inbox = inbox,
-                        JsonBody = ActivityPubSerializer.SerializeWithContext(
-                            translator.PrivateNoteToDelete(
-                                existingMention)),
-                        StoredAt = DateTimeOffset.UtcNow
-                    });
-                }
-
                 context.Mentions.Remove(existingMention);
             }
 
@@ -230,7 +217,7 @@ namespace Crowmask
                     Id = Guid.NewGuid(),
                     Inbox = inbox,
                     JsonBody = ActivityPubSerializer.SerializeWithContext(
-                        translator.PrivateNoteToCreate(
+                        translator.CreateTransientPrivateNote(
                             newInteraction)),
                     StoredAt = DateTimeOffset.UtcNow
                 });
@@ -253,19 +240,6 @@ namespace Crowmask
 
             foreach (var existingInteraction in existingInteractions)
             {
-                await foreach (string inbox in locator.GetAdminActorInboxesAsync())
-                {
-                    context.OutboundActivities.Add(new OutboundActivity
-                    {
-                        Id = Guid.NewGuid(),
-                        Inbox = inbox,
-                        JsonBody = ActivityPubSerializer.SerializeWithContext(
-                        translator.PrivateNoteToDelete(
-                            existingInteraction)),
-                        StoredAt = DateTimeOffset.UtcNow
-                    });
-                }
-
                 context.Interactions.Remove(existingInteraction);
             }
 
