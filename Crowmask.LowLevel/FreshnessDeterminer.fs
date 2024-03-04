@@ -5,6 +5,8 @@ open Crowmask.Interfaces
 
 /// Determines whether an IPerishable post is stale or not.
 module FreshnessDeterminer =
+    let BlueskyIntegrationAdded = DateTimeOffset.Parse("2024-03-04T22:15:00Z")
+
     let IsFresh (post: IPerishable) =
         let now = DateTimeOffset.UtcNow
 
@@ -18,10 +20,13 @@ module FreshnessDeterminer =
 
         let refresh_attempted_within_4_minutes = now - post.CacheRefreshAttemptedAt < TimeSpan.FromMinutes(4)
 
-        refresh_attempted_within_4_minutes
-        || (older_than_1_hour && refreshed_within_1_hour)
-        || (older_than_7_days && refreshed_within_7_days)
-        || (older_than_28_days && refreshed_within_28_days)
+        let recent_enough =
+            refresh_attempted_within_4_minutes
+            || (older_than_1_hour && refreshed_within_1_hour)
+            || (older_than_7_days && refreshed_within_7_days)
+            || (older_than_28_days && refreshed_within_28_days)
+
+        recent_enough && post.CacheRefreshSucceededAt > BlueskyIntegrationAdded
 
     let IsStale (post: IPerishable) =
         not (IsFresh post)
