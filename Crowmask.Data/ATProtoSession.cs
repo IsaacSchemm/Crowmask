@@ -12,10 +12,10 @@ namespace Crowmask.Data
     public class ATProtoSession
     {
         /// <summary>
-        /// The user's DID.
+        /// The user's handle.
         /// </summary>
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public string DID { get; set; }
+        public string Handle { get; set; }
 
         /// <summary>
         /// An access token.

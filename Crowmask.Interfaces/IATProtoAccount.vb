@@ -6,10 +6,10 @@
     ReadOnly Property Hostname As String
 
     ''' <summary>
-    ''' The DID (e.g. did:plc:xxxxxx).
+    ''' The user's handle (e.g. example.bsky.social).
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property DID As String
+    ReadOnly Property Handle As String
 
     ''' <summary>
     ''' The login username, if available.

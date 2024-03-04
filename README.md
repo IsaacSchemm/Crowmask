@@ -3,32 +3,39 @@
 **Crowmask** is a single-user ActivityPub bridge for Weasyl, implemented
 using Azure Functions and Azure Cosmos DB. It is intended for users who:
 
-* post artwork to Weasyl
-* have an ActivityPub account elsewhere (e.g. Mastodon) but want to keep
-  artwork on a separate account
-* have an Azure account, are familiar with deploying .NET web apps from Visual
- Studio, and are comfortable setting things up in the Azure portal
+* already post artwork to Weasyl
+* have an ActivityPub account elsewhere (e.g. Mastodon) not used for art
+* know how to deploy a C# Azure Functions app to Azure
 
 Crowmask is written mostly in C# with some parts in F#.
 
 The Crowmask server is configured with a Weasyl API key and generates a single
 automated user account, using the name, info, avatar, and submissions of the
 Weasyl user who created the API key. This user account can be followed by
-users on Mastodon, Pixelfed, and microblog.pub, among others.
+users on Mastodon, Pixelfed, and microblog.pub, among others. (Crowmask can
+also use atproto to act as a Bluesky bot, if so configured.)
 
 Submissions (retrieved from the Weasyl API) are mapped to `Note` objects that
 contain the title (as a link to Weasyl), description, and tags. Images will be
 included for visual submissions.
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
-or tags the Crowmask actor in a post, Crowmask will send a private message to
+or tags the Crowmask actor in a post, Crowmask will send a private `Note` to
 the "admin actors" defined in its configuration variables and shown on its
-profile page.
+profile page. (Bluesky notifications are also checked every six hours and
+summarized in a private `Article`.)
 
 Outgoing activities (like "accept follow" or "create new post") are processed
 every minute. Submissions are updated periodically, ranging from every ten
 minutes (for submissions less than an hour old) to every 28 days (for those
 over 28 days old). User profile data is updated hourly.
+
+TODO:
+
+* Posting to Bluesky (all posts will be backdated)
+* Deleting posts from Bluesky when they are deleted from Weasyl
+* Re-evaluating whether private messages need public endpoints (does this
+  app's artwork page expose this information anymore?)
 
 ## Browsing
 
@@ -57,6 +64,8 @@ Layers:
 
 * **Crowmask.Interfaces** (VB.NET): contains interfaces used to pass config
   values between layers or to allow inner layers to call outer-layer code.
+* **Crowmask.ATProto** (F#): a minimalist API client for communicating with an
+  atproto PDS like `bsky.social`.
 * **Crowmask.Data** (C#): contains the data types and and data context, which
   map to documents in the Cosmos DB backend of EF Core.
 * **Crowmask.LowLevel** (F#): converts data objects like `Submission` (which
@@ -91,6 +100,7 @@ HTTP endpoints:
 
 Timed functions:
 
+* `ATProtoCheckNotifications` (every six hours)
 * `RefreshCache` (every day at 12:00)
 * `RefreshProfile` (every hour at :05)
 * `RefreshRecent` (every ten minutes)
@@ -101,7 +111,8 @@ Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit".
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
 was quickly modified to support the strongly typed nature of .NET and the specificity of this app.
 Still, having a simple, working ActivityPub implementation in a language I was able to understand (if
-not compile) was incredibly helpful.
+not compile) was incredibly helpful, as was running a [microblog.pub](`https://docs.microblog.pub/`)
+instance and being able to see the logs.
 
 Example `local.settings.json`:
 
@@ -116,10 +127,17 @@ Example `local.settings.json`:
         "HandleName": "activitypub-username-here",
         "KeyVaultHost": "crowmask.vault.azure.net",
         "WeasylApiKey": "...",
+        "ATProtoPDS": "conocybe.us-west.host.bsky.network",
+        "ATProtoHandle": "example.bsky.social",
+        "ATProtoIdentifier": "username@example.com",
+        "ATProtoPassword": "xxxxxxxxxxxxxx",
         "AzureWebJobsStorage": "UseDevelopmentStorage=true",
         "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
       }
     }
+
+Settings prefixed with `ATProto` are optional; the `ATProtoIdentifier` and
+`ATProtoPassword` should be removed once tokens are established.
 
 For **Key Vault**, the app is set up to use Managed Identity - turn this on in
 the Function App (Settings > Identity) then go to the key vault's access

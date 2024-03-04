@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Net.NetworkInformation;
-using System.Text;
 using System.Threading.Tasks;
 using Crowmask.ATProto;
 using Crowmask.Data;
@@ -28,8 +24,7 @@ namespace Crowmask.Functions
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("ATProtoCheckNotifications")]
-        //public async Task Run([TimerTrigger("0 0 */6 * * *")] TimerInfo myTimer)
-        public async Task Run([TimerTrigger("59 */1 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("0 0 */6 * * *")] TimerInfo myTimer)
         {
             var client = httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
@@ -37,25 +32,28 @@ namespace Crowmask.Functions
             foreach (var account in appInfo.ATProtoBotAccounts)
             {
                 var session = await context.ATProtoSessions
-                    .Where(s => s.DID == account.DID)
+                    .Where(s => s.Handle == account.Handle)
                     .SingleOrDefaultAsync();
 
                 if (account.Identifier != null && account.Password != null)
                 {
-                    if (session == null)
-                    {
-                        session = new ATProtoSession
-                        {
-                            DID = account.DID
-                        };
-                        context.ATProtoSessions.Add(session);
-                    }
-
                     var tokens = await Auth.createSessionAsync(
                         client,
                         account.Hostname,
                         account.Identifier,
                         account.Password);
+
+                    if (tokens.handle != account.Handle)
+                        continue;
+
+                    if (session == null)
+                    {
+                        session = new ATProtoSession
+                        {
+                            Handle = account.Handle
+                        };
+                        context.ATProtoSessions.Add(session);
+                    }
 
                     session.AccessToken = tokens.accessJwt;
                     session.RefreshToken = tokens.refreshJwt;
@@ -71,19 +69,19 @@ namespace Crowmask.Functions
                     account.Hostname,
                     wrapper,
                     new NN.NotificationParameters(
-                        limit: 100,
+                        limit: 50,
                         cursor: null));
 
                 var mostRecentNotifications = mostRecent.notifications.TakeWhile(n => n.cid != session.LastSeenCid);
 
-                //if (!mostRecentNotifications.Any())
-                //    continue;
+                if (!mostRecentNotifications.Any())
+                    continue;
 
                 string countStr = mostRecent.cursor == null
                     ? $"{mostRecentNotifications.Count()}"
                     : $"{mostRecentNotifications.Count()}+";
 
-                string title = $"{account.DID}: {countStr} Bluesky notification(s)";
+                string title = $"{countStr} Bluesky notification(s) for @{account.Handle}";
 
                 string description = string.Join(
                     "\n",
