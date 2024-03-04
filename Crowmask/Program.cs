@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
+using Crowmask.HighLevel.ATProto;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -54,10 +55,11 @@ var host = new HostBuilder()
         services.AddHttpClient();
 
         services.AddScoped<ActivityPubTranslator>();
-        services.AddScoped<IdMapper>();
+        services.AddScoped<BlueskyAgent>();
         services.AddScoped<ContentNegotiator>();
         services.AddScoped<SubmissionCache>();
         services.AddScoped<FeedBuilder>();
+        services.AddScoped<IdMapper>();
         services.AddScoped<InboxHandler>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
