@@ -1,7 +1,6 @@
 ﻿namespace Crowmask.ATProto
 
 open System
-open System.Collections.Generic
 open System.Net.Http
 open System.Threading.Tasks
 open System.Net.Http.Json
@@ -120,12 +119,16 @@ module AutoRefresh =
         use! finalResp = task {
             match credentials, initialResp.StatusCode with
             | :? IAutomaticRefreshCredentials as auto, HttpStatusCode.BadRequest ->
-                let! newCredentials = Auth.refreshSessionAsync httpClient req.uri.Host auto
-                do! auto.UpdateTokensAsync(newCredentials)
-                return!
-                    req
-                    |> Requester.addAccessToken newCredentials
-                    |> Requester.sendAsync httpClient
+                let! err = initialResp.Content.ReadFromJsonAsync<Error>()
+                if err.error = "ExpiredToken" then
+                    let! newCredentials = Auth.refreshSessionAsync httpClient req.uri.Host auto
+                    do! auto.UpdateTokensAsync(newCredentials)
+                    return!
+                        req
+                        |> Requester.addAccessToken newCredentials
+                        |> Requester.sendAsync httpClient
+                else
+                    return failwith err.message
             | _ ->
                 return initialResp
         }
@@ -133,6 +136,14 @@ module AutoRefresh =
         finalResp.EnsureSuccessStatusCode() |> ignore
         return! finalResp.Content.ReadFromJsonAsync<'T>()
     }
+
+type Limit =
+| DefaultLimit
+| Limit of int
+
+type Cursor =
+| FromStart
+| FromCursor of string
 
 module Notifications =
     type Author = {
@@ -155,20 +166,17 @@ module Notifications =
         notifications: Notification list
     }
 
-    type NotificationParameters = {
-        limit: Nullable<int>
-        cursor: string
-    }
-
-    let listNotificationsAsync httpClient hostname credentials (ps: NotificationParameters) = task {
+    let listNotificationsAsync httpClient hostname credentials limit cursor = task {
         return!
             Requester.build hostname HttpMethod.Get "app.bsky.notification.listNotifications"
             |> Requester.addQueryParameters [
-                if ps.limit.HasValue then
-                    "limit", $"{ps.limit.Value}"
+                match limit with
+                | Limit x -> "limit", $"{x}"
+                | DefaultLimit -> ()
 
-                if not (isNull ps.cursor) then
-                    "cursor", ps.cursor
+                match cursor with
+                | FromCursor c -> "cursor", c
+                | FromStart -> ()
             ]
             |> AutoRefresh.sendAsync<NotificationList> httpClient credentials
     }

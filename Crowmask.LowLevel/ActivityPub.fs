@@ -228,8 +228,8 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "object" (this.AsPrivateNote mention)
     ]
 
-    /// Builds a transient Create activity for a transient Article sent to the admin actor.
-    member _.TransientPrivateArticleToCreate (name: string) (description: string) = dict [
+    /// Builds a transient Create activity for a transient Note sent to the admin actor.
+    member _.CreateTransientPrivateNote (description: string) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
@@ -240,10 +240,9 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
 
             pair "id" id
             pair "url" id
-            pair "type" "Article"
+            pair "type" "Note"
 
             pair "attributedTo" actor
-            pair "name" name
             pair "content" (Markdig.Markdown.ToHtml description)
             pair "published" DateTimeOffset.UtcNow
             pair "to" [yield! appInfo.AdminActorIds]

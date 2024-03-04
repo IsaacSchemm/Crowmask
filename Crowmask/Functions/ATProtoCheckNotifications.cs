@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -29,91 +30,103 @@ namespace Crowmask.Functions
             var client = httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
 
+            var exceptions = new List<Exception>(0);
+
             foreach (var account in appInfo.ATProtoBotAccounts)
             {
-                var session = await context.ATProtoSessions
-                    .Where(s => s.Handle == account.Handle)
-                    .SingleOrDefaultAsync();
-
-                if (account.Identifier != null && account.Password != null)
+                try
                 {
-                    var tokens = await Auth.createSessionAsync(
-                        client,
-                        account.Hostname,
-                        account.Identifier,
-                        account.Password);
+                    var session = await context.ATProtoSessions
+                        .Where(s => s.Handle == account.Handle)
+                        .SingleOrDefaultAsync();
 
-                    if (tokens.handle != account.Handle)
-                        continue;
-
-                    if (session == null)
+                    if (account.Identifier != null && account.Password != null)
                     {
-                        session = new ATProtoSession
+                        var tokens = await Auth.createSessionAsync(
+                            client,
+                            account.Hostname,
+                            account.Identifier,
+                            account.Password);
+
+                        if (tokens.handle != account.Handle)
+                            continue;
+
+                        if (session == null)
                         {
-                            Handle = account.Handle
-                        };
-                        context.ATProtoSessions.Add(session);
+                            session = new ATProtoSession
+                            {
+                                Handle = account.Handle
+                            };
+                            context.ATProtoSessions.Add(session);
+                        }
+
+                        session.AccessToken = tokens.accessJwt;
+                        session.RefreshToken = tokens.refreshJwt;
                     }
 
-                    session.AccessToken = tokens.accessJwt;
-                    session.RefreshToken = tokens.refreshJwt;
-                }
+                    if (session == null)
+                        continue;
 
-                if (session == null)
-                    continue;
+                    var wrapper = new TokenWrapper(context, session);
 
-                var wrapper = new TokenWrapper(context, session);
+                    var mostRecent = await NN.listNotificationsAsync(
+                        client,
+                        account.Hostname,
+                        wrapper,
+                        limit: Limit.DefaultLimit,
+                        cursor: Cursor.FromStart);
 
-                var mostRecent = await NN.listNotificationsAsync(
-                    client,
-                    account.Hostname,
-                    wrapper,
-                    new NN.NotificationParameters(
-                        limit: 50,
-                        cursor: null));
+                    var mostRecentNotifications = mostRecent.notifications.TakeWhile(n => n.cid != session.LastSeenCid);
 
-                var mostRecentNotifications = mostRecent.notifications.TakeWhile(n => n.cid != session.LastSeenCid);
+                    if (!mostRecentNotifications.Any())
+                        continue;
 
-                if (!mostRecentNotifications.Any())
-                    continue;
+                    string countStr = mostRecent.cursor == null
+                        ? $"{mostRecentNotifications.Count()}"
+                        : $"{mostRecentNotifications.Count()}+";
 
-                string countStr = mostRecent.cursor == null
-                    ? $"{mostRecentNotifications.Count()}"
-                    : $"{mostRecentNotifications.Count()}+";
+                    IEnumerable<string> buildContent()
+                    {
+                        yield return $"{countStr} Bluesky notification(s) for @{account.Handle}";
+                        yield return $"";
 
-                string title = $"{countStr} Bluesky notification(s) for @{account.Handle}";
-
-                string description = string.Join(
-                    "\n",
-                    mostRecentNotifications
-                        .GroupBy(n => n.reason)
-                        .Select(group =>
+                        foreach (var group in mostRecentNotifications.GroupBy(n => n.reason))
                         {
                             var authors = group
-                                .Select(n => n.author.handle)
-                                .Distinct()
-                                .Take(3);
-                            return $"* **{group.Key}**: {group.Count()} notifications, from users including {string.Join(", ", authors)}";
-                        }));
+                                    .Select(n => n.author.handle)
+                                    .Distinct()
+                                    .Take(3);
+                            yield return $"* **{group.Key}**: {group.Count()} notifications, from users including {string.Join(", ", authors)}";
+                        }
+                    }
 
-                await foreach (string inbox in locator.GetAdminActorInboxesAsync())
-                {
-                    context.OutboundActivities.Add(new OutboundActivity
+                    await foreach (string inbox in locator.GetAdminActorInboxesAsync())
                     {
-                        Id = Guid.NewGuid(),
-                        Inbox = inbox,
-                        JsonBody = ActivityPubSerializer.SerializeWithContext(
-                            translator.TransientPrivateArticleToCreate(
-                                name: title,
-                                description: description)),
-                        StoredAt = DateTimeOffset.UtcNow
-                    });
+                        context.OutboundActivities.Add(new OutboundActivity
+                        {
+                            Id = Guid.NewGuid(),
+                            Inbox = inbox,
+                            JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                translator.CreateTransientPrivateNote(
+                                    string.Join("\n", buildContent()))),
+                            StoredAt = DateTimeOffset.UtcNow
+                        });
+                    }
+
+                    if (mostRecentNotifications.Any())
+                        session.LastSeenCid = mostRecentNotifications.First().cid;
+
+                    await context.SaveChangesAsync();
                 }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
 
-                if (mostRecentNotifications.Any())
-                    session.LastSeenCid = mostRecentNotifications.First().cid;
-
-                await context.SaveChangesAsync();
+            if (exceptions.Count > 0)
+            {
+                throw new AggregateException("Could not check Bluesky notifications", exceptions);
             }
         }
     }
