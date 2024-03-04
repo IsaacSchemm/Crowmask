@@ -68,9 +68,9 @@ Public Interface IApplicationInformation
     ReadOnly Property UpstreamRedirect As Boolean
 
     ''' <summary>
-    ''' A list of atproto accounts that Crowmask should create and delete
+    ''' A list of Bluesky accounts that Crowmask should create and delete
     ''' posts on (mirroring its ActivityPub posts).
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property ATProtoBotAccounts As IEnumerable(Of IATProtoAccount)
+    ReadOnly Property BlueskyBotAccounts As IEnumerable(Of IBlueskyAccount)
 End Interface

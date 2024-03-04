@@ -120,5 +120,25 @@ namespace Crowmask.Data
         /// Whether this is considered an artwork submission.
         /// </summary>
         public bool Visual => Subtype == "visual" || Subtype == null;
+
+        public class BlueskyPost
+        {
+            /// <summary>
+            /// The Bluesky user's DID.
+            /// </summary>
+            [Required]
+            public string DID { get; set; }
+
+            /// <summary>
+            /// The post's record key.
+            /// </summary>
+            [Required]
+            public string RecordKey { get; set; }
+        }
+
+        /// <summary>
+        /// A list of Bluesky posts created by Crowmask that mirror this submission.
+        /// </summary>
+        public List<BlueskyPost> BlueskyPosts { get; set; } = [];
     }
 }

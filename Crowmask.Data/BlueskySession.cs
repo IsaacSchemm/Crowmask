@@ -9,13 +9,13 @@ namespace Crowmask.Data
     /// Holds access tokens and refresh tokens for atproto sessions that
     /// correspond to bot accounts Crowmask is configured to post to.
     /// </summary>
-    public class ATProtoSession
+    public class BlueskySession
     {
         /// <summary>
-        /// The user's handle.
+        /// The user's DID.
         /// </summary>
         [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
-        public string Handle { get; set; }
+        public string DID { get; set; }
 
         /// <summary>
         /// An access token.

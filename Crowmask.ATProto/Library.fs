@@ -8,6 +8,7 @@ open System.Net.Http.Headers
 open System.Net
 
 type IAccessTokenCredentials =
+    abstract member DID: string
     abstract member AccessToken: string
 
 type IRefreshTokenCredentials =
@@ -21,6 +22,7 @@ type Tokens = {
     did: string
 } with
     interface IRefreshTokenCredentials with
+        member this.DID = this.did
         member this.AccessToken = this.accessJwt
         member this.RefreshToken = this.refreshJwt
 
@@ -29,18 +31,23 @@ type IAutomaticRefreshCredentials =
     abstract member UpdateTokensAsync: newCredentials: IRefreshTokenCredentials -> Task
 
 module Requester =
+    type Body =
+    | NoBody
+    | JsonBody of (string * obj) list
+    | RawBody of data: byte[] * contentType: string
+
     type Request = {
         method: HttpMethod
         uri: Uri
         bearerToken: string option
-        body: (string * obj) list option
+        body: Body
     }
 
     let build (hostname: string) (method: HttpMethod) (procedureName: string) = {
         method = method
         uri = new Uri($"https://{Uri.EscapeDataString(hostname)}/xrpc/{Uri.EscapeDataString(procedureName)}")
         bearerToken = None
-        body = None
+        body = NoBody
     }
 
     let addQueryParameters (parameters: (string * string) list) (req: Request) =
@@ -54,7 +61,11 @@ module Requester =
         }
 
     let addJsonBody (body: (string * obj) list) (req: Request) = {
-        req with body = Some body
+        req with body = JsonBody body
+    }
+
+    let addBody (body: byte[]) (contentType: string) (req: Request) = {
+        req with body = RawBody (body, contentType)
     }
 
     let addAccessToken (credentials: IAccessTokenCredentials) (req: Request) = {
@@ -69,12 +80,18 @@ module Requester =
         use req = new HttpRequestMessage(request.method, request.uri)
 
         match request.bearerToken with
-        | Some t -> req.Headers.Authorization <- new AuthenticationHeaderValue("Bearer", t)
+        | Some t ->
+            req.Headers.Authorization <- new AuthenticationHeaderValue("Bearer", t)
         | None -> ()
 
         match request.body with
-        | Some b -> req.Content <- JsonContent.Create(dict b)
-        | None -> ()
+        | RawBody (data, contentType) ->
+            let c = new ByteArrayContent(data)
+            c.Headers.ContentType <- new MediaTypeHeaderValue(contentType)
+            req.Content <- c
+        | JsonBody b ->
+            req.Content <- JsonContent.Create(dict b)
+        | NoBody -> ()
 
         return! httpClient.SendAsync(req)
     }
@@ -110,7 +127,7 @@ module AutoRefresh =
         message: string
     }
 
-    let sendAsync<'T> httpClient (credentials: IAccessTokenCredentials) req = task {
+    let readAsync<'T> httpClient (credentials: IAccessTokenCredentials) req = task {
         use! initialResp =
             req
             |> Requester.addAccessToken credentials
@@ -134,7 +151,11 @@ module AutoRefresh =
         }
 
         finalResp.EnsureSuccessStatusCode() |> ignore
-        return! finalResp.Content.ReadFromJsonAsync<'T>()
+
+        if typedefof<'T> = typedefof<unit> then
+            return () :> obj :?> 'T
+        else
+            return! finalResp.Content.ReadFromJsonAsync<'T>()
     }
 
 type Limit =
@@ -178,5 +199,68 @@ module Notifications =
                 | FromCursor c -> "cursor", c
                 | FromStart -> ()
             ]
-            |> AutoRefresh.sendAsync<NotificationList> httpClient credentials
+            |> AutoRefresh.readAsync<NotificationList> httpClient credentials
+    }
+
+module Repo =
+    type BlobResponse = {
+        blob: obj
+    }
+
+    let uploadBlobAsync httpClient hostname (credentials: IAccessTokenCredentials) (data: byte[]) (contentType: string) = task {
+        return!
+            Requester.build hostname HttpMethod.Post "com.atproto.repo.uploadBlob"
+            |> Requester.addBody data contentType
+            |> AutoRefresh.readAsync<BlobResponse> httpClient credentials
+    }
+
+    type Post = {
+        text: string
+        createdAt: DateTimeOffset
+        images: BlobResponse seq
+    }
+
+    type NewRecord = {
+        uri: string
+        cid: string
+    } with
+        member this.RecordKey =
+            this.uri.Split('/')
+            |> Seq.last
+
+    let createRecordAsync httpClient hostname (credentials: IAccessTokenCredentials) (post: Post) = task {
+        return!
+            Requester.build hostname HttpMethod.Post "com.atproto.repo.createRecord"
+            |> Requester.addJsonBody [
+                "repo", "lizard-socks.lakora.us"
+                "collection", "app.bsky.feed.post"
+                "record", dict [
+                    "$type", "app.bsky.feed.post" :> obj
+                    "text", post.text
+                    "createdAt", post.createdAt.ToString("o")
+
+                    if not (Seq.isEmpty post.images) then
+                        "embed", dict [
+                            "$type", "app.bsky.embed.images" :> obj
+                            "images", [
+                                for i in post.images do dict [
+                                    "image", i.blob
+                                    "alt", ""
+                                ]
+                            ]
+                        ]
+                ]
+            ]
+            |> AutoRefresh.readAsync<NewRecord> httpClient credentials
+    }
+
+    let deleteRecordAsync httpClient hostname (credentials: IAccessTokenCredentials) (rkey: string) = task {
+        do!
+            Requester.build hostname HttpMethod.Post "com.atproto.repo.deleteRecord"
+            |> Requester.addJsonBody [
+                "repo", "lizard-socks.lakora.us"
+                "collection", "app.bsky.feed.post"
+                "rkey", rkey
+            ]
+            |> AutoRefresh.readAsync<unit> httpClient credentials
     }

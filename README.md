@@ -30,13 +30,6 @@ every minute. Submissions are updated periodically, ranging from every ten
 minutes (for submissions less than an hour old) to every 28 days (for those
 over 28 days old). User profile data is updated hourly.
 
-TODO:
-
-* Posting to Bluesky (all posts will be backdated)
-* Deleting posts from Bluesky when they are deleted from Weasyl
-* Re-evaluating whether private messages need public endpoints (does this
-  app's artwork page expose this information anymore?)
-
 ## Browsing
 
 Crowmask is primarily an [ActivityPub](https://www.w3.org/TR/activitypub/)
