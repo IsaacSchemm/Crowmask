@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 using Crowmask.ATProto;
@@ -13,7 +14,6 @@ using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
-
 using NN = Crowmask.ATProto.Notifications;
 
 namespace Crowmask.Functions
@@ -28,7 +28,8 @@ namespace Crowmask.Functions
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("ATProtoCheckNotifications")]
-        public async Task Run([TimerTrigger("0 0 */6 * * *")] TimerInfo myTimer)
+        //public async Task Run([TimerTrigger("0 0 */6 * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("59 */1 * * * *")] TimerInfo myTimer)
         {
             var client = httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
@@ -61,75 +62,41 @@ namespace Crowmask.Functions
                 }
 
                 if (session == null)
-                {
-                    break;
-                }
+                    continue;
 
                 var wrapper = new TokenWrapper(context, session);
 
-                async IAsyncEnumerable<NN.Notification> listAll()
-                {
-                    var paging = new NN.NotificationParameters(
-                        limit: 1,
-                        cursor: null);
+                var mostRecent = await NN.listNotificationsAsync(
+                    client,
+                    account.Hostname,
+                    wrapper,
+                    new NN.NotificationParameters(
+                        limit: 100,
+                        cursor: null));
 
-                    while (true)
-                    {
-                        var results = await NN.listNotificationsAsync(
-                            client,
-                            account.Hostname,
-                            wrapper,
-                            paging);
+                var mostRecentNotifications = mostRecent.notifications.TakeWhile(n => n.cid != session.LastSeenCid);
 
-                        foreach (var item in results.notifications)
-                            yield return item;
+                //if (!mostRecentNotifications.Any())
+                //    continue;
 
-                        if (results.cursor is string newCursor)
-                            paging = new NN.NotificationParameters(
-                                limit: paging.limit,
-                                cursor: newCursor);
-                        else
-                            yield break;
-                    }
-                }
+                string countStr = mostRecent.cursor == null
+                    ? $"{mostRecentNotifications.Count()}"
+                    : $"{mostRecentNotifications.Count()}+";
 
-                StringBuilder sb = new();
+                string title = $"{account.DID}: {countStr} Bluesky notification(s)";
 
-                try
-                {
-                    var notifications = await listAll()
-                        .TakeWhile(n => n.cid != session.LastSeenCid)
-                        .Take(101)
-                        .ToListAsync();
-
-                    if (notifications.Count > 100)
-                    {
-                        sb.Append($"<a href='https://bsky.app/notifications'>Bluesky notifications:</a> 100+");
-                    }
-                    else
-                    {
-                        sb.AppendLine("<a href='https://bsky.app/notifications'>Bluesky notifications:</a>");
-                        sb.AppendLine("");
-                        foreach (var group in notifications.Take(100).GroupBy(n => n.reason))
+                string description = string.Join(
+                    "\n",
+                    mostRecentNotifications
+                        .GroupBy(n => n.reason)
+                        .Select(group =>
                         {
-                            var allAuthors = group
+                            var authors = group
                                 .Select(n => n.author.handle)
-                                .ToList();
-                            var authorsDisplay = allAuthors.Count > 2
-                                ? allAuthors.Take(1).Concat(["and others"])
-                                : allAuthors;
-                            sb.AppendLine($"* {group.Key}: {group.Count()} notification(s) from {string.Join(", ", authorsDisplay)}");
-                        }
-                    }
-
-                    session.LastSeenCid = notifications.Take(100).Last().cid;
-                }
-                catch (Exception ex)
-                {
-                    sb.AppendLine(WebUtility.HtmlEncode(ex.ToString()));
-
-                    context.ATProtoSessions.Remove(session);
-                }
+                                .Distinct()
+                                .Take(3);
+                            return $"* **{group.Key}**: {group.Count()} notifications, from users including {string.Join(", ", authors)}";
+                        }));
 
                 await foreach (string inbox in locator.GetAdminActorInboxesAsync())
                 {
@@ -138,11 +105,15 @@ namespace Crowmask.Functions
                         Id = Guid.NewGuid(),
                         Inbox = inbox,
                         JsonBody = ActivityPubSerializer.SerializeWithContext(
-                            translator.TransientPrivateNoteToCreate(
-                                sb.ToString())),
+                            translator.TransientPrivateArticleToCreate(
+                                name: title,
+                                description: description)),
                         StoredAt = DateTimeOffset.UtcNow
                     });
                 }
+
+                if (mostRecentNotifications.Any())
+                    session.LastSeenCid = mostRecentNotifications.First().cid;
 
                 await context.SaveChangesAsync();
             }

@@ -96,6 +96,16 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $""
         $"--------"
         $""
+        if not (Seq.isEmpty appInfo.AdminActorIds) then
+            $"## atproto"
+            $""
+            $"This server operates a bot account on:"
+            $""
+            for account in appInfo.ATProtoBotAccounts do
+                $"* `{enc account.DID}`"
+            $""
+        $"--------"
+        $""
         $"## Atom/RSS"
         $""
         $"[Atom](/api/actor/outbox/page?format=atom)"
