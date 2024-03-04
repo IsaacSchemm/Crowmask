@@ -6,6 +6,8 @@ namespace Crowmask.Data
 {
     public class CrowmaskDbContext(DbContextOptions<CrowmaskDbContext> options) : DbContext(options)
     {
+        public DbSet<ATProtoSession> ATProtoSessions { get; set; }
+
         public DbSet<Follower> Followers { get; set; }
 
         public DbSet<Interaction> Interactions { get; set; }
