@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using Crowmask.HighLevel.ATProto;
+using Crowmask.ATProto;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -56,6 +57,7 @@ var host = new HostBuilder()
 
         services.AddScoped<ActivityPubTranslator>();
         services.AddScoped<BlueskyAgent>();
+        services.AddScoped<BlueskyClient>();
         services.AddScoped<ContentNegotiator>();
         services.AddScoped<SubmissionCache>();
         services.AddScoped<FeedBuilder>();
