@@ -228,28 +228,26 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "object" (this.AsPrivateNote mention)
     ]
 
-    /// Builds a transient Note object for an arbritary private message to the admin actor.
-    member _.AsTransientPrivateNote (markdown: string) = dict [
-        let id = (mapper.GenerateTransientId())
-
-        pair "id" id
-        pair "url" id
-        pair "type" "Note"
-
-        pair "attributedTo" actor
-        pair "content" (Markdig.Markdown.ToHtml markdown)
-        pair "published" DateTimeOffset.UtcNow
-        pair "to" [yield! appInfo.AdminActorIds]
-    ]
-
-    /// Builds a transient Create activity for an arbritary private message to the admin actor.
-    member this.TransientPrivateNoteToCreate (markdown: string) = dict [
+    /// Builds a transient Create activity for a transient Article sent to the admin actor.
+    member _.TransientPrivateArticleToCreate (name: string) (description: string) = dict [
         pair "type" "Create"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor
         pair "published" DateTimeOffset.UtcNow
         pair "to" [yield! appInfo.AdminActorIds]
-        pair "object" (this.AsTransientPrivateNote markdown)
+        pair "object" (dict [
+            let id = (mapper.GenerateTransientId())
+
+            pair "id" id
+            pair "url" id
+            pair "type" "Article"
+
+            pair "attributedTo" actor
+            pair "name" name
+            pair "content" (Markdig.Markdown.ToHtml description)
+            pair "published" DateTimeOffset.UtcNow
+            pair "to" [yield! appInfo.AdminActorIds]
+        ])
     ]
 
     /// Builds a transient Delete activity for a private notification to the admin actor.
