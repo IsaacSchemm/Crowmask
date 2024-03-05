@@ -77,33 +77,35 @@ namespace Crowmask.Functions
 
                     var wrapper = new TokenWrapper(context, session);
 
-                    var mostRecent = await Notifications.ListNotificationsAsync(
-                        client,
-                        wrapper,
-                        limit: Notifications.Limit.DefaultLimit,
-                        cursor: Notifications.Cursor.FromStart);
+                    int maxNotificationNumber = 200;
 
-                    var mostRecentNotifications = mostRecent.notifications.TakeWhile(n => n.cid != session.LastSeenCid);
+                    var mostRecentNotifications = await Notifications.ListAllNotificationsAsync(client, wrapper)
+                        .TakeWhile(n => n.cid != session.LastSeenCid)
+                        .Take(maxNotificationNumber)
+                        .ToListAsync();
 
-                    if (!mostRecentNotifications.Any())
+                    if (mostRecentNotifications.Count == 0)
                         continue;
 
-                    string countStr = mostRecent.cursor == null
-                        ? $"{mostRecentNotifications.Count()}"
-                        : $"{mostRecentNotifications.Count()}+";
+                    string countStr = mostRecentNotifications.Count < maxNotificationNumber
+                        ? $"{mostRecentNotifications.Count}"
+                        : $"{maxNotificationNumber}+";
 
                     IEnumerable<string> buildContent()
                     {
-                        yield return $"{countStr} Bluesky notification(s) for [`{WebUtility.HtmlEncode(account.DID)}`](https://bsky.app/profile/{WebUtility.HtmlEncode(account.DID)})";
+                        string didStr = WebUtility.HtmlEncode(account.DID);
+
+                        yield return $"{countStr} Bluesky notification(s) for [`{didStr}`](https://bsky.app/profile/{didStr})";
                         yield return $"";
 
                         foreach (var group in mostRecentNotifications.GroupBy(n => n.reason))
                         {
-                            var authors = group
-                                    .Select(n => n.author.handle)
-                                    .Distinct()
-                                    .Take(3);
-                            yield return $"* **{group.Key}**: {group.Count()} notifications, from users including {string.Join(", ", authors)}";
+                            string reasonStr = WebUtility.HtmlEncode(group.Key);
+                            var authorStrs = group
+                                .Select(n => WebUtility.HtmlEncode(n.author.handle))
+                                .Distinct()
+                                .Take(3);
+                            yield return $"* **{reasonStr}**: {group.Count()} notifications, from users including {string.Join(", ", authorStrs)}";
                         }
                     }
 
@@ -120,8 +122,8 @@ namespace Crowmask.Functions
                         });
                     }
 
-                    if (mostRecentNotifications.Any())
-                        session.LastSeenCid = mostRecentNotifications.First().cid;
+                    if (mostRecentNotifications.Count != 0)
+                        session.LastSeenCid = mostRecentNotifications[0].cid;
 
                     await context.SaveChangesAsync();
                 }

@@ -6,6 +6,7 @@ open System.Net.Http
 open System.Net.Http.Headers
 open System.Net.Http.Json
 open System.Threading.Tasks
+open FSharp.Control
 
 /// Any object that contains access and refresh tokens from Bluesky.
 type ITokenPair =
@@ -180,11 +181,7 @@ module Reader =
 
 /// Lists notifications on the user's Bluesky account.
 module Notifications =
-    type Limit =
-    | DefaultLimit
-    | Limit of int
-
-    type Cursor =
+    type Page =
     | FromStart
     | FromCursor of string
 
@@ -208,19 +205,30 @@ module Notifications =
         notifications: Notification list
     }
 
-    let ListNotificationsAsync httpClient credentials limit cursor = task {
+    let ListNotificationsAsync httpClient credentials page = task {
         return!
             Requester.build credentials HttpMethod.Get "app.bsky.notification.listNotifications"
             |> Requester.addQueryParameters [
-                match limit with
-                | Limit x -> "limit", $"{x}"
-                | DefaultLimit -> ()
-
-                match cursor with
+                match page with
                 | FromCursor c -> "cursor", c
                 | FromStart -> ()
             ]
             |> Reader.readAsync<NotificationList> httpClient credentials
+    }
+
+    let ListAllNotificationsAsync httpClient credentials = taskSeq {
+        let mutable page = FromStart
+        let mutable finished = false
+
+        while not finished do
+            let! result = ListNotificationsAsync httpClient credentials page
+            yield! result.notifications
+
+            match result.cursor with
+            | Some nextCursor ->
+                page <- FromCursor nextCursor
+            | None ->
+                finished <- true
     }
 
 /// Handles creating and deleting Bluesky posts.
