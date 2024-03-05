@@ -1,45 +1,37 @@
 ﻿# Crowmask 🐦‍⬛🎭
 
-**Crowmask** is a single-user ActivityPub bridge and Bluesky bot for Weasyl,
-implemented using Azure Functions and Azure Cosmos DB. It is intended for
-users who:
+**Crowmask** is a combination ActivityPub server and Bluesky bot that mirrors
+a single [Weasyl](https://www.weasyl.com/) account.
 
-* already post artwork to Weasyl
-* already have an ActivityPub account elsewhere (e.g. Mastodon)
-* know how to deploy a C# Azure Functions app to Azure
+Crowmask is intended for users who already use an ActivityPub microblogging
+platform (e.g. Mastodon), but want a separate art account that tracks their
+Weasyl gallery. It's designed to be deployed to Azure Functions and Cosmos DB,
+rather than to a physical server or virtual machine.
 
 Crowmask is written mostly in C# with some parts in F#.
 
-The Crowmask server is configured with a Weasyl API key and generates a single
-automated user account, using the name, info, avatar, and submissions of the
-Weasyl user who created the API key. This user account can be followed by
-users on Mastodon, Pixelfed, and microblog.pub, among others.
-
-Submissions (retrieved from the Weasyl API) are mapped to `Note` objects that
-contain the title (as a link to Weasyl), description, and tags. Images will be
-included for visual submissions.
+The Crowmask server implements ActivityPub server-to-server, and exposes a
+single user account (with the name, profile, and avatar of the Weasyl user who
+the configured API key belongs to). Mastodon and Pixelfed users can follow
+this account. Crowmask does not implement atproto; it connects to an external
+Bluesky account and creates and deletes posts as needed (all posts are
+backdated, and posts for edited submissions are deleted and re-created).
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 or tags the Crowmask actor in a post, Crowmask will send a private `Note` to
 the "admin actors" defined in its configuration variables and shown on its
-profile page.
+profile page. Bluesky notifications are checked every six hours and summarized
+in a private `Note` sent to the admin actors.hale 
 
 Outgoing activities (like "accept follow" or "create new post") are processed
 every minute. Submissions are updated periodically, ranging from every ten
 minutes (for submissions less than an hour old) to every 28 days (for those
 over 28 days old). User profile data is updated hourly.
 
-Crowmask can also use atproto to act as a Bluesky bot, if so configured.
-Bluesky notifications are also checked every six hours and summarized in a
-private `Note` sent to the admin actors. (Crowmask does not integrate into
-the atproto network directly as a PDS, because doing so properly would require
-implementing WebSockets, and Crowmask is designed to operate over HTTP and
-timed functions only.)
-
 ## Browsing
 
 Crowmask is primarily an [ActivityPub](https://www.w3.org/TR/activitypub/)
-server, but it does include profile and submission pages, among others. If
+server and bot, but it does include profile and submission pages. As long as
 `ReturnHTML` is set to `true` in Program.cs, you can access these pages by
 pointing a web browser at any of the ActivityPub URLs.
 
@@ -48,8 +40,7 @@ Markdown renditions of these pages to user agents that do not request a more
 specific content type.
 
 If `UpstreamRedirect` is set to `true` in Program.cs, Crowmask will redirect
-actor and post URLs to the equivalent Weasyl pages for any web browsers that
-request them.
+web browsers from the actor and post URLs to the equivalent Weasyl pages.
 
 Crowmask implements ActivityPub, HTML, and Markdown responses through content
 negotiation. The RSS and Atom feeds are implemented on the endpoint for page 1
@@ -61,8 +52,8 @@ explicitly prefer `application/xml` over `text/html`.
 
 Layers:
 
-* **Crowmask.ATProto** (F#): a small Bluesky API client for use. Only
-  implements atproto functionality needed for Crowmask.
+* **Crowmask.ATProto** (F#): a small Bluesky API client. Only implements
+  functionality needed for Crowmask.
 * **Crowmask.Interfaces** (VB.NET): contains interfaces used to pass config
   values between layers or to allow inner layers to call outer-layer code.
 * **Crowmask.Data** (C#): contains the data types and and data context, which
@@ -133,8 +124,9 @@ Example `local.settings.json`:
       }
     }
 
-Settings prefixed with `ATProto` are optional; the `ATProtoIdentifier` and
-`ATProtoPassword` should be removed once tokens are established.
+Settings prefixed with `ATProto` can be omitted if you don't need the Bluesky
+bot. Crowmask stores Bluesky tokens in its database, so `ATProtoIdentifier`
+and `ATProtoPassword` should be removed once tokens are established.
 
 For **Key Vault**, the app is set up to use Managed Identity - turn this on in
 the Function App (Settings > Identity) then go to the key vault's access
