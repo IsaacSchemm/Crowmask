@@ -28,15 +28,11 @@ type Tokens = {
 type IHost =
     abstract member PDS: string
 
-/// Identifies an atproto user.
-type IAccount =
-    inherit IHost
-    abstract member DID: string
-
 /// Any object that can be used to authenticate with Bluesky.
 /// Contains the user's DID, the PDS to connect to, and the current access token.
 type ICredentials =
-    inherit IAccount
+    inherit IHost
+    abstract member DID: string
     abstract member AccessToken: string
 
 /// An object can implement this interface to enable automatic token refresh.
@@ -115,7 +111,9 @@ module Requester =
 
 /// Handles logging in and refreshing tokens.
 module Auth =
-    let CreateSessionAsync httpClient host identifier password = task {
+    let CreateSessionAsync httpClient hostname identifier password = task {
+        let host = { new IHost with member _.PDS = hostname }
+
         use! resp =
             Requester.build host HttpMethod.Post "com.atproto.server.createSession"
             |> Requester.addJsonBody [

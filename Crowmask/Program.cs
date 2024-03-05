@@ -110,8 +110,8 @@ record AppInfo(
         }
     }
 
-    string Crowmask.ATProto.IHost.PDS => BlueskyPDS;
-    string Crowmask.ATProto.IAccount.DID => BlueskyDID;
+    string IBlueskyAccountConfiguration.PDS => BlueskyPDS;
+    string IBlueskyAccountConfiguration.DID => BlueskyDID;
     string IBlueskyAccountConfiguration.Identifier => BlueskyIdentifier;
     string IBlueskyAccountConfiguration.Password => BlueskyPassword;
 }
