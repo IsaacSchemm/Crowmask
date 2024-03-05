@@ -13,7 +13,6 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using Crowmask.HighLevel.ATProto;
-using Crowmask.ATProto;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -31,7 +30,7 @@ var host = new HostBuilder()
 
         services.AddSingleton<IApplicationInformation>(new AppInfo(
             ApplicationName: "Crowmask",
-            VersionNumber: "1.6",
+            VersionNumber: "1.7",
             ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             WebsiteUrl: $"https://github.com/IsaacSchemm/Crowmask/",
             Username: Environment.GetEnvironmentVariable("HandleName"),
@@ -57,7 +56,6 @@ var host = new HostBuilder()
 
         services.AddScoped<ActivityPubTranslator>();
         services.AddScoped<BlueskyAgent>();
-        services.AddScoped<BlueskyClient>();
         services.AddScoped<ContentNegotiator>();
         services.AddScoped<SubmissionCache>();
         services.AddScoped<FeedBuilder>();
@@ -90,7 +88,7 @@ record AppInfo(
     string BlueskyPDS,
     string BlueskyDID,
     string BlueskyIdentifier,
-    string BlueskyPassword) : IApplicationInformation, IBlueskyAccount
+    string BlueskyPassword) : IApplicationInformation, IBlueskyAccountConfiguration
 {
     string IApplicationInformation.UserAgent =>
         $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
@@ -104,7 +102,7 @@ record AppInfo(
         }
     }
 
-    IEnumerable<IBlueskyAccount> IApplicationInformation.BlueskyBotAccounts {
+    IEnumerable<IBlueskyAccountConfiguration> IApplicationInformation.BlueskyBotAccounts {
         get
         {
             if (!string.IsNullOrEmpty(BlueskyPDS) && !string.IsNullOrEmpty(BlueskyDID))
@@ -112,10 +110,10 @@ record AppInfo(
         }
     }
 
-    string IBlueskyAccount.PDS => BlueskyPDS;
-    string IBlueskyAccount.DID => BlueskyDID;
-    string IBlueskyAccount.Identifier => BlueskyIdentifier;
-    string IBlueskyAccount.Password => BlueskyPassword;
+    string Crowmask.ATProto.IHost.PDS => BlueskyPDS;
+    string Crowmask.ATProto.IAccount.DID => BlueskyDID;
+    string IBlueskyAccountConfiguration.Identifier => BlueskyIdentifier;
+    string IBlueskyAccountConfiguration.Password => BlueskyPassword;
 }
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

@@ -72,5 +72,5 @@ Public Interface IApplicationInformation
     ''' posts on (mirroring its ActivityPub posts).
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property BlueskyBotAccounts As IEnumerable(Of IBlueskyAccount)
+    ReadOnly Property BlueskyBotAccounts As IEnumerable(Of IBlueskyAccountConfiguration)
 End Interface

@@ -6,15 +6,16 @@ namespace Crowmask.HighLevel.ATProto
 {
     public class TokenWrapper(CrowmaskDbContext context, BlueskySession session) : IAutomaticRefreshCredentials
     {
-        public string DID { get; private set; } = session.DID;
+        public string DID => session.DID;
+
+        public string PDS => session.PDS;
 
         public string AccessToken { get; private set; } = session.AccessToken;
 
         public string RefreshToken { get; private set; } = session.RefreshToken;
 
-        public async Task UpdateTokensAsync(IRefreshTokenCredentials newCredentials)
+        public async Task UpdateTokensAsync(ITokenPair newCredentials)
         {
-            DID = newCredentials.DID;
             AccessToken = newCredentials.AccessToken;
             RefreshToken = newCredentials.RefreshToken;
 
@@ -24,7 +25,6 @@ namespace Crowmask.HighLevel.ATProto
 
             if (dbRecord != null)
             {
-                dbRecord.DID = DID;
                 dbRecord.AccessToken = AccessToken;
                 dbRecord.RefreshToken = RefreshToken;
                 await context.SaveChangesAsync();

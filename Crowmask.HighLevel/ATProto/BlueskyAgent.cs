@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 namespace Crowmask.HighLevel.ATProto
 {
     public class BlueskyAgent(
-        BlueskyClient blueskyClient,
         CrowmaskDbContext context,
         IApplicationInformation appInfo,
         IHttpClientFactory httpClientFactory)
@@ -17,6 +16,7 @@ namespace Crowmask.HighLevel.ATProto
                 return;
 
             using var httpClient = httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
 
             foreach (var mirrorPost in submission.BlueskyPosts.ToList())
             {
@@ -34,7 +34,8 @@ namespace Crowmask.HighLevel.ATProto
                         continue;
 
                     var wrapper = new TokenWrapper(context, session);
-                    await blueskyClient.DeleteRecordAsync(
+                    await Repo.DeleteRecordAsync(
+                        httpClient,
                         wrapper,
                         mirrorPost.RecordKey);
 
@@ -50,6 +51,7 @@ namespace Crowmask.HighLevel.ATProto
                 return;
 
             using var httpClient = httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
 
             async IAsyncEnumerable<(byte[] data, string contentType)> downloadImagesAsync()
             {
@@ -84,14 +86,16 @@ namespace Crowmask.HighLevel.ATProto
                     var wrapper = new TokenWrapper(context, session);
                     var blobResponses = await allImages
                         .ToAsyncEnumerable()
-                        .SelectAwait(async image => await blueskyClient.UploadBlobAsync(
+                        .SelectAwait(async image => await Repo.UploadBlobAsync(
+                            httpClient,
                             wrapper,
                             image.data,
                             image.contentType))
                         .ToListAsync();
-                    var post = await blueskyClient.CreateRecordAsync(
+                    var post = await Repo.CreateRecordAsync(
+                        httpClient,
                         wrapper,
-                        new Modules.Repo.Post(
+                        new Repo.Post(
                             text: converter.Convert(submission.Content),
                             createdAt: submission.PostedAt,
                             images: blobResponses));
