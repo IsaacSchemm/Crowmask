@@ -3,7 +3,17 @@
 ''' and password credentials.
 ''' </summary>
 Public Interface IBlueskyAccountConfiguration
-    Inherits ATProto.IAccount
+    ''' <summary>
+    ''' The PDS to connect to (e.g. bsky.social).
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property PDS As String
+
+    ''' <summary>
+    ''' The user's DID.
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property DID As String
 
     ''' <summary>
     ''' The login username, if available.

@@ -47,7 +47,7 @@ namespace Crowmask.Functions
                     {
                         var tokens = await Auth.CreateSessionAsync(
                             client,
-                            account,
+                            account.PDS,
                             account.Identifier,
                             account.Password);
 
