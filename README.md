@@ -61,6 +61,8 @@ explicitly prefer `application/xml` over `text/html`.
 
 Layers:
 
+* **Crowmask.ATProto** (F#): a small Bluesky API client for use. Only
+  implements atproto functionality needed for Crowmask.
 * **Crowmask.Interfaces** (VB.NET): contains interfaces used to pass config
   values between layers or to allow inner layers to call outer-layer code.
 * **Crowmask.Data** (C#): contains the data types and and data context, which
@@ -69,8 +71,6 @@ Layers:
   are specific to the database schema) to more general F# records, then to
   ActivityPub objects or Markdown / HTML pages; maps Crowmask internal IDs to
   ActivityPub IDs; and talks to the Weasyl API.
-* **Crowmask.ATProto** (F#): a small API client for communicating with Bluesky
-  or a similar atproto PDS. Only implements NSIDs used by Crowmask.
 * **Crowmask.HighLevel** (C#):
     * **Signatures**: HTTP signature validation, adapted from
       [Letterbook](https://github.com/Letterbook/Letterbook).

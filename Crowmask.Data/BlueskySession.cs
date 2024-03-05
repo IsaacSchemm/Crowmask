@@ -18,6 +18,12 @@ namespace Crowmask.Data
         public string DID { get; set; }
 
         /// <summary>
+        /// The PDS hostname.
+        /// </summary>
+        [Required]
+        public string PDS { get; set; }
+
+        /// <summary>
         /// An access token.
         /// </summary>
         [Required]

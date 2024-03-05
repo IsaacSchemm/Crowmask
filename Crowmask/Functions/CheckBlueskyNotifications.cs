@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Crowmask.ATProto;
@@ -16,7 +17,6 @@ namespace Crowmask.Functions
 {
     public class CheckBlueskyNotifications(
         ActivityPubTranslator translator,
-        BlueskyClient blueskyClient,
         CrowmaskDbContext context,
         IApplicationInformation appInfo,
         IHttpClientFactory httpClientFactory,
@@ -45,7 +45,11 @@ namespace Crowmask.Functions
 
                     if (account.Identifier != null && account.Password != null)
                     {
-                        var tokens = await blueskyClient.CreateSessionAsync(account);
+                        var tokens = await Auth.CreateSessionAsync(
+                            client,
+                            account,
+                            account.Identifier,
+                            account.Password);
 
                         if (tokens.did != account.DID)
                             continue;
@@ -66,12 +70,18 @@ namespace Crowmask.Functions
                     if (session == null)
                         continue;
 
+                    if (session.PDS != account.PDS)
+                    {
+                        session.PDS = account.PDS;
+                    }
+
                     var wrapper = new TokenWrapper(context, session);
 
-                    var mostRecent = await blueskyClient.ListNotificationsAsync(
+                    var mostRecent = await Notifications.ListNotificationsAsync(
+                        client,
                         wrapper,
-                        limit: Limit.DefaultLimit,
-                        cursor: Cursor.FromStart);
+                        limit: Notifications.Limit.DefaultLimit,
+                        cursor: Notifications.Cursor.FromStart);
 
                     var mostRecentNotifications = mostRecent.notifications.TakeWhile(n => n.cid != session.LastSeenCid);
 
@@ -84,7 +94,7 @@ namespace Crowmask.Functions
 
                     IEnumerable<string> buildContent()
                     {
-                        yield return $"{countStr} Bluesky notification(s) for [`{Uri.EscapeDataString(account.DID)}`](https://bsky.app/profile/{Uri.EscapeDataString(account.DID)})";
+                        yield return $"{countStr} Bluesky notification(s) for [`{WebUtility.HtmlEncode(account.DID)}`](https://bsky.app/profile/{WebUtility.HtmlEncode(account.DID)})";
                         yield return $"";
 
                         foreach (var group in mostRecentNotifications.GroupBy(n => n.reason))
