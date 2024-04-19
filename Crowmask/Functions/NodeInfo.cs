@@ -38,7 +38,7 @@ namespace Crowmask.Functions
                 software = new
                 {
                     name = "crowmask",
-                    version = "1.0.0",
+                    version = appInfo.VersionNumber,
                     repository = "https://github.com/IsaacSchemm/Crowmask",
                     homepage = "https://github.com/IsaacSchemm/Crowmask"
                 },
