@@ -1,38 +1,27 @@
 using System;
 using System.Threading.Tasks;
 using Crowmask.HighLevel;
-using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 
 namespace Crowmask.Functions
 {
-    public class RefreshRecent(SubmissionCache cache, WeasylClient weasylClient)
+    public class RefreshRecent(SubmissionCache cache)
     {
         /// <summary>
-        /// Refreshes posts that were originally posted within the past day.
-        /// Runs every ten minutes.
+        /// Refreshes cached posts with an upstream post date within the last 30 minutes.
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("RefreshRecent")]
-        public async Task Run([TimerTrigger("* */10 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("* */5 * * * *")] TimerInfo myTimer)
         {
-            DateTimeOffset yesterday = DateTimeOffset.UtcNow.AddDays(-1);
+            DateTimeOffset old = DateTimeOffset.UtcNow.AddHours(-1);
 
-            await foreach (var submission in weasylClient.GetMyGallerySubmissionsAsync())
-            {
-                await cache.RefreshSubmissionAsync(submission.submitid);
-                if (submission.posted_at < yesterday)
-                    break;
-            }
+            await foreach (var post in cache.GetCachedSubmissionsAsync(since: old))
+                await cache.RefreshPostAsync(post.id);
 
-            await foreach (var post in cache.GetCachedSubmissionsAsync(since: yesterday))
-                if (post.stale)
-                    await cache.RefreshPostAsync(post.id);
-
-            await foreach (var post in cache.GetCachedJournalsAsync(since: yesterday))
-                if (post.stale)
-                    await cache.RefreshPostAsync(post.id);
+            await foreach (var post in cache.GetCachedJournalsAsync(since: old))
+                await cache.RefreshPostAsync(post.id);
         }
     }
 }

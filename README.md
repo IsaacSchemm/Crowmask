@@ -52,21 +52,20 @@ of the outbox, but must be explicitly requested with `format=rss` or
 * **Crowmask.Interfaces**: contains interfaces used to pass config values between layers or to allow inner layers to call outer-layer code.
 * **Crowmask.Data**: contains the data types and and data context, which map to documents in the Cosmos DB backend of EF Core.
 * **Crowmask.LowLevel**:
-    * determines when cached posts are considered stale;
-    * converts data objects like `Submission` (which are specific to the database schema) to more general F# records, then to ActivityPub objects or Markdown / HTML pages;
-    * maps Crowmask internal IDs to ActivityPub IDs;
-    * talks to the Weasyl API;
-    * and performs content negotiation.
+  * determines when cached posts are considered stale;
+  * converts data objects like `Submission` (which are specific to the database schema) to more general F# records, then to ActivityPub objects or Markdown / HTML pages;
+  * maps Crowmask internal IDs to ActivityPub IDs;
+  * talks to the Weasyl API;
+  * and performs content negotiation.
 * **Crowmask.HighLevel**:
-    * **ATProto**: Creates, updates, and deletes Bluesky posts.
-    * **Signatures**: HTTP signature validation, adapted from an older version of [Letterbook](https://github.com/Letterbook/Letterbook).
-    * **Remote**: Talks to other ActivityPub servers.
-    * **FeedBuilder**: Implements RSS and Atom feeds.
-    * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
-    * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
-    * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
-* **Crowmask** (C#): The main Azure Functions project, responsible for
-  handling HTTP requests and running timed functions.
+  * **ATProto**: Creates, updates, and deletes Bluesky posts.
+  * **Signatures**: HTTP signature validation, adapted from an older version of [Letterbook](https://github.com/Letterbook/Letterbook).
+  * **Remote**: Talks to other ActivityPub servers.
+  * **FeedBuilder**: Implements RSS and Atom feeds.
+  * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
+  * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
+  * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
+* **Crowmask** (C#): The main Azure Functions project, responsible for handling HTTP requests and running timed functions.
 
 ### Public HTTP endpoints
 
@@ -92,13 +91,21 @@ is configured to use.
 * `PUT /api/submissions/{submitid}/alt`: changes the submission's current alt text (default is empty)
 * `POST /api/submissions/{submitid}/refresh`: triggers a refresh of the submission (if stale or missing)
 
-### Timed functions
+### Timed refresh functions
 
-* `ATProtoCheckNotifications` (every six hours)
-* `RefreshCache` (every day at 12:00)
-* `RefreshProfile` (every hour at :05)
-* `RefreshRecent` (every ten minutes)
-* `RefreshUpstream` (every month on the 5th at 17:00)
+* `RefreshRecent` (every five minutes)
+  * Cached posts with an upstream post date within the last hour (posts this recent are always considered stale)
+* `RefreshStale` (every day at 12:00)
+  * All stale cached posts
+* `RefreshUpstreamFull` (every month on the 5th at 17:00)
+  * All submissions in the user's Weasyl gallery
+* `RefreshUpstreamNew` (every hour at :30)
+  * All submissions in the user's Weasyl gallery that are newer than the most recent cached post
+
+### Other timed funtions
+
+* `CheckBlueskyNotifications` (every six hours at :00)
+* `RefreshProfile` (every day at 16:00)
 * `SendOutbound` (every hour at :02)
 
 ### Additional information

@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class RefreshCache(SubmissionCache cache)
+    public class RefreshStale(SubmissionCache cache)
     {
         /// <summary>
-        /// Refreshes all stale posts. Runs every day at 12:00.
+        /// Refreshes all stale posts.
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>
-        [Function("RefreshCache")]
+        [Function("RefreshStale")]
         public async Task Run([TimerTrigger("0 0 12 * * *")] TimerInfo myTimer)
         {
             await foreach (var post in cache.GetCachedSubmissionsAsync())

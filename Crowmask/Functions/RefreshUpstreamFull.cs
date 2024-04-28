@@ -5,15 +5,14 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class RefreshUpstream(SubmissionCache cache, WeasylClient weasylClient)
+    public class RefreshUpstreamFull(SubmissionCache cache, WeasylClient weasylClient)
     {
         /// <summary>
-        /// Refreshes all posts in the user's Weasyl gallery that are missing
-        /// or stale in the cache. Runs every month on the 5th at 17:00.
+        /// Refreshes all submissions in the user's Weasyl gallery that are missing or stale in the cache.
         /// </summary>
         /// <param name="myTimer"></param>
         /// <returns></returns>
-        [Function("RefreshUpstream")]
+        [Function("RefreshUpstreamFull")]
         public async Task Run([TimerTrigger("0 0 17 5 * *")] TimerInfo myTimer)
         {
             await foreach (var submission in weasylClient.GetMyGallerySubmissionsAsync())
