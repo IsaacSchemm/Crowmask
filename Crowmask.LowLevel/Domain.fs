@@ -25,6 +25,7 @@ type Person = {
 type Image = {
     mediaType: string
     url: string
+    alt: string
 }
 
 /// A sensitivity level for a post - either general, or with a specific warning.
@@ -144,12 +145,14 @@ module Domain =
                 for media in submission.Media do {
                     mediaType = media.ContentType
                     url = media.Url
+                    alt = media.AltText |> Option.ofObj |> Option.defaultValue ""
                 }
         ]
         thumbnails = [
             for thumbnail in submission.Thumbnails do {
                 mediaType = thumbnail.ContentType
                 url = thumbnail.Url
+                alt = ""
             }
         ]
         tags = [for t in submission.Tags do t.Tag]

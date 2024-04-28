@@ -144,7 +144,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         match post.sensitivity with
         | General ->
             for image in post.images do
-                $"[![]({image.url})]({image.url})"
+                $"[![{image.alt}]({image.url})]({image.url})"
             $""
             post.content
         | Sensitive message ->

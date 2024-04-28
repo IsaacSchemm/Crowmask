@@ -53,7 +53,7 @@ namespace Crowmask.HighLevel.ATProto
             using var httpClient = httpClientFactory.CreateClient();
             httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(appInfo.UserAgent);
 
-            async IAsyncEnumerable<(byte[] data, string contentType)> downloadImagesAsync()
+            async IAsyncEnumerable<(byte[] data, string contentType, string alt)> downloadImagesAsync()
             {
                 foreach (var image in submission.Media)
                 {
@@ -61,7 +61,7 @@ namespace Crowmask.HighLevel.ATProto
                     using var resp = await httpClient.SendAsync(req);
                     byte[] data = await resp.Content.ReadAsByteArrayAsync();
                     string mediaType = resp.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
-                    yield return (data, mediaType);
+                    yield return (data, mediaType, image.AltText);
                 }
             }
 
@@ -90,7 +90,8 @@ namespace Crowmask.HighLevel.ATProto
                             httpClient,
                             wrapper,
                             image.data,
-                            image.contentType))
+                            image.contentType,
+                            image.alt))
                         .ToListAsync();
                     var post = await Repo.CreateRecordAsync(
                         httpClient,

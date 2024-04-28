@@ -44,6 +44,12 @@ namespace Crowmask.Data
             /// </summary>
             [Required]
             public string ContentType { get; set; } = "";
+
+            /// <summary>
+            /// Alt text for the media. Crowmask defaults to an empty string if no alt text is specified.
+            /// </summary>
+            [Required]
+            public string AltText { get; set; } = "";
         }
 
         /// <summary>

@@ -137,6 +137,8 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
                 pair "type" "Document"
                 pair "mediaType" image.mediaType
                 pair "url" image.url
+                if image.alt <> "" then
+                    pair "name" image.alt
             ]
         ]
     ]

@@ -233,13 +233,15 @@ module Notifications =
 module Repo =
     type BlobResponse = {
         blob: obj
+        alt: string
     }
 
-    let UploadBlobAsync httpClient (credentials: ICredentials) (data: byte[]) (contentType: string) = task {
-        return!
+    let UploadBlobAsync httpClient (credentials: ICredentials) (data: byte[]) (contentType: string) (alt: string) = task {
+        let! blob =
             Requester.build credentials HttpMethod.Post "com.atproto.repo.uploadBlob"
             |> Requester.addBody data contentType
             |> Reader.readAsync<BlobResponse> httpClient credentials
+        return { blob = blob; alt = alt }
     }
 
     type Post = {
@@ -273,7 +275,7 @@ module Repo =
                             "images", [
                                 for i in post.images do dict [
                                     "image", i.blob
-                                    "alt", ""
+                                    "alt", i.alt
                                 ]
                             ]
                         ]

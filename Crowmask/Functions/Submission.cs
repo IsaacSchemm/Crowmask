@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Submissions(
+    public class Submission(
         SubmissionCache cache,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
@@ -19,12 +19,12 @@ namespace Crowmask.Functions
         /// <param name="req"></param>
         /// <param name="submitid">The numeric ID of the submission on Weasyl</param>
         /// <returns>An ActivityStreams Note or Collection or a Markdown or HTML response, depending on the query string and the user agent's Accept header.</returns>
-        [Function("Submissions")]
+        [Function("Submission")]
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/submissions/{submitid}")] HttpRequestData req,
             int submitid)
         {
-            if (await cache.GetCachedSubmissionAsync(submitid) is not CacheResult.PostResult pr)
+            if (await cache.RefreshSubmissionAsync(submitid) is not CacheResult.PostResult pr)
                 return req.CreateResponse(HttpStatusCode.NotFound);
 
             var submission = pr.Post;

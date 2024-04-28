@@ -55,8 +55,9 @@ namespace Crowmask.HighLevel
         /// submission is stale or absent. New, updated, and deleted posts will generate new ActivityPub messages.
         /// </summary>
         /// <param name="submitid">The submission ID</param>
+        /// <param name="altText">New alt text to apply (will force a refresh)</param>
         /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> RefreshSubmissionAsync(int submitid)
+        public async Task<CacheResult> RefreshSubmissionAsync(int submitid, string? altText = null)
         {
             var cachedSubmission = await Context.Submissions
                 .Where(s => s.SubmitId == submitid)
@@ -65,7 +66,8 @@ namespace Crowmask.HighLevel
             if (cachedSubmission != null)
             {
                 if (!FreshnessDeterminer.IsStale(cachedSubmission))
-                    return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
+                    if (altText == null)
+                        return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -97,7 +99,8 @@ namespace Crowmask.HighLevel
                         .SelectAwait(async s => new Submission.SubmissionMedia
                         {
                             Url = s.url,
-                            ContentType = await GetContentTypeAsync(s.url)
+                            ContentType = await GetContentTypeAsync(s.url),
+                            AltText = altText
                         })
                         .ToListAsync();
                     cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
