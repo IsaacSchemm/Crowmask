@@ -109,7 +109,12 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "id" id
         pair "url" id
 
-        pair "type" "Note"
+        match post.id with
+        | SubmitId _ ->
+            pair "type" "Note"
+        | JournalId _ ->
+            pair "type" "Article"
+            pair "name" post.title
 
         pair "attributedTo" actor
         pair "content" post.content
