@@ -19,7 +19,7 @@ namespace Crowmask.Functions
         /// <returns></returns>
         [Function("JournalRefresh")]
         public async Task<HttpResponseData> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/journals/{journalid}/refresh")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/journals/{journalid}/refresh")] HttpRequestData req,
             int journalid)
         {
             if (!req.Headers.TryGetValues("X-Weasyl-API-Key", out IEnumerable<string> keys))
