@@ -35,6 +35,21 @@ namespace Crowmask.HighLevel
         }
 
         /// <summary>
+        /// Checks the information for the given post in Crowmask's database
+        /// (if any), and fetches new information from Weasyl if the post is
+        /// stale or absent. New, updated, and deleted posts will generate new
+        /// ActivityPub messages.
+        /// </summary>
+        /// <param name="postid">The post ID</param>
+        /// <returns>A CacheResult union, with the found post if any</returns>
+        public async Task<CacheResult> RefreshPostAsync(PostId postId)
+        {
+            return postId is PostId.SubmitId submitid ? await RefreshSubmissionAsync(submitid.Item)
+                : postId is PostId.JournalId journalid ? await RefreshJournalAsync(journalid.Item)
+                : throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Checks the information for the given submission in Crowmask's
         /// database (if any), and fetches new information from Weasyl if the
         /// submission is stale or absent. New, updated, and deleted posts will generate new ActivityPub messages.
@@ -183,6 +198,131 @@ namespace Crowmask.HighLevel
         }
 
         /// <summary>
+        /// Checks the information for the given journal entry in Crowmask's
+        /// database (if any), and fetches new information from Weasyl if the
+        /// journal entry is stale or absent. New, updated, and deleted posts
+        /// will generate new ActivityPub messages.
+        /// </summary>
+        /// <param name="journalid">The journal ID</param>
+        /// <returns>A CacheResult union, with the found post if any</returns>
+        public async Task<CacheResult> RefreshJournalAsync(int journalid)
+        {
+            var cachedJournal = await Context.Journals
+                .Where(j => j.JournalId == journalid)
+                .SingleOrDefaultAsync();
+
+            if (cachedJournal != null)
+            {
+                if (!FreshnessDeterminer.IsStale(cachedJournal))
+                    return CacheResult.NewPostResult(Domain.JournalAsPost(cachedJournal));
+
+                cachedJournal.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
+                await Context.SaveChangesAsync();
+            }
+
+            try
+            {
+                var option = await weasylClient.GetMyPublicJournalAsync(journalid);
+                if (OptionModule.ToObj(option) is Weasyl.JournalDetail weasylJournal)
+                {
+                    bool newlyCreated = false;
+
+                    if (cachedJournal == null)
+                    {
+                        newlyCreated = true;
+                        cachedJournal = new Journal
+                        {
+                            JournalId = journalid,
+                            FirstCachedAt = DateTimeOffset.UtcNow
+                        };
+                        Context.Journals.Add(cachedJournal);
+                    }
+
+                    var oldJournal = Domain.JournalAsPost(cachedJournal);
+
+                    cachedJournal.Content = weasylJournal.content;
+                    cachedJournal.PostedAt = weasylJournal.posted_at;
+                    cachedJournal.Rating = weasylJournal.rating;
+                    cachedJournal.Tags = weasylJournal.tags
+                        .Select(t => new Journal.JournalTag
+                        {
+                            Tag = t
+                        })
+                        .ToList();
+                    cachedJournal.Title = weasylJournal.title;
+
+                    cachedJournal.Link = weasylJournal.link;
+
+                    var newJournal = Domain.JournalAsPost(cachedJournal);
+
+                    TimeSpan age = DateTimeOffset.UtcNow - newJournal.first_upstream;
+
+                    bool changed = !oldJournal.Equals(newJournal);
+                    bool backfill = newlyCreated && age > TimeSpan.FromHours(12);
+
+                    // Notify ActivityPub servers of updates to posts Crowmask
+                    // has seen before, and of posts that are new to Crowmask
+                    // that are less than 12 hours old.
+                    if (changed && !backfill)
+                    {
+                        foreach (string inbox in await inboxLocator.GetDistinctInboxesAsync(followersOnly: newlyCreated))
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = inbox,
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                    newlyCreated
+                                    ? translator.ObjectToCreate(newJournal)
+                                    : translator.ObjectToUpdate(newJournal)),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
+                    }
+
+                    cachedJournal.CacheRefreshSucceededAt = DateTimeOffset.UtcNow;
+                    await Context.SaveChangesAsync();
+
+                    await Context.SaveChangesAsync();
+
+                    return CacheResult.NewPostResult(newJournal);
+                }
+                else
+                {
+                    if (cachedJournal != null)
+                    {
+                        Context.Journals.Remove(cachedJournal);
+
+                        var post = Domain.JournalAsPost(cachedJournal);
+
+                        foreach (string inbox in await inboxLocator.GetDistinctInboxesAsync())
+                        {
+                            Context.OutboundActivities.Add(new OutboundActivity
+                            {
+                                Id = Guid.NewGuid(),
+                                Inbox = inbox,
+                                JsonBody = ActivityPubSerializer.SerializeWithContext(
+                                    translator.ObjectToDelete(
+                                        post)),
+                                StoredAt = DateTimeOffset.UtcNow
+                            });
+                        }
+
+                        await Context.SaveChangesAsync();
+                    }
+
+                    return CacheResult.PostNotFound;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                return cachedJournal == null
+                    ? CacheResult.PostNotFound
+                    : CacheResult.NewPostResult(Domain.JournalAsPost(cachedJournal));
+            }
+        }
+
+        /// <summary>
         /// Gets cached submission information from Crowmask's database
         /// without making an upstream call to Weasyl, even if the information
         /// is stale or absent.
@@ -205,7 +345,7 @@ namespace Crowmask.HighLevel
         /// </summary>
         /// <param name="nextid">Only return submissions with an ID lower than this one</param>
         /// <param name="since">Only return submissions originally posted to Weasyl after this point in time</param>
-        /// <returns>A list of submission IDs</returns>
+        /// <returns>A list of submissions</returns>
         public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync(int nextid = int.MaxValue, DateTimeOffset? since = null)
         {
             DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
@@ -238,6 +378,38 @@ namespace Crowmask.HighLevel
         public async Task<int> GetCachedSubmissionCountAsync()
         {
             return await Context.Submissions.CountAsync();
+        }
+
+        /// <summary>
+        /// Returns a list of cached journal entries from Crowmask's database.
+        /// Journal entries with higher IDs will be returned first.
+        /// </summary>
+        /// <param name="nextid">Only return journal entries with an ID lower than this one</param>
+        /// <param name="since">Only return journal entries originally posted to Weasyl after this point in time</param>
+        /// <returns>A list of journal entries</returns>
+        public async IAsyncEnumerable<Post> GetCachedJournalsAsync(int nextid = int.MaxValue, DateTimeOffset? since = null)
+        {
+            DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
+            int batchSize = 5;
+
+            while (true)
+            {
+                var list = await Context.Journals
+                    .Where(j => j.JournalId < nextid)
+                    .Where(j => j.PostedAt > cutoff)
+                    .OrderByDescending(j => j.JournalId)
+                    .Take(batchSize)
+                    .ToListAsync();
+
+                foreach (var journal in list)
+                    yield return Domain.JournalAsPost(journal);
+
+                if (list.Count == 0)
+                    break;
+
+                nextid = list.Last().JournalId;
+                batchSize = 100;
+            }
         }
     }
 }

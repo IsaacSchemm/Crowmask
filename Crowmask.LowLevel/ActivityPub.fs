@@ -104,7 +104,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         let effective_date =
             if backdate then post.first_upstream else post.first_cached
 
-        let id = mapper.GetObjectId(post.submitid)
+        let id = mapper.GetObjectId(post.id)
 
         pair "id" id
         pair "url" id
@@ -144,7 +144,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
     /// Builds a Create activity for a submission.
     member this.ObjectToCreate (post: Post) = dict [
         pair "type" "Create"
-        pair "id" $"{mapper.GetObjectId(post.submitid)}?view=create"
+        pair "id" $"{mapper.GetObjectId(post.id)}?view=create"
         pair "actor" actor
         pair "published" post.first_cached
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
@@ -171,7 +171,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "published" DateTimeOffset.UtcNow
         pair "to" "https://www.w3.org/ns/activitystreams#Public"
         pair "cc" [$"{actor}/followers"]
-        pair "object" (mapper.GetObjectId(post.submitid))
+        pair "object" (mapper.GetObjectId(post.id))
     ]
 
     /// Builds a transient Create activity for a transient Note sent to the admin actor.
@@ -225,7 +225,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "type" "OrderedCollectionPage"
 
         if page.posts <> [] then
-            pair "next" $"{actor}/outbox/page?nextid={List.min [for p in page.posts do p.submitid]}"
+            pair "next" (mapper.GetNextOutboxPage [for p in page.posts do p.id])
 
         pair "partOf" $"{actor}/outbox"
         pair "orderedItems" [for p in page.posts do this.ObjectToCreate p]

@@ -28,7 +28,7 @@ namespace Crowmask.Functions
 
             await foreach (var post in cache.GetCachedSubmissionsAsync(since: yesterday))
                 if (post.stale)
-                    await cache.RefreshSubmissionAsync(post.submitid);
+                    await cache.RefreshPostAsync(post.id);
         }
     }
 }

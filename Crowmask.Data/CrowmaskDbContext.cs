@@ -12,6 +12,8 @@ namespace Crowmask.Data
 
         public DbSet<Interaction> Interactions { get; set; }
 
+        public DbSet<Journal> Journals { get; set; }
+
         public DbSet<KnownInbox> KnownInboxes { get; set; }
 
         public DbSet<Mention> Mentions { get; set; }

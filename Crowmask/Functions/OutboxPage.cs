@@ -32,9 +32,13 @@ namespace Crowmask.Functions
                 ? n
                 : int.MaxValue;
 
-            var posts = await cache.GetCachedSubmissionsAsync(nextid: nextid)
-                .Take(20)
-                .ToListAsync();
+            var posts = req.Query["type"] == "journal"
+                ? await cache.GetCachedJournalsAsync(nextid: nextid)
+                    .Take(5)
+                    .ToListAsync()
+                : await cache.GetCachedSubmissionsAsync(nextid: nextid)
+                    .Take(20)
+                    .ToListAsync();
 
             var galleryPage = Domain.AsGalleryPage(posts, nextid);
 

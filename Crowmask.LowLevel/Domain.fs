@@ -43,9 +43,11 @@ type RemoteAction = {
     added_at: DateTimeOffset
 }
 
+type PostId = SubmitId of int | JournalId of int
+
 /// A Weasyl post to mirror to ActivityPub.
 type Post = {
-    submitid: int
+    id: PostId
     title: string
     content: string
     url: string
@@ -113,7 +115,7 @@ module Domain =
     }
 
     let AsPost(submission: Submission) = {
-        submitid = submission.SubmitId
+        id = SubmitId submission.SubmitId
         title = submission.Title
         content = String.concat "\n" [
             if submission.Visual then
@@ -158,6 +160,38 @@ module Domain =
             | "explicit" -> Sensitive "Explicit (18+)"
             | x -> Sensitive x
         stale = FreshnessDeterminer.IsStale(submission)
+    }
+
+    let JournalAsPost(journal: Journal) = {
+        id = JournalId journal.JournalId
+        title = journal.Title
+        content = String.concat "\n" [
+            journal.Content
+
+            if journal.Tags.Count > 0 then
+                String.concat "" [
+                    "<p>"
+                    String.concat " " [
+                        for tag in journal.Tags do
+                            let href = $"https://www.weasyl.com/search?q={Uri.EscapeDataString(tag.Tag)}"
+                            $"<a href='{WebUtility.HtmlEncode(href)}' rel='tag'>#{WebUtility.HtmlEncode(tag.Tag)}</a>"
+                    ]
+                    "</p>"
+                ]
+        ]
+        url = journal.Link//$"https://www.weasyl.com/journal/{journal.JournalId}"
+        first_upstream = journal.PostedAt
+        first_cached = journal.FirstCachedAt
+        images = []
+        thumbnails = []
+        tags = [for t in journal.Tags do t.Tag]
+        sensitivity =
+            match journal.Rating with
+            | "general" -> General
+            | "mature" -> Sensitive "Mature (18+)"
+            | "explicit" -> Sensitive "Explicit (18+)"
+            | x -> Sensitive x
+        stale = FreshnessDeterminer.IsStale(journal)
     }
 
     let AsGallery(count: int) = {

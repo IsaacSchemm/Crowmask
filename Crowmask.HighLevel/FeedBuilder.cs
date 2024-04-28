@@ -42,14 +42,14 @@ namespace Crowmask.HighLevel.Feed
         {
             var item = new SyndicationItem
             {
-                Id = mapper.GetObjectId(post.submitid),
+                Id = mapper.GetObjectId(post.id),
                 Title = new TextSyndicationContent(post.title, TextSyndicationContentKind.Plaintext),
                 PublishDate = post.first_upstream,
                 LastUpdatedTime = post.first_upstream,
                 Content = new TextSyndicationContent(string.Join(" ", GetHtml(post)), TextSyndicationContentKind.Html)
             };
 
-            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.submitid)), "text/html"));
+            item.Links.Add(SyndicationLink.CreateAlternateLink(new Uri(mapper.GetObjectId(post.id)), "text/html"));
 
             return item;
         }

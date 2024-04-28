@@ -1,4 +1,5 @@
 using Crowmask.HighLevel;
+using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ namespace Crowmask.Functions
         {
             await foreach (var post in cache.GetCachedSubmissionsAsync())
                 if (post.stale)
-                    await cache.RefreshSubmissionAsync(post.submitid);
+                    await cache.RefreshPostAsync(post.id);
         }
     }
 }

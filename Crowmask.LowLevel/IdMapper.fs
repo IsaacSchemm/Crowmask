@@ -16,12 +16,14 @@ type IdMapper(appInfo: IApplicationInformation) =
         $"https://{appInfo.ApplicationHostname}#transient-{Guid.NewGuid()}"
 
     /// Determines the ActivityPub object ID for a post.
-    member _.GetObjectId(submitid: int) =
-        $"https://{appInfo.ApplicationHostname}/api/submissions/{submitid}"
+    member _.GetObjectId(id: PostId) =
+        match id with
+        | SubmitId submitid -> $"https://{appInfo.ApplicationHostname}/api/submissions/{submitid}"
+        | JournalId journalid -> $"https://{appInfo.ApplicationHostname}/api/journals/{journalid}"
 
     /// Determines the ID to use for a Create activity for a post.
-    member this.GetCreateId(submitid: int) =
-        $"{this.GetObjectId(submitid)}#create"
+    member this.GetCreateId(id: PostId) =
+        $"{this.GetObjectId(id)}#create"
 
     /// Determines the URL for a notification post sent to the admin actor.
     member _.GetObjectId(interaction: Interaction) =
@@ -30,3 +32,9 @@ type IdMapper(appInfo: IApplicationInformation) =
     /// Determines the URL for a notification post sent to the admin actor.
     member _.GetObjectId(remoteMention: Mention) =
         $"https://{appInfo.ApplicationHostname}/api/mentions/{remoteMention.Id}/notification"
+
+    /// Determines the URL for the next page of the outbox.
+    member _.GetNextOutboxPage(ids: PostId seq) =
+        match Seq.min ids with
+        | SubmitId submitid -> $"/api/actor/outbox/page?nextid={submitid}"
+        | JournalId journalid -> $"/api/actor/outbox/page?nextid={journalid}&type=journal"

@@ -69,7 +69,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $"<table><tr>"
         for post in recentSubmissions do
             for thumbnail in post.thumbnails do
-                $"<td><a href='{mapper.GetObjectId(post.submitid)}'>"
+                $"<td><a href='{mapper.GetObjectId(post.id)}'>"
                 $"<img src='{thumbnail.url}' />"
                 $""
                 $"**{enc post.title}**  "
@@ -79,6 +79,8 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $"</tr></table>"
         $""
         $"[View gallery](/api/actor/outbox/page)"
+        $""
+        $"[View journal entries](/api/actor/outbox/page?type=journal)"
         $""
         $"----------"
         $""
@@ -97,10 +99,13 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $"--------"
         $""
         if not (Seq.isEmpty appInfo.AdminActorIds) then
-            $"## atproto (e.g. Bluesky)"
+            $"## Bluesky"
             $""
             for account in appInfo.BlueskyBotAccounts do
                 $"This server operates a bot account at [`{enc account.DID}`](https://bsky.app/profile/{enc account.DID}) on `{enc account.PDS}`."
+                $"Artwork submissions will be mirrored to this account."
+                $""
+                $"Crowmask does not currently mirror journal entries to Bluesky."
                 $""
         $"--------"
         $""
@@ -201,7 +206,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $""
         for post in page.posts do
             let date = post.first_upstream.UtcDateTime.ToString("MMM d, yyyy")
-            let post_url = mapper.GetObjectId(post.submitid)
+            let post_url = mapper.GetObjectId(post.id)
 
             $"### [{enc post.title}]({post_url}) ({enc date})"
             $""
@@ -216,13 +221,11 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
             $""
         $""
         if page.posts <> [] then
-            $"[View more posts](/api/actor/outbox/page?nextid={List.min [for p in page.posts do p.submitid]})"
+            $"[View more posts]({mapper.GetNextOutboxPage [for p in page.posts do p.id]})"
         else
             "No more posts are available."
         $""
         $"----------"
-        $""
-        $"To interact with a submission via ActivityPub, use the URI format `{mapper.GetObjectId 0}`, where `0` is the numeric ID from the Weasyl submission URI (e.g. `https://www.weasyl.com/~user/submissions/0000000/post-title`)."
         $""
     ]
 

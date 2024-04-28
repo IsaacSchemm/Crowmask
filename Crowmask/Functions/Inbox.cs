@@ -19,26 +19,11 @@ namespace Crowmask.Functions
 {
     public class Inbox(
         IApplicationInformation appInfo,
-        IdMapper mapper,
         InboxHandler inboxHandler,
         MastodonVerifier mastodonVerifier,
         Requester requester)
     {
         private static readonly IEnumerable<JToken> Empty = [];
-
-        /// <summary>
-        /// Extracts the submission ID, if any, from an ActivityPub object ID.
-        /// </summary>
-        /// <param name="objectId">The ActivityPub ID / URL for a Crowmask post</param>
-        /// <returns>A submission ID, or null</returns>
-        private int? GetSubmitId(string objectId)
-        {
-            return Uri.TryCreate(objectId, UriKind.Absolute, out Uri uri)
-                && int.TryParse(uri.AbsolutePath.Split('/').Last(), out int candidate)
-                && mapper.GetObjectId(candidate) == objectId
-                    ? candidate
-                    : null;
-        }
 
         /// <summary>
         /// Accepts an ActivityPub message.
