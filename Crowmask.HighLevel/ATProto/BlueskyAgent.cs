@@ -2,6 +2,7 @@
 using Crowmask.Data;
 using Crowmask.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Crowmask.HighLevel.ATProto
 {

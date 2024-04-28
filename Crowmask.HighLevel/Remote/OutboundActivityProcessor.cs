@@ -54,7 +54,14 @@ namespace Crowmask.HighLevel.Remote
                         inboxesToSkip.Add(activity.Inbox);
                     }
 
-                    await context.SaveChangesAsync();
+                    try
+                    {
+                        await context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Could not save status of activity {activity.Id} (has it already been deleted?)", ex);
+                    }
                 }
             }
         }

@@ -233,21 +233,25 @@ module Notifications =
 module Repo =
     type BlobResponse = {
         blob: obj
+    }
+
+    type BlobWithAltText = {
+        blob: obj
         alt: string
     }
 
     let UploadBlobAsync httpClient (credentials: ICredentials) (data: byte[]) (contentType: string) (alt: string) = task {
-        let! blob =
+        let! blobResponse =
             Requester.build credentials HttpMethod.Post "com.atproto.repo.uploadBlob"
             |> Requester.addBody data contentType
             |> Reader.readAsync<BlobResponse> httpClient credentials
-        return { blob = blob; alt = alt }
+        return { blob = blobResponse.blob; alt = alt }
     }
 
     type Post = {
         text: string
         createdAt: DateTimeOffset
-        images: BlobResponse seq
+        images: BlobWithAltText seq
     }
 
     type NewRecord = {
