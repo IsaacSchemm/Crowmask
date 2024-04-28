@@ -1,14 +1,10 @@
 ﻿# Crowmask 🐦‍⬛🎭
 
-**Crowmask** is a combination ActivityPub server and Bluesky bot that mirrors
-a single [Weasyl](https://www.weasyl.com/) account.
-
-Crowmask is intended for users who already use an ActivityPub microblogging
-platform (e.g. Mastodon), but want a separate art account that tracks their
-Weasyl gallery. It's designed to be deployed to Azure Functions and Cosmos DB,
-rather than to a physical server or virtual machine.
-
-Crowmask is written mostly in C# with some parts in F#.
+**Crowmask** is a combination ActivityPub server and Bluesky bot, written in
+C# and F#, that is designed to run on Azure Functions and Cosmos DB and mirrors
+a single [Weasyl](https://www.weasyl.com/) account. Crowmask is designed to be
+deployed to Azure Functions and Cosmos DB, rather than to a physical server or
+virtual machine.
 
 The Crowmask server implements ActivityPub server-to-server, and exposes a
 single user account (with the name, profile, and avatar of the Weasyl user who
@@ -19,13 +15,14 @@ backdated, and posts for edited submissions are deleted and re-created).
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 or tags the Crowmask actor in a post, Crowmask will send a private `Note` to
-the "admin actors" defined in its configuration variables and shown on its
-profile page. Bluesky notifications are checked every six hours and summarized
-in a private `Note` sent to the admin actors.hale 
+any ActivityPub accounts that are configured as "admin actors" (typically,
+there would be a single account configured this way). Bluesky notifications
+are checked every six hours and summarized in a private `Note` sent to these
+admin actors. 
 
 Outgoing activities (like "accept follow" or "create new post") are processed
 every minute. Submissions are updated periodically, ranging from every ten
-minutes (for submissions less than an hour old) to every 28 days (for those
+minutes (for submissions less than a day old) to every 28 days (for those
 over 28 days old). User profile data is updated hourly.
 
 ## Browsing
@@ -45,26 +42,24 @@ web browsers from the actor and post URLs to the equivalent Weasyl pages.
 Crowmask implements ActivityPub, HTML, and Markdown responses through content
 negotiation. The RSS and Atom feeds are implemented on the endpoint for page 1
 of the outbox, but must be explicitly requested with `format=rss` or
-`format=atom`, as (historically) some browsers have sent Accept headers that
-explicitly prefer `application/xml` over `text/html`.
+`format=atom`.
 
 ## Implementation details
 
-Layers:
+### Layers
 
-* **Crowmask.ATProto** (F#): a small Bluesky API client. Only implements
-  functionality needed for Crowmask.
-* **Crowmask.Interfaces** (VB.NET): contains interfaces used to pass config
-  values between layers or to allow inner layers to call outer-layer code.
-* **Crowmask.Data** (C#): contains the data types and and data context, which
-  map to documents in the Cosmos DB backend of EF Core.
-* **Crowmask.LowLevel** (F#): converts data objects like `Submission` (which
-  are specific to the database schema) to more general F# records, then to
-  ActivityPub objects or Markdown / HTML pages; maps Crowmask internal IDs to
-  ActivityPub IDs; and talks to the Weasyl API.
-* **Crowmask.HighLevel** (C#):
-    * **Signatures**: HTTP signature validation, adapted from
-      [Letterbook](https://github.com/Letterbook/Letterbook).
+* **Crowmask.ATProto**: a small Bluesky API client. Only implements functionality needed for Crowmask.
+* **Crowmask.Interfaces**: contains interfaces used to pass config values between layers or to allow inner layers to call outer-layer code.
+* **Crowmask.Data**: contains the data types and and data context, which map to documents in the Cosmos DB backend of EF Core.
+* **Crowmask.LowLevel**:
+    * determines when cached posts are considered stale;
+    * converts data objects like `Submission` (which are specific to the database schema) to more general F# records, then to ActivityPub objects or Markdown / HTML pages;
+    * maps Crowmask internal IDs to ActivityPub IDs;
+    * talks to the Weasyl API;
+    * and performs content negotiation.
+* **Crowmask.HighLevel**:
+    * **ATProto**: Creates, updates, and deletes Bluesky posts.
+    * **Signatures**: HTTP signature validation, adapted from an older version of [Letterbook](https://github.com/Letterbook/Letterbook).
     * **Remote**: Talks to other ActivityPub servers.
     * **FeedBuilder**: Implements RSS and Atom feeds.
     * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
@@ -73,7 +68,7 @@ Layers:
 * **Crowmask** (C#): The main Azure Functions project, responsible for
   handling HTTP requests and running timed functions.
 
-HTTP endpoints:
+### Public HTTP endpoints
 
 * `/.well-known/nodeinfo`: returns the location of the NodeInfo endpoint
 * `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the domain of the first admin actor
@@ -84,9 +79,20 @@ HTTP endpoints:
 * `/api/actor/nodeinfo`: returns a NodeInfo 2.2 response
 * `/api/actor/outbox`: provides the number of submissions and a link to the first outbox page
 * `/api/actor/outbox/page`: contains `Create` activities for known cached Weasyl posts, newest first; also handles Atom and RSS (20 per page)
-* `/api/submissions/{submitid}`: returns the resulting `Note` object
+* `/api/journals/{journalid}`: returns the resulting ActivityPub object
+* `/api/submissions/{submitid}`: returns the resulting ActivityPub object
 
-Timed functions:
+### Private HTTP endpoints
+
+These functions must be authenticated using the `X-Weasyl-API-Key` header, and
+the value of the header must be the same as the Weasyl API key that Crowmask
+is configured to use.
+
+* `POST /api/journals/{journalid}/refresh`: triggers a refresh of the journal entry (if stale or missing)
+* `PUT /api/submissions/{submitid}/alt`: changes the submission's current alt text (default is empty)
+* `POST /api/submissions/{submitid}/refresh`: triggers a refresh of the submission (if stale or missing)
+
+### Timed functions
 
 * `ATProtoCheckNotifications` (every six hours)
 * `RefreshCache` (every day at 12:00)
@@ -94,6 +100,8 @@ Timed functions:
 * `RefreshRecent` (every ten minutes)
 * `RefreshUpstream` (every month on the 5th at 17:00)
 * `SendOutbound` (every hour at :02)
+
+### Additional information
 
 Crowmask stands for "Content Read Off Weasyl: Modified ActivityPub Starter Kit". It began as an attempt
 to port [ActivityPub Starter Kit](https://github.com/jakelazaroff/activitypub-starter-kit) to .NET, but
@@ -127,6 +135,10 @@ Example `local.settings.json`:
 Settings prefixed with `ATProto` can be omitted if you don't need the Bluesky
 bot. Crowmask stores Bluesky tokens in its database, so `ATProtoIdentifier`
 and `ATProtoPassword` should be removed once tokens are established.
+
+You should be able to leave `AdminActor` blank or omit it to run the server
+without an admin actor (and without the ability to see who's interacted with
+your posts), although this hasn't been tested.
 
 For **Key Vault**, the app is set up to use Managed Identity - turn this on in
 the Function App (Settings > Identity) then go to the key vault's access

@@ -2,37 +2,33 @@ using Crowmask.HighLevel;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class SubmissionAltPut(SubmissionCache cache, IWeasylApiKeyProvider weasylApiKeyProvider)
+    public class JournalRefresh(SubmissionCache cache, IWeasylApiKeyProvider weasylApiKeyProvider)
     {
         /// <summary>
-        /// Updates alt text for a submission.
+        /// Updates a journal entry from Weasyl, if it is stale or missing in Crowmask's cache.
         /// </summary>
         /// <param name="req"></param>
-        /// <param name="submitid">The submission ID</param>
+        /// <param name="journalid">The numeric ID of the journal on Weasyl</param>
         /// <returns></returns>
-        [Function("SubmissionAltPut")]
+        [Function("JournalRefresh")]
         public async Task<HttpResponseData> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "api/submissions/{submitid}/alt")] HttpRequestData req,
-            int submitid)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/journals/{journalid}/refresh")] HttpRequestData req,
+            int journalid)
         {
             if (!req.Headers.TryGetValues("X-Weasyl-API-Key", out IEnumerable<string> keys))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
             if (!keys.Contains(weasylApiKeyProvider.ApiKey))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
 
-            using var sr = new StreamReader(req.Body);
-            string newAltText = await sr.ReadToEndAsync();
-            await cache.RefreshSubmissionAsync(submitid, altText: newAltText);
-            return req.CreateResponse(HttpStatusCode.ResetContent);
+            await cache.RefreshJournalAsync(journalid);
+            return req.CreateResponse(HttpStatusCode.NoContent);
         }
     }
 }

@@ -188,16 +188,11 @@ type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClie
         return! resp.Content.ReadFromJsonAsync<Weasyl.UserProfile>()
     }
 
-    /// Gets the username and ID of the user who issued the Weasyl API key.
-    let whoamiAsync () = task {
+    /// Gets and stores the username and ID of the user who issued the Weasyl API key.
+    let whoamiLazy = lazy task {
         use! resp = getAsync $"https://www.weasyl.com/api/whoami"
         ignore (resp.EnsureSuccessStatusCode())
         return! resp.Content.ReadFromJsonAsync<Weasyl.Whoami>()
-    }
-
-    /// Gets and stores the username and ID of the user who issued the Weasyl API key.
-    let whoamiLazy = lazy task {
-        return! whoamiAsync ()
     }
 
     /// Gets and stores the user profile information of the user who issued the Weasyl API key.

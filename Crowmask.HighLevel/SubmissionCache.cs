@@ -343,6 +343,23 @@ namespace Crowmask.HighLevel
         }
 
         /// <summary>
+        /// Gets cached journal entry information from Crowmask's database
+        /// without making an upstream call to Weasyl, even if the information
+        /// is stale or absent.
+        /// </summary>
+        /// <param name="journalid"></param>
+        /// <returns></returns>
+        public async Task<CacheResult> GetCachedJournalAsync(int journalid)
+        {
+            var cachedSubmission = await Context.Journals
+                .Where(j => j.JournalId == journalid)
+                .SingleOrDefaultAsync();
+            return cachedSubmission != null
+                ? CacheResult.NewPostResult(Domain.JournalAsPost(cachedSubmission))
+                : CacheResult.PostNotFound;
+        }
+
+        /// <summary>
         /// Returns a list of cached submissions from Crowmask's database.
         /// Submissions with higher IDs will be returned first.
         /// </summary>

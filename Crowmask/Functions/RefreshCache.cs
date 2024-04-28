@@ -18,6 +18,10 @@ namespace Crowmask.Functions
             await foreach (var post in cache.GetCachedSubmissionsAsync())
                 if (post.stale)
                     await cache.RefreshPostAsync(post.id);
+
+            await foreach (var post in cache.GetCachedJournalsAsync())
+                if (post.stale)
+                    await cache.RefreshPostAsync(post.id);
         }
     }
 }
