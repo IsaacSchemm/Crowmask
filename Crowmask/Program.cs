@@ -30,7 +30,7 @@ var host = new HostBuilder()
 
         services.AddSingleton<IApplicationInformation>(new AppInfo(
             ApplicationName: "Crowmask",
-            VersionNumber: "1.8.2",
+            VersionNumber: "1.8.4",
             ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             WebsiteUrl: "https://github.com/IsaacSchemm/Crowmask/",
             Username: Environment.GetEnvironmentVariable("HandleName"),

@@ -62,7 +62,7 @@ namespace Crowmask.HighLevel.ATProto
                     using var resp = await httpClient.SendAsync(req);
                     byte[] data = await resp.Content.ReadAsByteArrayAsync();
                     string mediaType = resp.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
-                    yield return (data, mediaType, image.AltText);
+                    yield return (data, mediaType, submission.AltText);
                 }
             }
 

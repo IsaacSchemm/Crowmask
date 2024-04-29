@@ -100,8 +100,7 @@ namespace Crowmask.HighLevel
                         .SelectAwait(async s => new Submission.SubmissionMedia
                         {
                             Url = s.url,
-                            ContentType = await GetContentTypeAsync(s.url),
-                            AltText = altText
+                            ContentType = await GetContentTypeAsync(s.url)
                         })
                         .ToListAsync();
                     cachedSubmission.Thumbnails = await weasylSubmission.media.thumbnail
@@ -124,6 +123,7 @@ namespace Crowmask.HighLevel
                     cachedSubmission.Title = weasylSubmission.title;
 
                     cachedSubmission.Link = weasylSubmission.link;
+                    cachedSubmission.AltText = altText ?? cachedSubmission.AltText;
 
                     var newSubmission = Domain.AsPost(cachedSubmission);
 

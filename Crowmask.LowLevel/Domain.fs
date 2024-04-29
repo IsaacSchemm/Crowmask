@@ -145,7 +145,7 @@ module Domain =
                 for media in submission.Media do {
                     mediaType = media.ContentType
                     url = media.Url
-                    alt = media.AltText |> Option.ofObj |> Option.defaultValue ""
+                    alt = submission.AltText |> Option.ofObj |> Option.defaultValue ""
                 }
         ]
         thumbnails = [
