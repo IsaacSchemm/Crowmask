@@ -27,7 +27,7 @@ namespace Crowmask.Functions
             if (!keys.Contains(weasylApiKeyProvider.ApiKey))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
 
-            await cache.RefreshJournalAsync(journalid);
+            await cache.RefreshJournalAsync(journalid, force: true);
             return req.CreateResponse(HttpStatusCode.NoContent);
         }
     }

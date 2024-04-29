@@ -55,9 +55,10 @@ namespace Crowmask.HighLevel
         /// submission is stale or absent. New, updated, and deleted posts will generate new ActivityPub messages.
         /// </summary>
         /// <param name="submitid">The submission ID</param>
-        /// <param name="altText">New alt text to apply (will force a refresh)</param>
+        /// <param name="force">Whether to force a refresh, even if not stale</param>
+        /// <param name="altText">New alt text to apply (will always force a refresh)</param>
         /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> RefreshSubmissionAsync(int submitid, string? altText = null)
+        public async Task<CacheResult> RefreshSubmissionAsync(int submitid, bool force = false, string? altText = null)
         {
             var cachedSubmission = await Context.Submissions
                 .Where(s => s.SubmitId == submitid)
@@ -65,9 +66,9 @@ namespace Crowmask.HighLevel
 
             if (cachedSubmission != null)
             {
-                if (!FreshnessDeterminer.IsStale(cachedSubmission))
-                    if (altText == null)
-                        return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
+                bool mustRefresh = FreshnessDeterminer.IsStale(cachedSubmission) || force || altText != null;
+                if (!mustRefresh)
+                    return CacheResult.NewPostResult(Domain.AsPost(cachedSubmission));
 
                 cachedSubmission.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;
                 await Context.SaveChangesAsync();
@@ -207,8 +208,9 @@ namespace Crowmask.HighLevel
         /// will generate new ActivityPub messages.
         /// </summary>
         /// <param name="journalid">The journal ID</param>
+        /// <param name="force">Whether to force a refresh, even if not stale</param>
         /// <returns>A CacheResult union, with the found post if any</returns>
-        public async Task<CacheResult> RefreshJournalAsync(int journalid)
+        public async Task<CacheResult> RefreshJournalAsync(int journalid, bool force = false)
         {
             var cachedJournal = await Context.Journals
                 .Where(j => j.JournalId == journalid)
@@ -216,7 +218,8 @@ namespace Crowmask.HighLevel
 
             if (cachedJournal != null)
             {
-                if (!FreshnessDeterminer.IsStale(cachedJournal))
+                bool mustRefresh = FreshnessDeterminer.IsStale(cachedJournal) || force;
+                if (!mustRefresh)
                     return CacheResult.NewPostResult(Domain.JournalAsPost(cachedJournal));
 
                 cachedJournal.CacheRefreshAttemptedAt = DateTimeOffset.UtcNow;

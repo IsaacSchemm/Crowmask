@@ -14,7 +14,7 @@ namespace Crowmask.Functions
         /// <param name="myTimer"></param>
         /// <returns></returns>
         [Function("RefreshUpstreamNew")]
-        public async Task Run([TimerTrigger("0 30 * * * *")] TimerInfo myTimer)
+        public async Task Run([TimerTrigger("0 15 16 * * *")] TimerInfo myTimer)
         {
             await foreach (var submission in weasylClient.GetMyGallerySubmissionsAsync())
             {

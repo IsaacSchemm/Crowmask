@@ -87,9 +87,9 @@ These functions must be authenticated using the `X-Weasyl-API-Key` header, and
 the value of the header must be the same as the Weasyl API key that Crowmask
 is configured to use.
 
-* `POST /api/journals/{journalid}/refresh`: triggers a refresh of the journal entry (if stale or missing)
-* `PUT /api/submissions/{submitid}/alt`: changes the submission's current alt text (default is empty)
-* `POST /api/submissions/{submitid}/refresh`: triggers a refresh of the submission (if stale or missing)
+* `POST /api/journals/{journalid}/refresh`: triggers a refresh of the journal entry
+* `POST /api/submissions/{submitid}/refresh`: triggers a refresh of the submission
+  * Optional query string parameter `alt=`: sets the alt text of the image
 
 ### Timed refresh functions
 
@@ -99,7 +99,7 @@ is configured to use.
   * All stale cached posts
 * `RefreshUpstreamFull` (every month on the 5th at 17:00)
   * All submissions in the user's Weasyl gallery
-* `RefreshUpstreamNew` (every hour at :30)
+* `RefreshUpstreamNew` (every day at 16:15)
   * All submissions in the user's Weasyl gallery that are newer than the most recent cached post
 
 ### Other timed funtions
