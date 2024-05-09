@@ -1,17 +1,17 @@
 ﻿# Crowmask 🐦‍⬛🎭
 
 **Crowmask** is a combination ActivityPub server and Bluesky bot, written in
-C# and F#, that is designed to run on Azure Functions and Cosmos DB and mirrors
-a single [Weasyl](https://www.weasyl.com/) account. Crowmask is designed to be
-deployed to Azure Functions and Cosmos DB, rather than to a physical server or
-virtual machine.
+C# and F#, that runs on Azure Functions and Cosmos DB and mirrors artwork (and
+optionally journal entries) from a [Weasyl](https://www.weasyl.com/) account.
 
-The Crowmask server implements ActivityPub server-to-server, and exposes a
-single user account (with the name, profile, and avatar of the Weasyl user who
-the configured API key belongs to). Mastodon and Pixelfed users can follow
-this account. Crowmask does not implement atproto; it connects to an external
-Bluesky account and creates and deletes posts as needed (all posts are
-backdated, and posts for edited submissions are deleted and re-created).
+Crowmask implements ActivityPub (server-to-server), exposing a user account
+with the name, profile, and avatar of the attached Weasyl user (the user
+associated with the Weasyl API key configured in the app's settings). Mastodon
+and Pixelfed users can follow this account.
+
+Crowmask can also connect to a Bluesky account, creating and deleting artwork
+posts as needed (all posts are backdated, and posts for edited submissions are
+deleted and re-created).
 
 When a user likes, replies to, or shares/boosts one of this account's posts,
 or tags the Crowmask actor in a post, Crowmask will send a private `Note` to
@@ -19,11 +19,6 @@ any ActivityPub accounts that are configured as "admin actors" (typically,
 there would be a single account configured this way). Bluesky notifications
 are checked every six hours and summarized in a private `Note` sent to these
 admin actors. 
-
-Outgoing activities (like "accept follow" or "create new post") are processed
-every minute. Submissions are updated periodically, ranging from every ten
-minutes (for submissions less than a day old) to every 28 days (for those
-over 28 days old). User profile data is updated hourly.
 
 ## Browsing
 
@@ -34,10 +29,11 @@ pointing a web browser at any of the ActivityPub URLs.
 
 If `ReturnMarkdown` is set to `true` in Program.cs, Crowmask will return
 Markdown renditions of these pages to user agents that do not request a more
-specific content type.
+specific content type. (You can see this using something like `curl`.)
 
 If `UpstreamRedirect` is set to `true` in Program.cs, Crowmask will redirect
-web browsers from the actor and post URLs to the equivalent Weasyl pages.
+web browsers from the actor and post URLs to the equivalent Weasyl pages,
+instead of returning HTML.
 
 Crowmask implements ActivityPub, HTML, and Markdown responses through content
 negotiation. The RSS and Atom feeds are implemented on the endpoint for page 1
@@ -59,7 +55,7 @@ of the outbox, but must be explicitly requested with `format=rss` or
   * and performs content negotiation.
 * **Crowmask.HighLevel**:
   * **ATProto**: Creates, updates, and deletes Bluesky posts.
-  * **Signatures**: HTTP signature validation, adapted from an older version of [Letterbook](https://github.com/Letterbook/Letterbook).
+  * **Signatures**: HTTP signature validation.
   * **Remote**: Talks to other ActivityPub servers.
   * **FeedBuilder**: Implements RSS and Atom feeds.
   * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
@@ -116,6 +112,8 @@ was quickly modified to support the strongly typed nature of .NET and the specif
 Still, having a simple, working ActivityPub implementation in a language I was able to understand (if
 not compile) was incredibly helpful, as was running a [microblog.pub](`https://docs.microblog.pub/`)
 instance and being able to see the logs.
+
+HTTP signature validation is adapted from [Letterbook](https://github.com/Letterbook/Letterbook).
 
 Example `local.settings.json`:
 
