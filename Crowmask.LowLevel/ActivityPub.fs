@@ -13,12 +13,15 @@ module ActivityPubSerializer =
     let Context: obj list = [
         "https://w3id.org/security/v1"
         "https://www.w3.org/ns/activitystreams"
+
         {| 
             // https://docs.joinmastodon.org/spec/activitypub/#as
             Hashtag = "as:Hashtag"
             sensitive = "as:sensitive"
-            // https://docs.joinpeertube.org/api/activitypub#example-2
-            comments = "as:comments"
+
+            toot = "http://joinmastodon.org/ns#"
+            discoverable = "toot:discoverable"
+            indexable = "toot:indexable"
         |}
     ]
 
@@ -57,6 +60,8 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         pair "name" person.name
         pair "summary" person.summary
         pair "url" actor
+        pair "discoverable" true
+        pair "indexable" true
         pair "publicKey" {|
             id = $"{actor}#main-key"
             owner = actor
