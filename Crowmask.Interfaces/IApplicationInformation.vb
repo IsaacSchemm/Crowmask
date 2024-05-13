@@ -61,11 +61,18 @@ Public Interface IApplicationInformation
     ReadOnly Property ReturnMarkdown As Boolean
 
     ''' <summary>
-    ''' Whether requests from web browsers to individual posts or to the actor
-    ''' URL should redirect to Weasyl.
+    ''' Whether web browsers should be redirected to Weasyl when visiting the
+    ''' actor URL.
     ''' </summary>
     ''' <returns></returns>
-    ReadOnly Property UpstreamRedirect As Boolean
+    ReadOnly Property RedirectActor As Boolean
+
+    ''' <summary>
+    ''' Whether web browsers should be redirected to Weasyl when visiting URLs
+    ''' for individual posts.
+    ''' </summary>
+    ''' <returns></returns>
+    ReadOnly Property RedirectPosts As Boolean
 
     ''' <summary>
     ''' A list of Bluesky accounts that Crowmask should create and delete

@@ -27,13 +27,11 @@ server and bot, but it does include profile and submission pages. As long as
 `ReturnHTML` is set to `true` in Program.cs, you can access these pages by
 pointing a web browser at any of the ActivityPub URLs.
 
-If `ReturnMarkdown` is set to `true` in Program.cs, Crowmask will return
-Markdown renditions of these pages to user agents that do not request a more
-specific content type. (You can see this using something like `curl`.)
-
-If `UpstreamRedirect` is set to `true` in Program.cs, Crowmask will redirect
-web browsers from the actor and post URLs to the equivalent Weasyl pages,
-instead of returning HTML.
+Certain parameters set in Program.cs affect content negotiation. By default,
+Crowmask will return Markdown renditions of its pages to any user agent that
+does not specify ActivityPub JSON or HTML in its `Accept` header, and it will
+redirect web browsers that try to access the URLs for individual posts to the
+corresponding Weasyl pages (but it will not do the same with the actor URL).
 
 Crowmask implements ActivityPub, HTML, and Markdown responses through content
 negotiation. The RSS and Atom feeds are implemented on the endpoint for page 1
@@ -61,7 +59,7 @@ of the outbox, but must be explicitly requested with `format=rss` or
   * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
   * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
   * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
-* **Crowmask** (C#): The main Azure Functions project, responsible for handling HTTP requests and running timed functions.
+* **Crowmask**: The main Azure Functions project, responsible for handling HTTP requests and running timed functions.
 
 ### Public HTTP endpoints
 

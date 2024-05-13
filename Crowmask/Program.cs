@@ -30,7 +30,7 @@ var host = new HostBuilder()
 
         services.AddSingleton<IApplicationInformation>(new AppInfo(
             ApplicationName: "Crowmask",
-            VersionNumber: "1.8.4",
+            VersionNumber: "1.8.5",
             ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             WebsiteUrl: "https://github.com/IsaacSchemm/Crowmask/",
             Username: Environment.GetEnvironmentVariable("HandleName"),
@@ -38,7 +38,8 @@ var host = new HostBuilder()
             AdminActorId: Environment.GetEnvironmentVariable("AdminActor"),
             ReturnHTML: true,
             ReturnMarkdown: true,
-            UpstreamRedirect: false,
+            RedirectActor: false,
+            RedirectPosts: true,
             BlueskyPDS: Environment.GetEnvironmentVariable("BlueskyPDS"),
             BlueskyDID: Environment.GetEnvironmentVariable("BlueskyDID"),
             BlueskyIdentifier: Environment.GetEnvironmentVariable("BlueskyIdentifier"),
@@ -84,7 +85,8 @@ record AppInfo(
     string AdminActorId,
     bool ReturnHTML,
     bool ReturnMarkdown,
-    bool UpstreamRedirect,
+    bool RedirectActor,
+    bool RedirectPosts,
     string BlueskyPDS,
     string BlueskyDID,
     string BlueskyIdentifier,

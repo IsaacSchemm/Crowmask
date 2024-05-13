@@ -6,7 +6,7 @@ open Microsoft.Net.Http.Headers
 open Crowmask.Interfaces
 
 /// A type of formatting that Crowmask supports for HTTP responses.
-type CrowmaskFormatFamily = Markdown | HTML | UpstreamRedirect | ActivityPub | RSS | Atom
+type CrowmaskFormatFamily = Markdown | HTML | RedirectActor | RedirectPost | ActivityPub | RSS | Atom
 
 /// An output format that Crowmask supports, consisting of the general type of response (family) and an HTTP Content-Type value.
 type CrowmaskFormat = {
@@ -36,8 +36,10 @@ type ContentNegotiator(appInfo: IApplicationInformation) =
         format ActivityPub "text/json"
 
         // Redirect web browsers to Weasyl, if enabled.
-        if appInfo.UpstreamRedirect then
-            format UpstreamRedirect "text/html"
+        if appInfo.RedirectActor then
+            format RedirectActor "text/html"
+        if appInfo.RedirectPosts then
+            format RedirectPost "text/html"
 
         // HTML responses for web browsers.
         if appInfo.ReturnHTML then

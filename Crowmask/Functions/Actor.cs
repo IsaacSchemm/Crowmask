@@ -50,7 +50,7 @@ namespace Crowmask.Functions
                     var recent = await submissionCache.GetCachedSubmissionsAsync().Take(3).ToListAsync();
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person, recent));
                 }
-                else if (format.Family.IsUpstreamRedirect)
+                else if (format.Family.IsRedirectActor)
                 {
                     return req.Redirect(person.url);
                 }

@@ -43,7 +43,7 @@ namespace Crowmask.Functions
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(submission));
                 }
-                else if (format.Family.IsUpstreamRedirect)
+                else if (format.Family.IsRedirectPost)
                 {
                     return req.Redirect(submission.url);
                 }
