@@ -9,7 +9,6 @@ namespace Crowmask.Functions
 {
     public class Journal(
         SubmissionCache cache,
-        MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
         ActivityPubTranslator translator)
     {
@@ -34,14 +33,6 @@ namespace Crowmask.Functions
                 if (format.Family.IsActivityPub)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, ActivityPubSerializer.SerializeWithContext(translator.AsObject(post)));
-                }
-                else if (format.Family.IsMarkdown)
-                {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(post));
-                }
-                else if (format.Family.IsHTML)
-                {
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(post));
                 }
                 else if (format.Family.IsRedirectPost)
                 {

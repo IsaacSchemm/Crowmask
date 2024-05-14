@@ -49,20 +49,6 @@ Public Interface IApplicationInformation
     ReadOnly Property AdminActorIds As IEnumerable(Of String)
 
     ''' <summary>
-    ''' Whether web browsers should be redirected to Weasyl when visiting the
-    ''' actor URL.
-    ''' </summary>
-    ''' <returns></returns>
-    ReadOnly Property RedirectActor As Boolean
-
-    ''' <summary>
-    ''' Whether web browsers should be redirected to Weasyl when visiting URLs
-    ''' for individual posts.
-    ''' </summary>
-    ''' <returns></returns>
-    ReadOnly Property RedirectPosts As Boolean
-
-    ''' <summary>
     ''' A list of Bluesky accounts that Crowmask should create and delete
     ''' posts on (mirroring its ActivityPub posts).
     ''' </summary>

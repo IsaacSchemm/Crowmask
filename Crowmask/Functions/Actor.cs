@@ -15,7 +15,6 @@ namespace Crowmask.Functions
         IActorKeyProvider keyProvider,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,
-        SubmissionCache submissionCache,
         ActivityPubTranslator translator,
         UserCache userCache)
     {
@@ -47,10 +46,6 @@ namespace Crowmask.Functions
                 else if (format.Family.IsMarkdown)
                 {
                     return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person));
-                }
-                else if (format.Family.IsRedirectActor)
-                {
-                    return req.Redirect(person.url);
                 }
             }
 

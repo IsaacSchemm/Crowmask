@@ -2,12 +2,11 @@
 
 open System.Net
 open Crowmask.Interfaces
-open Crowmask.Data
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub
 /// user agents.
-type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IApplicationInformation) =
+type MarkdownTranslator(mapper: IdMapper, appInfo: IApplicationInformation) =
     /// Performs HTML encoding on a string. (HTML can be inserted into
     /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode
@@ -98,40 +97,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
     ]
 
     member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
-
-    member _.ToMarkdown (post: Post) = String.concat "\n" [
-        $"<style type='text/css'>"
-        $"img {{ width: 640px; max-width: 100vw; height: 480px; object-fit: contain }}"
-        $"</style>"
-        $""
-        match post.sensitivity with
-        | General ->
-            for image in post.images do
-                $"[![{image.alt}]({image.url})]({image.url})"
-            $""
-            post.content
-        | Sensitive message ->
-            enc message
-        $""
-        $"[View on Weasyl]({post.url})"
-        $""
-    ]
-
-    member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
-
-    member _.ToMarkdown (interaction: Interaction) = String.concat "\n" [
-        $"{summarizer.ToMarkdown(interaction)}"
-        $""
-    ]
-
-    member this.ToHtml (interaction: Interaction) = this.ToMarkdown (interaction) |> toHtml "Crowmask"
-
-    member _.ToMarkdown (mention: Mention) = String.concat "\n" [
-        $"{summarizer.ToMarkdown(mention)}"
-        $""
-    ]
-
-    member this.ToHtml (mention: Mention) = this.ToMarkdown (mention) |> toHtml "Crowmask"
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
         $"## Gallery"
