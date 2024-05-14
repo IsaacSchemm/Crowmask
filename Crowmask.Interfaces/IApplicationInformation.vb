@@ -49,18 +49,6 @@ Public Interface IApplicationInformation
     ReadOnly Property AdminActorIds As IEnumerable(Of String)
 
     ''' <summary>
-    ''' Whether the HTML (text/html) user interface of Crowmask is enabled.
-    ''' </summary>
-    ''' <returns></returns>
-    ReadOnly Property ReturnHTML As Boolean
-
-    ''' <summary>
-    ''' Whether the Markdown (text/plain) user interface of Crowmask is enabled.
-    ''' </summary>
-    ''' <returns></returns>
-    ReadOnly Property ReturnMarkdown As Boolean
-
-    ''' <summary>
     ''' Whether web browsers should be redirected to Weasyl when visiting the
     ''' actor URL.
     ''' </summary>

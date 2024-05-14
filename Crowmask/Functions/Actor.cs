@@ -42,13 +42,11 @@ namespace Crowmask.Functions
                 }
                 else if (format.Family.IsHTML)
                 {
-                    var recent = await submissionCache.GetCachedSubmissionsAsync().Take(3).ToListAsync();
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(person, recent));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToHtml(person));
                 }
                 else if (format.Family.IsMarkdown)
                 {
-                    var recent = await submissionCache.GetCachedSubmissionsAsync().Take(3).ToListAsync();
-                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person, recent));
+                    return await req.WriteCrowmaskResponseAsync(format, markdownTranslator.ToMarkdown(person));
                 }
                 else if (format.Family.IsRedirectActor)
                 {

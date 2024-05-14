@@ -36,7 +36,7 @@ var host = new HostBuilder()
             Username: Environment.GetEnvironmentVariable("HandleName"),
             HandleHostname: Environment.GetEnvironmentVariable("HandleHost"),
             AdminActorId: Environment.GetEnvironmentVariable("AdminActor"),
-            ReturnHTML: true,
+            ReturnHTML: false,
             ReturnMarkdown: true,
             RedirectActor: false,
             RedirectPosts: true,

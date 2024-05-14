@@ -32,22 +32,7 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         "</html>"
     ]
 
-    /// A Markdown header that is included on all pages.
-    let sharedHeader = String.concat "\n" [
-        $"# [@{enc appInfo.Username}]({mapper.ActorId})"
-        $""
-        $"ActivityPub mirror powered by [{enc appInfo.ApplicationName}]({appInfo.WebsiteUrl})"
-    ]
-
-    member _.ToMarkdown (person: Person, recentSubmissions: Post seq) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"<style type='text/css'>"
-        $"table img {{ width: 250px; height: 250px; object-fit: scale-down; }}"
-        $"</style>"
-        $""
-        $"--------"
-        $""
+    member _.ToMarkdown (person: Person) = String.concat "\n" [
         $"## {enc person.name}"
         $""
         for iconUrl in person.iconUrls do
@@ -62,29 +47,19 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
             | None ->
                 $"* {enc metadata.name}: {enc metadata.value}"
         $""
-        $"----------"
-        $""
-        $"## Gallery"
-        $""
-        $"<table><tr>"
-        for post in recentSubmissions do
-            for thumbnail in post.thumbnails do
-                $"<td><a href='{mapper.GetObjectId(post.id)}'>"
-                $"<img src='{thumbnail.url}' />"
-                $""
-                $"**{enc post.title}**  "
-                $"{enc (post.first_upstream.UtcDateTime.ToLongDateString())}"
-                $""
-                $"</a></td>"
-        $"</tr></table>"
-        $""
         $"[View gallery](/api/actor/outbox/page)"
+        $"([Atom](/api/actor/outbox/page?format=atom))"
+        $"([RSS](/api/actor/outbox/page?format=rss))"
         $""
         $"[View journal entries](/api/actor/outbox/page?type=journal)"
+        $"([Atom](/api/actor/outbox/page?type=journal&format=atom))"
+        $"([RSS](/api/actor/outbox/page?type=journal&format=rss))"
         $""
         $"----------"
         $""
-        $"## ActivityPub (e.g. Mastodon)"
+        $"## ActivityPub"
+        $""
+        $"Follow this account on Mastodon or Pixelfed by copying its handle into your search bar:"
         $""
         for hostname in List.distinct [appInfo.HandleHostname; appInfo.ApplicationHostname] do
             $"    @{enc appInfo.Username}@{hostname}"
@@ -109,14 +84,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
                 $""
         $"--------"
         $""
-        $"## Atom/RSS"
-        $""
-        $"[Atom](/api/actor/outbox/page?format=atom)"
-        $""
-        $"[RSS](/api/actor/outbox/page?format=rss)"
-        $""
-        $"--------"
-        $""
         $"## [{enc appInfo.ApplicationName} {enc appInfo.VersionNumber}]({appInfo.WebsiteUrl}) 🐦‍⬛🎭"
         $""
         $"This program is free software: you can redistribute it and/or modify"
@@ -130,13 +97,9 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
         $"GNU Affero General Public License for more details."
     ]
 
-    member this.ToHtml (person: Person, recentSubmissions: Post seq) = this.ToMarkdown (person, recentSubmissions) |> toHtml person.name
+    member this.ToHtml (person: Person) = this.ToMarkdown person |> toHtml person.name
 
     member _.ToMarkdown (post: Post) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
         $"<style type='text/css'>"
         $"img {{ width: 640px; max-width: 100vw; height: 480px; object-fit: contain }}"
         $"</style>"
@@ -157,10 +120,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
     member this.ToHtml (post: Post) = this.ToMarkdown post |> toHtml post.title
 
     member _.ToMarkdown (interaction: Interaction) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
         $"{summarizer.ToMarkdown(interaction)}"
         $""
     ]
@@ -168,10 +127,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
     member this.ToHtml (interaction: Interaction) = this.ToMarkdown (interaction) |> toHtml "Crowmask"
 
     member _.ToMarkdown (mention: Mention) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
         $"{summarizer.ToMarkdown(mention)}"
         $""
     ]
@@ -179,10 +134,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
     member this.ToHtml (mention: Mention) = this.ToMarkdown (mention) |> toHtml "Crowmask"
 
     member _.ToMarkdown (gallery: Gallery) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
         $"## Gallery"
         $""
         $"{gallery.gallery_count} item(s)."
@@ -194,10 +145,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
     member this.ToHtml (gallery: Gallery) = this.ToMarkdown gallery |> toHtml "Gallery"
 
     member _.ToMarkdown (page: GalleryPage) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
         $"<style type='text/css'>"
         $"img {{ width: 250px; height: 250px; object-fit: scale-down; }}"
         $"</style>"
@@ -232,10 +179,6 @@ type MarkdownTranslator(mapper: IdMapper, summarizer: Summarizer, appInfo: IAppl
     member this.ToHtml (page: GalleryPage) = this.ToMarkdown page |> toHtml "Gallery"
 
     member _.ToMarkdown (followerCollection: FollowerCollection) = String.concat "\n" [
-        sharedHeader
-        $""
-        $"--------"
-        $""
         $"## Followers"
         $""
         for f in followerCollection.followers do

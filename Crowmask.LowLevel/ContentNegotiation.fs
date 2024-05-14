@@ -25,9 +25,8 @@ type ContentNegotiator(appInfo: IApplicationInformation) =
     /// A list of all response types supported by Crowmask, in the order that Crowmask prefers to use them.
     let supported = [
         // Markdown / plain text responses (may be useful for debugging).
-        if appInfo.ReturnMarkdown then
-            format Markdown "text/plain"
-            format Markdown "text/markdown"
+        format Markdown "text/plain"
+        format Markdown "text/markdown"
 
         // ActivityPub responses, for intercommunication with other ActivityPub software like Mastodon.
         format ActivityPub "application/activity+json"
@@ -42,8 +41,7 @@ type ContentNegotiator(appInfo: IApplicationInformation) =
             format RedirectPost "text/html"
 
         // HTML responses for web browsers.
-        if appInfo.ReturnHTML then
-            format HTML "text/html"
+        format HTML "text/html"
     ]
 
     let parse (str: string) =
