@@ -1,6 +1,7 @@
 ﻿using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
+using Crowmask.Signatures;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
@@ -11,7 +12,22 @@ namespace Crowmask.Remote
 {
     public class Requester(ICrowmaskHost host, IHttpClientFactory httpClientFactory, ISigner signer)
     {
-        public record RemoteActor(string Id, string? Name, string Inbox, string? SharedInbox);
+        public record RemoteActor(
+            string Id,
+            string? Name,
+            string Inbox,
+            string? SharedInbox,
+            string KeyId,
+            string KeyPem) : ISigningKey
+        {
+            Uri ISigningKey.Id => new(KeyId);
+            RSA ISigningKey.GetRsa()
+            {
+                var rsa = RSA.Create();
+                rsa.ImportFromPem(KeyPem);
+                return rsa;
+            }
+        }
 
         /// <summary>
         /// Fetches and returns an actor.
@@ -39,11 +55,16 @@ namespace Crowmask.Remote
                 }
             }
 
+            string keyId = expansion[0]["https://w3id.org/security#publicKey"][0]["@id"].Value<string>();
+            string keyPem = expansion[0]["https://w3id.org/security#publicKey"][0]["https://w3id.org/security#publicKeyPem"][0]["@value"].Value<string>();
+
             return new RemoteActor(
                 Id: id,
                 Name: name,
                 Inbox: inbox,
-                SharedInbox: sharedInbox);
+                SharedInbox: sharedInbox,
+                KeyId: keyId,
+                KeyPem: keyPem);
         }
 
         public async Task SendAsync(string recipient, IDictionary<string, object> message)

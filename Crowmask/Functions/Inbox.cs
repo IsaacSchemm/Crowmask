@@ -2,6 +2,7 @@ using Crowmask.ActivityPub;
 using Crowmask.Data;
 using Crowmask.DomainModeling;
 using Crowmask.Remote;
+using Crowmask.Signatures;
 using JsonLD.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -13,11 +14,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, Notifier notifier, Requester requester, Translator translator)
+    public class Inbox(CrowmaskDbContext context, IAdminActor adminActor, ICrowmaskHost host, MastodonVerifier mastodonVerifier, Notifier notifier, Requester requester, Translator translator)
     {
         private async Task<Submission> FindSubmissionByObjectIdAsync(string objectId)
         {
@@ -58,11 +61,22 @@ namespace Crowmask.Functions
 
             string type = expansion[0]["@type"][0].Value<string>();
 
+            string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
+            var actor = await requester.FetchActorAsync(actorId);
+
+            var signatureVerificationResult = mastodonVerifier.VerifyRequestSignature(
+                new SignedRequestToVerify(
+                    new HttpMethod(req.Method),
+                    req.Url,
+                    req.Headers),
+                verificationKey: actor);
+
+            if (signatureVerificationResult != NSign.VerificationResult.SuccessfullyVerified)
+                return req.CreateResponse(HttpStatusCode.Forbidden);
+
             if (type == "https://www.w3.org/ns/activitystreams#Follow")
             {
                 string objectId = expansion[0]["@id"].Value<string>();
-                string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorId);
 
                 var existing = await context.Followers
                     .Where(f => f.ActorId == actor.Id)
@@ -122,8 +136,6 @@ namespace Crowmask.Functions
             else if (type == "https://www.w3.org/ns/activitystreams#Like")
             {
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
-                string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorId);
 
                 if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
@@ -139,8 +151,6 @@ namespace Crowmask.Functions
             else if (type == "https://www.w3.org/ns/activitystreams#Announce")
             {
                 string objectId = expansion[0]["https://www.w3.org/ns/activitystreams#object"][0]["@id"].Value<string>();
-                string actorId = expansion[0]["https://www.w3.org/ns/activitystreams#actor"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorId);
 
                 if (await FindSubmissionByObjectIdAsync(objectId) is Submission submission)
                 {
@@ -159,9 +169,6 @@ namespace Crowmask.Functions
 
                 string replyJson = await requester.GetJsonAsync(new Uri(replyId));
                 JArray replyExpansion = JsonLdProcessor.Expand(JObject.Parse(replyJson));
-
-                string actorId = replyExpansion[0]["https://www.w3.org/ns/activitystreams#attributedTo"][0]["@id"].Value<string>();
-                var actor = await requester.FetchActorAsync(actorId);
 
                 foreach (var inReplyTo in replyExpansion[0]["https://www.w3.org/ns/activitystreams#inReplyTo"])
                 {

@@ -7,6 +7,7 @@ using Crowmask.DomainModeling;
 using Crowmask.Feed;
 using Crowmask.Markdown;
 using Crowmask.Remote;
+using Crowmask.Signatures;
 using Crowmask.Weasyl;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,6 +53,7 @@ var host = new HostBuilder()
         services.AddScoped<CrowmaskCache>();
         services.AddScoped<FeedBuilder>();
         services.AddScoped<MarkdownTranslator>();
+        services.AddScoped<MastodonVerifier>();
         services.AddScoped<Notifier>();
         services.AddScoped<OutboundActivityProcessor>();
         services.AddScoped<Requester>();
