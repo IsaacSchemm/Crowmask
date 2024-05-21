@@ -1,5 +1,4 @@
-﻿using Crowmask.Interfaces;
-using Crowmask.LowLevel;
+﻿using Crowmask.LowLevel;
 using System.Net;
 using System.ServiceModel.Syndication;
 using System.Text;
@@ -10,7 +9,7 @@ namespace Crowmask.HighLevel.Feed
     /// <summary>
     /// Builds Atom and RSS feeds for the outbox.
     /// </summary>
-    public class FeedBuilder(IdMapper mapper, IApplicationInformation appInfo)
+    public class FeedBuilder(IdMapper mapper, ApplicationInformation appInfo)
     {
         /// <summary>
         /// Generates an HTML rendition of the post, including image(s), description, and outgoing link(s).

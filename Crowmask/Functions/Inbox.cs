@@ -1,7 +1,6 @@
 using Crowmask.HighLevel;
 using Crowmask.HighLevel.Remote;
 using Crowmask.HighLevel.Signatures;
-using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using JsonLD.Core;
 using Microsoft.Azure.Functions.Worker;
@@ -18,7 +17,7 @@ using System.Threading.Tasks;
 namespace Crowmask.Functions
 {
     public class Inbox(
-        IApplicationInformation appInfo,
+        ApplicationInformation appInfo,
         InboxHandler inboxHandler,
         MastodonVerifier mastodonVerifier,
         Requester requester)

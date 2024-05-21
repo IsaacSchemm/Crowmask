@@ -1,5 +1,4 @@
 ﻿using Crowmask.Data;
-using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using JsonLD.Core;
 using Newtonsoft.Json.Linq;
@@ -12,7 +11,11 @@ namespace Crowmask.HighLevel.Remote
     /// <summary>
     /// Performs requests to other ActivityPub servers.
     /// </summary>
-    public class Requester(IdMapper mapper, IActorKeyProvider keyProvider, IApplicationInformation appInfo, IHttpClientFactory httpClientFactory)
+    public class Requester(
+        ApplicationInformation appInfo,
+        IActorKeyProvider keyProvider,
+        IdMapper mapper,
+        IHttpClientFactory httpClientFactory)
     {
         /// <summary>
         /// Fetches and returns an actor.

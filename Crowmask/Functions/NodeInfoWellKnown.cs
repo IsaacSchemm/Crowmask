@@ -1,4 +1,4 @@
-using Crowmask.Interfaces;
+using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class NodeInfoWellKnown(IApplicationInformation appInfo)
+    public class NodeInfoWellKnown(ApplicationInformation appInfo)
     {
         /// <summary>
         /// Points the user agent to the NodeInfo endpoint.

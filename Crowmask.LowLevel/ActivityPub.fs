@@ -4,7 +4,6 @@ open System
 open System.Collections.Generic
 open System.Net
 open System.Text.Json
-open Crowmask.Interfaces
 open Crowmask.Data
 
 /// Contains functions for JSON-LD serialization.
@@ -34,7 +33,7 @@ module ActivityPubSerializer =
 
 /// Creates ActivityPub objects (in string/object pair format) for actors,
 /// posts, and other objects tracked by Crowmask.
-type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summarizer, mapper: IdMapper) =
+type ActivityPubTranslator(appInfo: ApplicationInformation, summarizer: Summarizer, mapper: IdMapper) =
     /// The Crowmask actor ID.
     let actor = mapper.ActorId
 
@@ -49,7 +48,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
         && not (Char.IsUpper(c))
 
     /// Builds a Person object for the Crowmask actor.
-    member _.PersonToObject (person: Person) (key: IActorKey) (appInfo: IApplicationInformation) = dict [
+    member _.PersonToObject (person: Person) (key: ActorKey) (appInfo: ApplicationInformation) = dict [
         pair "id" actor
         pair "type" "Person"
         pair "inbox" $"{actor}/inbox"
@@ -94,7 +93,7 @@ type ActivityPubTranslator(appInfo: IApplicationInformation, summarizer: Summari
     ]
 
     /// Builds a transient Update activity for the Crowmask actor.
-    member this.PersonToUpdate (person: Person) (key: IActorKey) = dict [
+    member this.PersonToUpdate (person: Person) (key: ActorKey) = dict [
         pair "type" "Update"
         pair "id" (mapper.GenerateTransientId())
         pair "actor" actor

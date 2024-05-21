@@ -1,12 +1,11 @@
 ﻿namespace Crowmask.LowLevel
 
 open System.Net
-open Crowmask.Interfaces
 
 /// Creates Markdown and HTML renditions of Crowmask objects and pages, for
 /// use in the HTML web interface, or (for debugging) by other non-ActivityPub
 /// user agents.
-type MarkdownTranslator(mapper: IdMapper, appInfo: IApplicationInformation) =
+type MarkdownTranslator(mapper: IdMapper, appInfo: ApplicationInformation) =
     /// Performs HTML encoding on a string. (HTML can be inserted into
     /// Markdown and will be included in the final HTML output.)
     let enc = WebUtility.HtmlEncode

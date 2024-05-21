@@ -43,7 +43,6 @@ of the outbox, but must be explicitly requested with `format=rss` or
 ### Layers
 
 * **Crowmask.ATProto**: a small Bluesky API client. Only implements functionality needed for Crowmask.
-* **Crowmask.Interfaces**: contains interfaces used to pass config values between layers or to allow inner layers to call outer-layer code.
 * **Crowmask.Data**: contains the data types and and data context, which map to documents in the Cosmos DB backend of EF Core.
 * **Crowmask.LowLevel**:
   * determines when cached posts are considered stale;

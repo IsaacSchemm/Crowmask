@@ -5,7 +5,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Crowmask.Interfaces;
 using Crowmask.HighLevel.Remote;
 using NSign;
 using NSign.Signatures;

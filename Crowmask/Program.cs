@@ -1,7 +1,6 @@
 ﻿using Azure.Identity;
 using Crowmask;
 using Crowmask.Data;
-using Crowmask.Interfaces;
 using Crowmask.HighLevel;
 using Crowmask.HighLevel.Feed;
 using Crowmask.HighLevel.Remote;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
 using Crowmask.HighLevel.ATProto;
+using Microsoft.FSharp.Collections;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -28,18 +28,15 @@ var host = new HostBuilder()
                 new DefaultAzureCredential(),
                 databaseName: "Crowmask"));
 
-        services.AddSingleton<IApplicationInformation>(new AppInfo(
-            ApplicationName: "Crowmask",
-            VersionNumber: "1.9",
-            ApplicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
-            WebsiteUrl: "https://github.com/IsaacSchemm/Crowmask/",
-            Username: Environment.GetEnvironmentVariable("HandleName"),
-            HandleHostname: Environment.GetEnvironmentVariable("HandleHost"),
-            AdminActorId: Environment.GetEnvironmentVariable("AdminActor"),
-            BlueskyPDS: Environment.GetEnvironmentVariable("BlueskyPDS"),
-            BlueskyDID: Environment.GetEnvironmentVariable("BlueskyDID"),
-            BlueskyIdentifier: Environment.GetEnvironmentVariable("BlueskyIdentifier"),
-            BlueskyPassword: Environment.GetEnvironmentVariable("BlueskyPassword")));
+        services.AddSingleton(new ApplicationInformation(
+            applicationName: "Crowmask",
+            versionNumber: "1.10",
+            applicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
+            websiteUrl: "https://github.com/IsaacSchemm/Crowmask/",
+            username: Environment.GetEnvironmentVariable("HandleName"),
+            handleHostname: Environment.GetEnvironmentVariable("HandleHost"),
+            adminActorIds: ListModule.OfSeq(enumerateAdminActors()),
+            blueskyBotAccounts: ListModule.OfSeq(enumerateBlueskyAccounts())));
 
         services.AddSingleton<IActorKeyProvider>(
             new KeyProvider(
@@ -71,43 +68,25 @@ var host = new HostBuilder()
 
 host.Run();
 
-record AppInfo(
-    string ApplicationName,
-    string VersionNumber,
-    string ApplicationHostname,
-    string WebsiteUrl,
-    string Username,
-    string HandleHostname,
-    string AdminActorId,
-    string BlueskyPDS,
-    string BlueskyDID,
-    string BlueskyIdentifier,
-    string BlueskyPassword) : IApplicationInformation, IBlueskyAccountConfiguration
+IEnumerable<string> enumerateAdminActors()
 {
-    string IApplicationInformation.UserAgent =>
-        $"{ApplicationName}/{VersionNumber} ({WebsiteUrl})";
+    if (Environment.GetEnvironmentVariable("AdminActor") is string id)
+        yield return id;
+}
 
-    IEnumerable<string> IApplicationInformation.AdminActorIds
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(AdminActorId))
-                yield return AdminActorId;
-        }
-    }
+IEnumerable<BlueskyAccountConfiguration> enumerateBlueskyAccounts()
+{
+    if (Environment.GetEnvironmentVariable("BlueskyPDS") == null)
+        yield break;
 
-    IEnumerable<IBlueskyAccountConfiguration> IApplicationInformation.BlueskyBotAccounts {
-        get
-        {
-            if (!string.IsNullOrEmpty(BlueskyPDS) && !string.IsNullOrEmpty(BlueskyDID))
-                yield return this;
-        }
-    }
+    if (Environment.GetEnvironmentVariable("BlueskyDID") == null)
+        yield break;
 
-    string IBlueskyAccountConfiguration.PDS => BlueskyPDS;
-    string IBlueskyAccountConfiguration.DID => BlueskyDID;
-    string IBlueskyAccountConfiguration.Identifier => BlueskyIdentifier;
-    string IBlueskyAccountConfiguration.Password => BlueskyPassword;
+    yield return new BlueskyAccountConfiguration(
+        Environment.GetEnvironmentVariable("BlueskyPDS"),
+        Environment.GetEnvironmentVariable("BlueskyDID"),
+        Environment.GetEnvironmentVariable("BlueskyIdentifier"),
+        Environment.GetEnvironmentVariable("BlueskyPassword"));
 }
 
 record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

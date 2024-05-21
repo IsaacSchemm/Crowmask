@@ -1,4 +1,3 @@
-using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class WebFinger(IdMapper mapper, IApplicationInformation appInfo)
+    public class WebFinger(IdMapper mapper, ApplicationInformation appInfo)
     {
         /// <summary>
         /// Points the user agent to the Crowmask actor ID, or redirects to the equivalent endpoint on the admin actor's server.

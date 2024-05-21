@@ -1,4 +1,4 @@
-﻿using Crowmask.Interfaces;
+﻿using Crowmask.HighLevel.Signatures;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker.Http;
 using System;

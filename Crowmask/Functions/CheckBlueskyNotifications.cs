@@ -8,7 +8,6 @@ using Crowmask.ATProto;
 using Crowmask.Data;
 using Crowmask.HighLevel;
 using Crowmask.HighLevel.ATProto;
-using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +17,7 @@ namespace Crowmask.Functions
     public class CheckBlueskyNotifications(
         ActivityPubTranslator translator,
         CrowmaskDbContext context,
-        IApplicationInformation appInfo,
+        ApplicationInformation appInfo,
         IHttpClientFactory httpClientFactory,
         RemoteInboxLocator locator)
     {

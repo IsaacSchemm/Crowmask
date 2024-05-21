@@ -1,7 +1,7 @@
 ﻿using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
-using Crowmask.Interfaces;
+using Crowmask.LowLevel;
 using System;
 using System.Threading.Tasks;
 
@@ -13,20 +13,18 @@ namespace Crowmask
     /// </summary>
     public class KeyProvider(string VaultUri) : IActorKeyProvider
     {
-        private record PublicKey(string Pem) : IActorKey;
-
         /// <summary>
         /// Retrieves the public key and renders it in PEM format for use in the ActivityPub actor object.
         /// </summary>
         /// <returns>An object that contains the public key in PEM format</returns>
-        public async Task<IActorKey> GetPublicKeyAsync()
+        public async Task<ActorKey> GetPublicKeyAsync()
         {
             var tokenCredential = new DefaultAzureCredential();
             var keyClient = new KeyClient(new Uri(VaultUri), tokenCredential);
             var key = await keyClient.GetKeyAsync("crowmask-ap");
             byte[] arr = key.Value.Key.ToRSA().ExportSubjectPublicKeyInfo();
             string str = Convert.ToBase64String(arr);
-            return new PublicKey($"-----BEGIN PUBLIC KEY-----\n{str}\n-----END PUBLIC KEY-----");
+            return new ActorKey($"-----BEGIN PUBLIC KEY-----\n{str}\n-----END PUBLIC KEY-----");
         }
 
         /// <summary>

@@ -1,11 +1,11 @@
 ﻿using Crowmask.Data;
-using Crowmask.Interfaces;
 using Crowmask.HighLevel.Remote;
+using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.HighLevel
 {
-    public class RemoteInboxLocator(CrowmaskDbContext context, IApplicationInformation appInfo, Requester requester)
+    public class RemoteInboxLocator(CrowmaskDbContext context, ApplicationInformation appInfo, Requester requester)
     {
         /// <summary>
         /// Gets the URL of the admin actor's inbox.

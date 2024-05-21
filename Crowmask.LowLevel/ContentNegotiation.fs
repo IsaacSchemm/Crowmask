@@ -3,7 +3,6 @@
 open System.Linq
 open System.Net.Http.Headers
 open Microsoft.Net.Http.Headers
-open Crowmask.Interfaces
 
 /// A type of formatting that Crowmask supports for HTTP responses.
 type CrowmaskFormatFamily = Markdown | HTML | RedirectPost | ActivityPub | RSS | Atom
@@ -15,7 +14,7 @@ type CrowmaskFormat = {
 }
 
 /// An object that helps Crowmask determine the appropriate response type for an HTTP request.
-type ContentNegotiator(appInfo: IApplicationInformation) =
+type ContentNegotiator(appInfo: ApplicationInformation) =
     /// Builds a CrowmaskFormat object.
     let format family mediaType = {
         Family = family

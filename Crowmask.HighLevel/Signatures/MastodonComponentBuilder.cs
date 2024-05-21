@@ -4,7 +4,6 @@
 
 using static NSign.Constants;
 using NSign.Signatures;
-using Crowmask.Interfaces;
 
 namespace Crowmask.HighLevel.Signatures;
 

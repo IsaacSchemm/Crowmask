@@ -1,5 +1,5 @@
 using Crowmask.HighLevel;
-using Crowmask.Interfaces;
+using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using System;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class NodeInfo(SubmissionCache cache, IApplicationInformation appInfo, UserCache userCache)
+    public class NodeInfo(SubmissionCache cache, ApplicationInformation appInfo, UserCache userCache)
     {
         /// <summary>
         /// Returns a NodeInfo 2.2 response with information about the user and about Crowmask.

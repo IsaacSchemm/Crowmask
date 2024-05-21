@@ -1,11 +1,10 @@
 ﻿namespace Crowmask.LowLevel
 
 open System
-open Crowmask.Interfaces
 open Crowmask.Data
 
 /// Provides mappings between Crowmask's internal IDs and the public ActivityPub IDs of corresponding objects.
-type IdMapper(appInfo: IApplicationInformation) =
+type IdMapper(appInfo: ApplicationInformation) =
     /// The ActivityPub actor ID of the single actor hosted by this Crowmask instance.
     member _.ActorId =
         $"https://{appInfo.ApplicationHostname}/api/actor"

@@ -10,6 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="BlueskyAccountConfiguration.fs" />
+    <Compile Include="ApplicationInformation.fs" />
     <Compile Include="FreshnessDeterminer.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="IdMapper.fs" />
@@ -17,6 +19,8 @@
     <Compile Include="ContentNegotiation.fs" />
     <Compile Include="Summarizer.fs" />
     <Compile Include="MarkdownTranslator.fs" />
+    <Compile Include="ActorKey.fs" />
+    <Compile Include="IActorKeyProvider.fs" />
     <Compile Include="ActivityPub.fs" />
   </ItemGroup>
 
@@ -29,7 +33,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.Data\Crowmask.Data.csproj" />
-    <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
   </ItemGroup>
 
 </Project>

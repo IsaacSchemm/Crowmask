@@ -1,7 +1,6 @@
 ﻿namespace Crowmask.LowLevel
 
 open System
-open Crowmask.Interfaces
 open System.Net.Http
 open System.Net.Http.Headers
 open System.Net.Http.Json
@@ -120,7 +119,7 @@ type WeasylGalleryCount =
 | Count of int
 
 /// An object that allows for communication with the Weasyl API.
-type WeasylClient(appInfo: IApplicationInformation, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
+type WeasylClient(appInfo: ApplicationInformation, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
     /// Makes an HTTP GET request.
     let getAsync (uri: string) = task {
         use client = httpClientFactory.CreateClient()

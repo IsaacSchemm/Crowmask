@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Crowmask.ATProto\Crowmask.ATProto.fsproj" />
-    <ProjectReference Include="..\Crowmask.Interfaces\Crowmask.Interfaces.vbproj" />
     <ProjectReference Include="..\Crowmask.LowLevel\Crowmask.LowLevel.fsproj" />
   </ItemGroup>
 

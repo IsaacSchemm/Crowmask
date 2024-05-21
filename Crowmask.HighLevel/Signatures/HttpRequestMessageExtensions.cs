@@ -3,7 +3,6 @@
 // Adapted from NSign, used under the terms of the MIT license
 // https://github.com/Unisys/NSign/commit/660b2412cd523ed175d387cf32f549065b3cc56f
 
-using Crowmask.Interfaces;
 using NSign.Signatures;
 using static NSign.Constants;
 

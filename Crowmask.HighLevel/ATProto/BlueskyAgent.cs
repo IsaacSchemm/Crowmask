@@ -1,14 +1,13 @@
 ﻿using Crowmask.ATProto;
 using Crowmask.Data;
-using Crowmask.Interfaces;
+using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Crowmask.HighLevel.ATProto
 {
     public class BlueskyAgent(
         CrowmaskDbContext context,
-        IApplicationInformation appInfo,
+        ApplicationInformation appInfo,
         IHttpClientFactory httpClientFactory)
     {
         public async Task TryDeleteBlueskyPostsAsync(Submission submission)

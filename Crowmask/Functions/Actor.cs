@@ -1,17 +1,14 @@
 using Crowmask.HighLevel;
-using Crowmask.Interfaces;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.FSharp.Control;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
     public class Actor(
-        IApplicationInformation appInfo,
+        ApplicationInformation appInfo,
         IActorKeyProvider keyProvider,
         MarkdownTranslator markdownTranslator,
         ContentNegotiator negotiator,

@@ -1,7 +1,7 @@
 ﻿namespace Crowmask.LowLevel
 
 open System
-open Crowmask.Interfaces
+open Crowmask.Data
 
 /// Determines whether an IPerishable post is stale or not.
 module FreshnessDeterminer =
