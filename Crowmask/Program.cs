@@ -35,15 +35,23 @@ var host = new HostBuilder()
             websiteUrl: "https://github.com/IsaacSchemm/Crowmask/",
             username: Environment.GetEnvironmentVariable("HandleName"),
             handleHostname: Environment.GetEnvironmentVariable("HandleHost"),
-            adminActorIds: ListModule.OfSeq(enumerateAdminActors()),
-            blueskyBotAccounts: ListModule.OfSeq(enumerateBlueskyAccounts())));
+            adminActorIds: Environment.GetEnvironmentVariable("AdminActor") is string aa
+                ? SetModule.Singleton(aa)
+                : SetModule.Empty<string>(),
+            blueskyBotAccounts: Environment.GetEnvironmentVariable("BlueskyPDS") is string pds && Environment.GetEnvironmentVariable("BlueskyDID") is string did
+                ? SetModule.Singleton(new BlueskyAccountConfiguration(
+                    pds,
+                    did,
+                    Environment.GetEnvironmentVariable("BlueskyIdentifier"),
+                    Environment.GetEnvironmentVariable("BlueskyPassword")))
+                : SetModule.Empty<BlueskyAccountConfiguration>()));
 
         services.AddSingleton<IActorKeyProvider>(
             new KeyProvider(
                 $"https://{Environment.GetEnvironmentVariable("KeyVaultHost")}"));
 
-        services.AddSingleton<IWeasylApiKeyProvider>(
-            new WeasylApiKeyProvider(
+        services.AddSingleton(
+            new WeasylAuthorizationProvider(
                 Environment.GetEnvironmentVariable("WeasylApiKey")));
 
         services.AddHttpClient();
@@ -67,26 +75,3 @@ var host = new HostBuilder()
     .Build();
 
 host.Run();
-
-IEnumerable<string> enumerateAdminActors()
-{
-    if (Environment.GetEnvironmentVariable("AdminActor") is string id)
-        yield return id;
-}
-
-IEnumerable<BlueskyAccountConfiguration> enumerateBlueskyAccounts()
-{
-    if (Environment.GetEnvironmentVariable("BlueskyPDS") == null)
-        yield break;
-
-    if (Environment.GetEnvironmentVariable("BlueskyDID") == null)
-        yield break;
-
-    yield return new BlueskyAccountConfiguration(
-        Environment.GetEnvironmentVariable("BlueskyPDS"),
-        Environment.GetEnvironmentVariable("BlueskyDID"),
-        Environment.GetEnvironmentVariable("BlueskyIdentifier"),
-        Environment.GetEnvironmentVariable("BlueskyPassword"));
-}
-
-record WeasylApiKeyProvider(string ApiKey) : IWeasylApiKeyProvider;

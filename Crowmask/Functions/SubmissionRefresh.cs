@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class SubmissionRefresh(SubmissionCache cache, IWeasylApiKeyProvider weasylApiKeyProvider)
+    public class SubmissionRefresh(SubmissionCache cache, WeasylAuthorizationProvider weasylAuthorizationProvider)
     {
         /// <summary>
         /// Updates a submission from Weasyl, if it is stale or missing in Crowmask's cache.
@@ -24,7 +24,7 @@ namespace Crowmask.Functions
         {
             if (!req.Headers.TryGetValues("X-Weasyl-API-Key", out IEnumerable<string> keys))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
-            if (!keys.Contains(weasylApiKeyProvider.ApiKey))
+            if (!keys.Contains(weasylAuthorizationProvider.WeasylApiKey))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
 
             await cache.RefreshSubmissionAsync(submitid, force: true, altText: req.Query["alt"] );

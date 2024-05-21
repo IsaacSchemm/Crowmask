@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Crowmask.Functions
 {
-    public class JournalRefresh(SubmissionCache cache, IWeasylApiKeyProvider weasylApiKeyProvider)
+    public class JournalRefresh(SubmissionCache cache, WeasylAuthorizationProvider weasylAuthorizationProvider)
     {
         /// <summary>
         /// Updates a journal entry from Weasyl, if it is stale or missing in Crowmask's cache.
@@ -24,7 +24,7 @@ namespace Crowmask.Functions
         {
             if (!req.Headers.TryGetValues("X-Weasyl-API-Key", out IEnumerable<string> keys))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
-            if (!keys.Contains(weasylApiKeyProvider.ApiKey))
+            if (!keys.Contains(weasylAuthorizationProvider.WeasylApiKey))
                 return req.CreateResponse(HttpStatusCode.Forbidden);
 
             await cache.RefreshJournalAsync(journalid, force: true);

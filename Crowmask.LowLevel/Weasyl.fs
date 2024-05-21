@@ -6,10 +6,7 @@ open System.Net.Http.Headers
 open System.Net.Http.Json
 open FSharp.Control
 
-/// Provides an API key to access the Weasyl API and web interface.
-type IWeasylApiKeyProvider =
-    /// The Weasyl API key, created at https://www.weasyl.com/control/apikeys.
-    abstract member ApiKey: string
+type WeasylAuthorizationProvider = { WeasylApiKey: string }
 
 /// .NET types that map to response types from the Weasyl API.
 module Weasyl =
@@ -119,7 +116,7 @@ type WeasylGalleryCount =
 | Count of int
 
 /// An object that allows for communication with the Weasyl API.
-type WeasylClient(appInfo: ApplicationInformation, httpClientFactory: IHttpClientFactory, apiKeyProvider: IWeasylApiKeyProvider) =
+type WeasylClient(appInfo: ApplicationInformation, httpClientFactory: IHttpClientFactory, authorizationProvider: WeasylAuthorizationProvider) =
     /// Makes an HTTP GET request.
     let getAsync (uri: string) = task {
         use client = httpClientFactory.CreateClient()
@@ -127,7 +124,7 @@ type WeasylClient(appInfo: ApplicationInformation, httpClientFactory: IHttpClien
         use req = new HttpRequestMessage(HttpMethod.Get, uri)
         req.Headers.UserAgent.ParseAdd(appInfo.UserAgent)
         req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"))
-        req.Headers.Add("X-Weasyl-API-Key", apiKeyProvider.ApiKey)
+        req.Headers.Add("X-Weasyl-API-Key", authorizationProvider.WeasylApiKey)
 
         return! client.SendAsync(req)
     }

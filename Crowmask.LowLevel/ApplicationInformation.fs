@@ -23,11 +23,11 @@ type ApplicationInformation = {
 
     /// The ActivityPub IDs of the admin actors, ActivityPub users who should
     /// be notified when Crowmask recieves a boost, like, reply, or mention.
-    AdminActorIds: string list
+    AdminActorIds: Set<string>
 
-    /// A list of Bluesky accounts that Crowmask should create and delete
+    /// A set of Bluesky accounts that Crowmask should create and delete
     /// posts on (mirroring its ActivityPub posts).
-    BlueskyBotAccounts: BlueskyAccountConfiguration list
+    BlueskyBotAccounts: Set<BlueskyAccountConfiguration>
 } with
     /// The user agent string for outgoing requests.
     member this.UserAgent = $"{this.ApplicationName}/{this.VersionNumber} ({this.WebsiteUrl})"
