@@ -43,5 +43,11 @@ namespace Crowmask.Data
         /// </summary>
         [Required]
         public string TargetId { get; set; }
+
+        /// <summary>
+        /// The date/time (if any) when administrator of this Crowmask
+        /// instance dismissed this notification via the API.
+        /// </summary>
+        public DateTimeOffset? DismissedAt { get; set; }
     }
 }

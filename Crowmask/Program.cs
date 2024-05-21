@@ -2,31 +2,43 @@
 using Crowmask;
 using Crowmask.Data;
 using Crowmask.HighLevel;
+using Crowmask.HighLevel.ATProto;
 using Crowmask.HighLevel.Feed;
+using Crowmask.HighLevel.Notifications;
 using Crowmask.HighLevel.Remote;
 using Crowmask.HighLevel.Signatures;
 using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using Crowmask.HighLevel.ATProto;
 using Microsoft.FSharp.Collections;
+using System;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services => {
         if (Environment.GetEnvironmentVariable("CosmosDBAccountKey") is string accountKey)
+        {
             services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
                 Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
                 accountKey,
                 databaseName: "Crowmask"));
+            services.AddDbContextFactory<CrowmaskDbContext>(options => options.UseCosmos(
+                Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
+                accountKey,
+                databaseName: "Crowmask"));
+        }
         else
+        {
             services.AddDbContext<CrowmaskDbContext>(options => options.UseCosmos(
                 Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
                 new DefaultAzureCredential(),
                 databaseName: "Crowmask"));
+            services.AddDbContextFactory<CrowmaskDbContext>(options => options.UseCosmos(
+                Environment.GetEnvironmentVariable("CosmosDBAccountEndpoint"),
+                new DefaultAzureCredential(),
+                databaseName: "Crowmask"));
+        }
 
         services.AddSingleton(new ApplicationInformation(
             applicationName: "Crowmask",
@@ -65,6 +77,7 @@ var host = new HostBuilder()
         services.AddScoped<InboxHandler>();
         services.AddScoped<MarkdownTranslator>();
         services.AddScoped<MastodonVerifier>();
+        services.AddScoped<NotificationCollector>();
         services.AddScoped<OutboundActivityProcessor>();
         services.AddScoped<RemoteInboxLocator>();
         services.AddScoped<Requester>();

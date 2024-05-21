@@ -26,6 +26,12 @@ namespace Crowmask.Data
 
         private const int INTERNAL_USER_ID = 0;
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.HasDefaultContainer(nameof(CrowmaskDbContext));
+            base.OnModelCreating(modelBuilder);
+        }
+
         public async Task<User> GetUserAsync()
         {
             var user = await Users
