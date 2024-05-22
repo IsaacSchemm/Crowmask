@@ -132,8 +132,6 @@ type MarkdownTranslator(mapper: IdMapper, appInfo: ApplicationInformation) =
         else
             "No more posts are available."
         $""
-        $"----------"
-        $""
     ]
 
     member this.ToHtml (page: GalleryPage) = this.ToMarkdown page |> toHtml "Gallery"
