@@ -26,7 +26,7 @@ namespace Crowmask.Data
         public string ActorId { get; set; }
 
         /// <summary>
-        /// The ActivityPub type of the activity (Like, Announce, etc.)
+        /// The ActivityPub type of the activity (e.g. https://www.w3.org/ns/activitystreams#Like).
         /// </summary>
         [Required]
         public string ActivityType { get; set; }
@@ -43,11 +43,5 @@ namespace Crowmask.Data
         /// </summary>
         [Required]
         public string TargetId { get; set; }
-
-        /// <summary>
-        /// The date/time (if any) when administrator of this Crowmask
-        /// instance dismissed this notification via the API.
-        /// </summary>
-        public DateTimeOffset? DismissedAt { get; set; }
     }
 }

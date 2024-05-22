@@ -81,6 +81,7 @@ the value of the header must be the same as the Weasyl API key that Crowmask
 is configured to use.
 
 * `POST /api/journals/{journalid}/refresh`: triggers a refresh of the journal entry
+* `GET /api/notification-list`: returns a list of JSON objects representing interactions with content hosted by Crowmask
 * `POST /api/submissions/{submitid}/refresh`: triggers a refresh of the submission
   * Optional query string parameter `alt=`: sets the alt text of the image
 

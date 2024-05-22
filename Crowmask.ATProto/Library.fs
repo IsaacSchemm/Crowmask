@@ -171,6 +171,9 @@ module Reader =
 
         finalResp.EnsureSuccessStatusCode() |> ignore
 
+        let! str = finalResp.Content.ReadAsStringAsync()
+        printfn "%s" str
+
         if typedefof<'T> = typedefof<unit> then
             return () :> obj :?> 'T
         else
@@ -194,6 +197,7 @@ module Notifications =
         cid: string
         author: Author
         reason: string
+        reasonSubject: string
         isRead: bool
         indexedAt: DateTimeOffset
     }

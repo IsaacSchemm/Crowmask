@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.HighLevel.Notifications
 {
-    public class AlternateDbContext(DbContextOptions<CrowmaskDbContext> options) : CrowmaskDbContext(options) { }
-
     public class NotificationCollector(
         ApplicationInformation appInfo,
         IDbContextFactory<CrowmaskDbContext> contextFactory,
@@ -22,12 +20,9 @@ namespace Crowmask.HighLevel.Notifications
 
             await foreach (var i in query)
             {
-                if (i.DismissedAt != null)
-                    continue;
-
                 yield return new Notification(
-                    Category: NotificationCategory.Interaction,
-                    Action: i.ActivityType,
+                    Category: "ActivityStreams activity",
+                    Action: i.ActivityType.Replace("https://www.w3.org/ns/activitystreams#", ""),
                     User: i.ActorId,
                     Context: i.TargetId,
                     Timestamp: i.AddedAt);
@@ -44,14 +39,11 @@ namespace Crowmask.HighLevel.Notifications
 
             await foreach (var m in query)
             {
-                if (m.DismissedAt != null)
-                    continue;
-
                 yield return new Notification(
-                    Category: NotificationCategory.Mention,
-                    Action: "Mention",
+                    Category: "ActivityPub mention",
+                    Action: "Mention / Reply",
                     User: m.ActorId,
-                    Context: null,
+                    Context: m.ObjectId,
                     Timestamp: m.AddedAt);
             }
         }
@@ -75,10 +67,10 @@ namespace Crowmask.HighLevel.Notifications
             await foreach (var n in Crowmask.ATProto.Notifications.ListAllNotificationsAsync(client, wrapper))
             {
                 yield return new Notification(
-                    Category: NotificationCategory.Bluesky,
+                    Category: "Bluesky notification",
                     Action: n.reason,
                     User: n.author.handle,
-                    Context: null,
+                    Context: n.reasonSubject,
                     Timestamp: n.indexedAt);
             }
         }

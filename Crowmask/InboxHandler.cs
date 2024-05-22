@@ -186,7 +186,7 @@ namespace Crowmask
         /// Adds a remote activity to Crowmask, if it does not already exist.
         /// </summary>
         /// <param name="activityId">The ID of the activity</param>
-        /// <param name="activityType">The type of the activity (Like, Announce, etc.)</param>
+        /// <param name="activityType">The type of the activity (e.g. https://www.w3.org/ns/activitystreams#Like).</param>
         /// <param name="targetId">The object ID referred to by the activity</param>
         /// <param name="actor">The actor who created the activity</param>
         public async Task AddInteractionAsync(string activityId, string activityType, string targetId, RemoteActor actor)
