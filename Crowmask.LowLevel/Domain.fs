@@ -72,8 +72,8 @@ type Gallery = {
 
 /// A single page of the user's gallery.
 type GalleryPage = {
+    offset: int
     posts: Post list
-    nextid: int
 }
 
 /// An ActivityPub actor who is following this actor.
@@ -201,9 +201,9 @@ module Domain =
         gallery_count = count
     }
 
-    let AsGalleryPage(posts: Post seq, nextid: int) = {
+    let AsGalleryPage(offset: int, posts: Post seq) = {
+        offset = offset
         posts = Seq.toList posts
-        nextid = nextid
     }
 
     let AsFollowerActor(follower: Follower) = {

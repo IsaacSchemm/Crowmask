@@ -395,15 +395,6 @@ namespace Crowmask.HighLevel
         }
 
         /// <summary>
-        /// Returns the current number of cached posts in Crowmask's database.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<int> GetCachedSubmissionCountAsync()
-        {
-            return await Context.Submissions.CountAsync();
-        }
-
-        /// <summary>
         /// Returns a list of cached journal entries from Crowmask's database.
         /// Journal entries with higher IDs will be returned first.
         /// </summary>
@@ -433,6 +424,31 @@ namespace Crowmask.HighLevel
                 nextid = list.Last().JournalId;
                 batchSize = 100;
             }
+        }
+
+        /// <summary>
+        /// Returns the current number of cached submissions and journal
+        /// entries in Crowmask's database.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<int> GetCachedPostCountAsync()
+        {
+            return await Context.Submissions.CountAsync()
+                + await Context.Journals.CountAsync();
+        }
+
+        /// <summary>
+        /// Returns a combined list of cached submissions and journal entries
+        /// from Crowmask's database.
+        /// </summary>
+        /// <returns>A list of posts</returns>
+        public IAsyncEnumerable<Post> GetCachedPostsAsync()
+        {
+            return new[]
+            {
+                GetCachedSubmissionsAsync(),
+                GetCachedJournalsAsync()
+            }.MergeNewest(post => post.first_cached);
         }
     }
 }

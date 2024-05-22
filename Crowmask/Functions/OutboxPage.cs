@@ -28,19 +28,16 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox/page")] HttpRequestData req)
         {
-            int nextid = int.TryParse(req.Query["nextid"], out int n)
+            int offset = int.TryParse(req.Query["offset"], out int n)
                 ? n
-                : int.MaxValue;
+                : 0;
 
-            var posts = req.Query["type"] == "journal"
-                ? await cache.GetCachedJournalsAsync(nextid: nextid)
-                    .Take(5)
-                    .ToListAsync()
-                : await cache.GetCachedSubmissionsAsync(nextid: nextid)
-                    .Take(20)
-                    .ToListAsync();
+            var posts = await cache.GetCachedPostsAsync()
+                .Skip(offset)
+                .Take(100)
+                .ToListAsync();
 
-            var galleryPage = Domain.AsGalleryPage(posts, nextid);
+            var galleryPage = Domain.AsGalleryPage(offset, posts);
 
             var person = await userCache.GetUserAsync();
 

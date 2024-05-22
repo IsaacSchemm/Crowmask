@@ -22,7 +22,7 @@ namespace Crowmask.Functions
         public async Task<HttpResponseData> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/actor/outbox")] HttpRequestData req)
         {
-            int count = await cache.GetCachedSubmissionCountAsync();
+            int count = await cache.GetCachedPostCountAsync();
 
             var gallery = Domain.AsGallery(count: count);
 

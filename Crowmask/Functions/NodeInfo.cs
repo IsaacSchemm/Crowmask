@@ -23,7 +23,7 @@ namespace Crowmask.Functions
         {
             var user = await userCache.GetUserAsync();
 
-            int postCount = await cache.GetCachedSubmissionCountAsync();
+            int postCount = await cache.GetCachedPostCountAsync();
 
             var resp = req.CreateResponse(HttpStatusCode.OK);
             resp.Headers.Add("Content-Type", $"application/json; charset=utf-8");

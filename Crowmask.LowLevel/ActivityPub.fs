@@ -236,7 +236,7 @@ type ActivityPubTranslator(appInfo: ApplicationInformation, summarizer: Summariz
         pair "type" "OrderedCollectionPage"
 
         if page.posts <> [] then
-            pair "next" (mapper.GetNextOutboxPage [for p in page.posts do p.id])
+            pair "next" (mapper.GetNextOutboxPage page)
 
         pair "partOf" $"{actor}/outbox"
         pair "orderedItems" [for p in page.posts do this.ObjectToCreate p]

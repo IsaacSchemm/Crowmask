@@ -45,13 +45,9 @@ type MarkdownTranslator(mapper: IdMapper, appInfo: ApplicationInformation) =
             | None ->
                 $"* {enc metadata.name}: {enc metadata.value}"
         $""
-        $"[View gallery](/api/actor/outbox/page)"
+        $"[View posts](/api/actor/outbox/page)"
         $"([Atom](/api/actor/outbox/page?format=atom))"
         $"([RSS](/api/actor/outbox/page?format=rss))"
-        $""
-        $"[View journal entries](/api/actor/outbox/page?type=journal)"
-        $"([Atom](/api/actor/outbox/page?type=journal&format=atom))"
-        $"([RSS](/api/actor/outbox/page?type=journal&format=rss))"
         $""
         $"----------"
         $""
@@ -110,7 +106,7 @@ type MarkdownTranslator(mapper: IdMapper, appInfo: ApplicationInformation) =
 
     member _.ToMarkdown (page: GalleryPage) = String.concat "\n" [
         $"<style type='text/css'>"
-        $"img {{ width: 250px; height: 250px; object-fit: scale-down; }}"
+        $"img {{ width: 250px; height: 250px; outline: 1px dashed currentColor; object-fit: scale-down; }}"
         $"</style>"
         $""
         $"## Posts"
@@ -121,18 +117,18 @@ type MarkdownTranslator(mapper: IdMapper, appInfo: ApplicationInformation) =
 
             $"### [{enc post.title}]({post_url}) ({enc date})"
             $""
-            match post.sensitivity with
-            | General ->
+            match post.sensitivity, post.id with
+            | General, SubmitId _ ->
                 for thumbnail in post.thumbnails do
                     $"[![]({thumbnail.url})]({post_url})"
-                if post.thumbnails = [] then
-                    $"No thumbnail available"
-            | Sensitive message ->
+            | General, JournalId _ ->
+                $"Cached on {post.first_cached.UtcDateTime.ToLongDateString()}.  "
+                $"Click the link to view this journal entry on Weasyl."
+            | Sensitive message, _ ->
                 enc message
-            $""
         $""
         if page.posts <> [] then
-            $"[View more posts]({mapper.GetNextOutboxPage [for p in page.posts do p.id]})"
+            $"[View more posts]({mapper.GetNextOutboxPage page})"
         else
             "No more posts are available."
         $""

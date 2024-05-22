@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Crowmask.LowLevel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -85,6 +86,8 @@ namespace Crowmask.HighLevel
                     yield break;
 
                 var newest = sorted.First();
+
+                string nn = newest is Post p ? p.title : null;
 
                 yield return newest;
 

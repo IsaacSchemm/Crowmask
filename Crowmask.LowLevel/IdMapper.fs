@@ -33,7 +33,5 @@ type IdMapper(appInfo: ApplicationInformation) =
         $"https://{appInfo.ApplicationHostname}/api/mentions/{remoteMention.Id}/notification"
 
     /// Determines the URL for the next page of the outbox.
-    member _.GetNextOutboxPage(ids: PostId seq) =
-        match Seq.min ids with
-        | SubmitId submitid -> $"/api/actor/outbox/page?nextid={submitid}"
-        | JournalId journalid -> $"/api/actor/outbox/page?nextid={journalid}&type=journal"
+    member _.GetNextOutboxPage(page: GalleryPage) =
+        $"/api/actor/outbox/page?offset={page.offset + List.length page.posts}"
