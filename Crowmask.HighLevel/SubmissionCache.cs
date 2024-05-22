@@ -3,6 +3,7 @@ using Crowmask.HighLevel.ATProto;
 using Crowmask.LowLevel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FSharp.Core;
+using System.Collections.Generic;
 using System.Net.Http.Headers;
 
 namespace Crowmask.HighLevel
@@ -13,7 +14,7 @@ namespace Crowmask.HighLevel
     public class SubmissionCache(
         ActivityPubTranslator translator,
         BlueskyAgent blueskyAgent,
-        CrowmaskDbContext Context,
+        IDbContextFactory<CrowmaskDbContext> contextFactory,
         IHttpClientFactory httpClientFactory,
         RemoteInboxLocator inboxLocator,
         WeasylClient weasylClient)
@@ -60,6 +61,8 @@ namespace Crowmask.HighLevel
         /// <returns>A CacheResult union, with the found post if any</returns>
         public async Task<CacheResult> RefreshSubmissionAsync(int submitid, bool force = false, string? altText = null)
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             var cachedSubmission = await Context.Submissions
                 .Where(s => s.SubmitId == submitid)
                 .SingleOrDefaultAsync();
@@ -212,6 +215,8 @@ namespace Crowmask.HighLevel
         /// <returns>A CacheResult union, with the found post if any</returns>
         public async Task<CacheResult> RefreshJournalAsync(int journalid, bool force = false)
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             var cachedJournal = await Context.Journals
                 .Where(j => j.JournalId == journalid)
                 .SingleOrDefaultAsync();
@@ -337,6 +342,8 @@ namespace Crowmask.HighLevel
         /// <returns></returns>
         public async Task<CacheResult> GetCachedSubmissionAsync(int submitid)
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             var cachedSubmission = await Context.Submissions
                 .Where(s => s.SubmitId == submitid)
                 .SingleOrDefaultAsync();
@@ -354,6 +361,8 @@ namespace Crowmask.HighLevel
         /// <returns></returns>
         public async Task<CacheResult> GetCachedJournalAsync(int journalid)
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             var cachedSubmission = await Context.Journals
                 .Where(j => j.JournalId == journalid)
                 .SingleOrDefaultAsync();
@@ -371,27 +380,18 @@ namespace Crowmask.HighLevel
         /// <returns>A list of submissions</returns>
         public async IAsyncEnumerable<Post> GetCachedSubmissionsAsync(int nextid = int.MaxValue, DateTimeOffset? since = null)
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
-            int batchSize = 5;
 
-            while (true)
-            {
-                var list = await Context.Submissions
-                    .Where(s => s.SubmitId < nextid)
-                    .Where(s => s.PostedAt > cutoff)
-                    .OrderByDescending(s => s.SubmitId)
-                    .Take(batchSize)
-                    .ToListAsync();
+            var query = Context.Submissions
+                .Where(s => s.SubmitId < nextid)
+                .Where(s => s.PostedAt > cutoff)
+                .OrderByDescending(s => s.SubmitId)
+                .AsAsyncEnumerable();
 
-                foreach (var submission in list)
-                    yield return Domain.AsPost(submission);
-
-                if (list.Count == 0)
-                    break;
-
-                nextid = list.Last().SubmitId;
-                batchSize = 100;
-            }
+            await foreach (var submission in query)
+                yield return Domain.AsPost(submission);
         }
 
         /// <summary>
@@ -403,27 +403,18 @@ namespace Crowmask.HighLevel
         /// <returns>A list of journal entries</returns>
         public async IAsyncEnumerable<Post> GetCachedJournalsAsync(int nextid = int.MaxValue, DateTimeOffset? since = null)
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             DateTimeOffset cutoff = since ?? DateTimeOffset.MinValue;
-            int batchSize = 5;
 
-            while (true)
-            {
-                var list = await Context.Journals
-                    .Where(j => j.JournalId < nextid)
-                    .Where(j => j.PostedAt > cutoff)
-                    .OrderByDescending(j => j.JournalId)
-                    .Take(batchSize)
-                    .ToListAsync();
+            var query = Context.Journals
+                .Where(j => j.JournalId < nextid)
+                .Where(j => j.PostedAt > cutoff)
+                .OrderByDescending(j => j.JournalId)
+                .AsAsyncEnumerable();
 
-                foreach (var journal in list)
-                    yield return Domain.JournalAsPost(journal);
-
-                if (list.Count == 0)
-                    break;
-
-                nextid = list.Last().JournalId;
-                batchSize = 100;
-            }
+            await foreach (var journal in query)
+                yield return Domain.JournalAsPost(journal);
         }
 
         /// <summary>
@@ -433,6 +424,8 @@ namespace Crowmask.HighLevel
         /// <returns></returns>
         public async Task<int> GetCachedPostCountAsync()
         {
+            var Context = await contextFactory.CreateDbContextAsync();
+
             return await Context.Submissions.CountAsync()
                 + await Context.Journals.CountAsync();
         }
