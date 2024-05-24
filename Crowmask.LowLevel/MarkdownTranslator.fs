@@ -58,16 +58,11 @@ type MarkdownTranslator(mapper: IdMapper, appInfo: ApplicationInformation) =
         for hostname in List.distinct [appInfo.HandleHostname; appInfo.ApplicationHostname] do
             $"    @{enc appInfo.Username}@{hostname}"
         $""
-        if not (Seq.isEmpty appInfo.AdminActorIds) then
-            $"Any boosts, likes, replies, or mentions will generate a notification to:"
-            for adminActorId in appInfo.AdminActorIds do
-                $"* [`{enc adminActorId}`]({adminActorId})"
-            $""
         $"[View followers](/api/actor/followers)"
         $""
         $"--------"
         $""
-        if not (Seq.isEmpty appInfo.AdminActorIds) then
+        if not (Seq.isEmpty appInfo.BlueskyBotAccounts) then
             $"## Bluesky"
             $""
             for account in appInfo.BlueskyBotAccounts do

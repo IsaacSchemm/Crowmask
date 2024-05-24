@@ -21,7 +21,7 @@ namespace Crowmask.HighLevel.Notifications
             await foreach (var i in query)
             {
                 yield return new Notification(
-                    Category: "ActivityStreams activity",
+                    Category: "ActivityPub activity",
                     Action: i.ActivityType.Replace("https://www.w3.org/ns/activitystreams#", ""),
                     User: i.ActorId,
                     Context: i.TargetId,

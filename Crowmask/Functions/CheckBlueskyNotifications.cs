@@ -1,12 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Crowmask.ATProto;
 using Crowmask.Data;
-using Crowmask.HighLevel;
 using Crowmask.HighLevel.ATProto;
 using Crowmask.LowLevel;
 using Microsoft.Azure.Functions.Worker;
@@ -15,11 +12,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Crowmask.Functions
 {
     public class CheckBlueskyNotifications(
-        ActivityPubTranslator translator,
         CrowmaskDbContext context,
         ApplicationInformation appInfo,
-        IHttpClientFactory httpClientFactory,
-        RemoteInboxLocator locator)
+        IHttpClientFactory httpClientFactory)
     {
         /// <summary>
         /// Checks the atproto PDS for any notifications since the last check,
@@ -89,37 +84,6 @@ namespace Crowmask.Functions
                     string countStr = mostRecentNotifications.Count < maxNotificationNumber
                         ? $"{mostRecentNotifications.Count}"
                         : $"{maxNotificationNumber}+";
-
-                    IEnumerable<string> buildContent()
-                    {
-                        string didStr = WebUtility.HtmlEncode(account.DID);
-
-                        yield return $"{countStr} Bluesky notification(s) for [`{didStr}`](https://bsky.app/profile/{didStr})";
-                        yield return $"";
-
-                        foreach (var group in mostRecentNotifications.GroupBy(n => n.reason))
-                        {
-                            string reasonStr = WebUtility.HtmlEncode(group.Key);
-                            var authorStrs = group
-                                .Select(n => WebUtility.HtmlEncode(n.author.handle))
-                                .Distinct()
-                                .Take(3);
-                            yield return $"* **{reasonStr}**: {group.Count()} notifications, from users including {string.Join(", ", authorStrs)}";
-                        }
-                    }
-
-                    await foreach (string inbox in locator.GetAdminActorInboxesAsync())
-                    {
-                        context.OutboundActivities.Add(new OutboundActivity
-                        {
-                            Id = Guid.NewGuid(),
-                            Inbox = inbox,
-                            JsonBody = ActivityPubSerializer.SerializeWithContext(
-                                translator.CreateTransientPrivateNote(
-                                    string.Join("\n", buildContent()))),
-                            StoredAt = DateTimeOffset.UtcNow
-                        });
-                    }
 
                     if (mostRecentNotifications.Count != 0)
                         session.LastSeenCid = mostRecentNotifications[0].cid;

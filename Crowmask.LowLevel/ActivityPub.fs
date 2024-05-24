@@ -185,35 +185,6 @@ type ActivityPubTranslator(appInfo: ApplicationInformation, summarizer: Summariz
         pair "object" (mapper.GetObjectId(post.id))
     ]
 
-    /// Builds a transient Create activity for a transient Note sent to the admin actor.
-    member _.CreateTransientPrivateNote (markdown_content: string) = dict [
-        pair "type" "Create"
-        pair "id" (mapper.GenerateTransientId())
-        pair "actor" actor
-        pair "published" DateTimeOffset.UtcNow
-        pair "to" [yield! appInfo.AdminActorIds]
-        pair "object" (dict [
-            let id = (mapper.GenerateTransientId())
-
-            pair "id" id
-            pair "url" id
-            pair "type" "Note"
-
-            pair "attributedTo" actor
-            pair "content" (Markdig.Markdown.ToHtml markdown_content)
-            pair "published" DateTimeOffset.UtcNow
-            pair "to" [yield! appInfo.AdminActorIds]
-        ])
-    ]
-
-    /// Builds a transient Create activity for a transient Note sent to the admin actor.
-    member this.CreateTransientPrivateNote (interaction: Interaction) =
-        this.CreateTransientPrivateNote (summarizer.ToMarkdown interaction)
-
-    /// Builds a transient Create activity for a transient Note sent to the admin actor.
-    member this.CreateTransientPrivateNote (mention: Mention) =
-        this.CreateTransientPrivateNote (summarizer.ToMarkdown mention)
-
     /// Builds a transient Accept activity to accept a follow request.
     member _.AcceptFollow (followId: string) = dict [
         pair "type" "Accept"

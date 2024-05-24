@@ -21,10 +21,6 @@ type ApplicationInformation = {
     /// May or may not be the same as Crowmask's domain.
     HandleHostname: string
 
-    /// The ActivityPub IDs of the admin actors, ActivityPub users who should
-    /// be notified when Crowmask recieves a boost, like, reply, or mention.
-    AdminActorIds: Set<string>
-
     /// Additional hostnames to make WebFinger requests to if an incoming
     /// WebFinger request doesn't match the admin actor.
     WebFingerDomains: Set<string>

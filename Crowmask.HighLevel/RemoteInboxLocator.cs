@@ -1,37 +1,9 @@
 ﻿using Crowmask.Data;
-using Crowmask.HighLevel.Remote;
-using Crowmask.LowLevel;
-using Microsoft.EntityFrameworkCore;
 
 namespace Crowmask.HighLevel
 {
-    public class RemoteInboxLocator(CrowmaskDbContext context, ApplicationInformation appInfo, Requester requester)
+    public class RemoteInboxLocator(CrowmaskDbContext context)
     {
-        /// <summary>
-        /// Gets the URL of the admin actor's inbox.
-        /// </summary>
-        /// <returns>The inbox URL</returns>
-        public async IAsyncEnumerable<string> GetAdminActorInboxesAsync()
-        {
-            foreach (string adminActorId in appInfo.AdminActorIds)
-            {
-                var follower = await context.Followers
-                    .Where(f => f.ActorId == adminActorId)
-                    .Select(f => new { f.Inbox })
-                    .FirstOrDefaultAsync();
-
-                if (follower != null)
-                {
-                    yield return follower.Inbox;
-                }
-                else
-                {
-                    var adminActorDetails = await requester.FetchActorAsync(adminActorId);
-                    yield return adminActorDetails.Inbox;
-                }
-            }
-        }
-
         /// <summary>
         /// Gets the URLs of known inboxes.
         /// </summary>

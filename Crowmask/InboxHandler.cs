@@ -146,19 +146,6 @@ namespace Crowmask
 
             context.Mentions.Add(newMention);
 
-            await foreach (string inbox in locator.GetAdminActorInboxesAsync())
-            {
-                context.OutboundActivities.Add(new OutboundActivity
-                {
-                    Id = Guid.NewGuid(),
-                    Inbox = inbox,
-                    JsonBody = ActivityPubSerializer.SerializeWithContext(
-                        translator.CreateTransientPrivateNote(
-                            newMention)),
-                    StoredAt = DateTimeOffset.UtcNow
-                });
-            }
-
             await context.SaveChangesAsync();
         }
 
@@ -209,19 +196,6 @@ namespace Crowmask
             };
 
             context.Interactions.Add(newInteraction);
-
-            await foreach (string inbox in locator.GetAdminActorInboxesAsync())
-            {
-                context.OutboundActivities.Add(new OutboundActivity
-                {
-                    Id = Guid.NewGuid(),
-                    Inbox = inbox,
-                    JsonBody = ActivityPubSerializer.SerializeWithContext(
-                        translator.CreateTransientPrivateNote(
-                            newInteraction)),
-                    StoredAt = DateTimeOffset.UtcNow
-                });
-            }
 
             await context.SaveChangesAsync();
         }

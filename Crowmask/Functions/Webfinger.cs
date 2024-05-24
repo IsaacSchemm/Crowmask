@@ -73,14 +73,6 @@ namespace Crowmask.Functions
                 return resp;
             }
 
-            if (appInfo.AdminActorIds.Any() && Uri.TryCreate(appInfo.AdminActorIds.First(), UriKind.Absolute, out Uri adminActorUri))
-            {
-                var redirectUri = new Uri(adminActorUri, $"/.well-known/webfinger?resource={Uri.EscapeDataString(resource)}");
-                var resp = req.CreateResponse(HttpStatusCode.TemporaryRedirect);
-                resp.Headers.Add("Location", redirectUri.AbsoluteUri);
-                return resp;
-            }
-
             return req.CreateResponse(HttpStatusCode.NotFound);
         }
     }

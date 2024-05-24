@@ -13,13 +13,6 @@ Crowmask can also connect to a Bluesky account, creating and deleting artwork
 posts as needed (all posts are backdated, and posts for edited submissions are
 deleted and re-created).
 
-When a user likes, replies to, or shares/boosts one of this account's posts,
-or tags the Crowmask actor in a post, Crowmask will send a private `Note` to
-any ActivityPub accounts that are configured as "admin actors" (typically,
-there would be a single account configured this way). Bluesky notifications
-are checked every six hours and summarized in a private `Note` sent to these
-admin actors. 
-
 ## Browsing
 
 Crowmask is primarily an [ActivityPub](https://www.w3.org/TR/activitypub/)
@@ -38,6 +31,19 @@ negotiation. The RSS and Atom feeds are implemented on the endpoint for page 1
 of the outbox, but must be explicitly requested with `format=rss` or
 `format=atom`.
 
+## Notifications
+
+Crowmask notifications come in three categories:
+
+* ActivityPub activities (e.g. likes, announces)
+* ActivityPub mentions and replies
+* Bluesky notifications
+
+ActivityPub data is stored in Crowmask's database, but the list of Bluesky
+notifications it uses comes directly from Bluesky. There is no UI for viewing
+these notifications, but Crowmask does provide its own API to let you fetch
+them (see below).
+
 ## Implementation details
 
 ### Layers
@@ -55,7 +61,7 @@ of the outbox, but must be explicitly requested with `format=rss` or
   * **Signatures**: HTTP signature validation.
   * **Remote**: Talks to other ActivityPub servers.
   * **FeedBuilder**: Implements RSS and Atom feeds.
-  * **RemoteInboxLocator**: Collects inbox URLs for the admin actors, followers, and other known servers.
+  * **RemoteInboxLocator**: Collects inbox URLs for known users and servers.
   * **SubmissionCache**: Retrieves and updates submissions in Crowmask's database.
   * **UserCache**: Retrieves and updates the user profile in Crowmask's database.
 * **Crowmask**: The main Azure Functions project, responsible for handling HTTP requests and running timed functions.
@@ -63,7 +69,7 @@ of the outbox, but must be explicitly requested with `format=rss` or
 ### Public HTTP endpoints
 
 * `/.well-known/nodeinfo`: returns the location of the NodeInfo endpoint
-* `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, redirects to the same path on the domain of the first admin actor
+* `/.well-known/webfinger`: returns information about the actor, if given the actor's URL or a handle representing the actor on either `CrowmaskHost` or `HandleHost`; otherwise, performs the same request on the domain indicated by `WebFingerDomain` (if any) and returns the result
 * `/api/actor`: returns the `Person` object
 * `/api/actor/followers`: contains the IDs of all followers (not paginated)
 * `/api/actor/following`: an empty list
@@ -121,7 +127,6 @@ Example `local.settings.json`:
     {
       "IsEncrypted": false,
       "Values": {
-        "AdminActor": "https://pixelfed.example.com/users/...",
         "CosmosDBAccountEndpoint": "https://example.documents.azure.com:443/",
         "CosmosDBAccountKey": "...",
         "CrowmaskHost": "crowmask.example.com",
@@ -141,10 +146,6 @@ Example `local.settings.json`:
 Settings prefixed with `ATProto` can be omitted if you don't need the Bluesky
 bot. Crowmask stores Bluesky tokens in its database, so `ATProtoIdentifier`
 and `ATProtoPassword` should be removed once tokens are established.
-
-You should be able to leave `AdminActor` blank or omit it to run the server
-without an admin actor (and without the ability to see who's interacted with
-your posts), although this hasn't been tested.
 
 For **Key Vault**, the app is set up to use Managed Identity - turn this on in
 the Function App (Settings > Identity) then go to the key vault's access

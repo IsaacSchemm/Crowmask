@@ -42,14 +42,11 @@ var host = new HostBuilder()
 
         services.AddSingleton(new ApplicationInformation(
             applicationName: "Crowmask",
-            versionNumber: "1.10",
+            versionNumber: "2.0",   
             applicationHostname: Environment.GetEnvironmentVariable("CrowmaskHost"),
             websiteUrl: "https://github.com/IsaacSchemm/Crowmask/",
             username: Environment.GetEnvironmentVariable("HandleName"),
             handleHostname: Environment.GetEnvironmentVariable("HandleHost"),
-            adminActorIds: Environment.GetEnvironmentVariable("AdminActor") is string aa
-                ? SetModule.Singleton(aa)
-                : SetModule.Empty<string>(),
             webFingerDomains: Environment.GetEnvironmentVariable("WebFingerDomain") is string wf
                 ? SetModule.Singleton(wf)
                 : SetModule.Empty<string>(),
