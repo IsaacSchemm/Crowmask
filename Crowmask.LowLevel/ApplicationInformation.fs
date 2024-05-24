@@ -25,6 +25,10 @@ type ApplicationInformation = {
     /// be notified when Crowmask recieves a boost, like, reply, or mention.
     AdminActorIds: Set<string>
 
+    /// Additional hostnames to make WebFinger requests to if an incoming
+    /// WebFinger request doesn't match the admin actor.
+    WebFingerDomains: Set<string>
+
     /// A set of Bluesky accounts that Crowmask should create and delete
     /// posts on (mirroring its ActivityPub posts).
     BlueskyBotAccounts: Set<BlueskyAccountConfiguration>

@@ -50,6 +50,9 @@ var host = new HostBuilder()
             adminActorIds: Environment.GetEnvironmentVariable("AdminActor") is string aa
                 ? SetModule.Singleton(aa)
                 : SetModule.Empty<string>(),
+            webFingerDomains: Environment.GetEnvironmentVariable("WebFingerDomain") is string wf
+                ? SetModule.Singleton(wf)
+                : SetModule.Empty<string>(),
             blueskyBotAccounts: Environment.GetEnvironmentVariable("BlueskyPDS") is string pds && Environment.GetEnvironmentVariable("BlueskyDID") is string did
                 ? SetModule.Singleton(new BlueskyAccountConfiguration(
                     pds,
