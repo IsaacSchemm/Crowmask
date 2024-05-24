@@ -85,6 +85,9 @@ is configured to use.
 * `POST /api/submissions/{submitid}/refresh`: triggers a refresh of the submission
   * Optional query string parameter `alt=`: sets the alt text of the image
 
+The project **Crowmask.AdminTools** is a VB.NET WinForms app that provides a
+user interface for accessing these endpoints.
+
 ### Timed refresh functions
 
 * `RefreshRecent` (every five minutes)

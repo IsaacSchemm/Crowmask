@@ -20,6 +20,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crowmask.HighLevel", "Crowm
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Crowmask.ATProto", "Crowmask.ATProto\Crowmask.ATProto.fsproj", "{6E595F40-969E-41CA-B91A-AF5990EDF911}"
 EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Crowmask.AdminTools", "Crowmask.AdminTools\Crowmask.AdminTools.vbproj", "{A66F0823-D780-4F6A-A024-AD95B884C07F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E595F40-969E-41CA-B91A-AF5990EDF911}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A66F0823-D780-4F6A-A024-AD95B884C07F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A66F0823-D780-4F6A-A024-AD95B884C07F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A66F0823-D780-4F6A-A024-AD95B884C07F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A66F0823-D780-4F6A-A024-AD95B884C07F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
