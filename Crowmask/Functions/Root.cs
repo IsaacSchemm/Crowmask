@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Crowmask.Functions
 {
-    public class Root(IdMapper mapper)
+    public class Root
     {
         /// <summary>
         /// Redirects to the actor URL.
@@ -16,7 +16,7 @@ namespace Crowmask.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "/")] HttpRequestData req)
         {
             var resp = req.CreateResponse(HttpStatusCode.TemporaryRedirect);
-            resp.Headers.Add("Location", mapper.ActorId);
+            resp.Headers.Add("Location", "https://github.com/IsaacSchemm/Crowmask/");
             return resp;
         }
     }
